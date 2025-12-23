@@ -15,7 +15,9 @@ interface GameState {
     dropBead: (x: number, y: number) => void;
     checkWin: (board: BoardState) => Player | null;
     setAiEnabled: (enabled: boolean) => void;
+    makeAiMove: () => void;
 }
+
 
 const checkWin = (board: BoardState): Player | null => {
     const size = 4;
@@ -167,5 +169,8 @@ export const useGameStore = create<GameState>((set, get) => ({
             // Actually dropBead handles toggling, so if we call it, it will place for 'black' (current player) and toggle to 'white'.
             get().dropBead(move.x, move.y);
         }
-    }
+    },
+
+    checkWin: checkWin
 }));
+
