@@ -11,13 +11,13 @@ export default function Home() {
             <GameUI />
 
             <Canvas shadows>
-                <PerspectiveCamera makeDefault position={[6, 6, 6]} fov={45} />
+                <PerspectiveCamera makeDefault position={[0, 8, 12]} fov={45} />
                 <OrbitControls
                     enablePan={false}
                     maxPolarAngle={Math.PI / 2.2}
-                    minDistance={3}
-                    maxDistance={15}
-                    target={[0, 1, 0]}
+                    minDistance={5}
+                    maxDistance={20}
+                    target={[0, 0, 0]}
                 />
 
                 <Environment preset="studio" />
