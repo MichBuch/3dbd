@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   --background: #000000;
   --foreground: #ffffff;
@@ -9,9 +13,10 @@ body {
   margin: 0;
   padding: 0;
   font-family: Arial, Helvetica, sans-serif;
-  overflow: hidden; /* Prevent scrolling for the 3D canvas */
+  overflow: hidden;
+  /* Prevent scrolling for the 3D canvas */
 }
 
 canvas {
-    touch-action: none;
+  touch-action: none;
 }

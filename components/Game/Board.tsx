@@ -2,17 +2,12 @@ import { useMemo } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { Pillar } from './Pillar';
 import { Bead } from './Bead';
-import { useControls } from 'leva';
 
 export const Board = () => {
-    const { board, dropBead } = useGameStore();
+    const { board, dropBead, theme } = useGameStore();
 
-    const { stickSpacing, baseColor, whiteColor, blackColor } = useControls('Board Settings', {
-        stickSpacing: { value: 2.5, min: 1.5, max: 4, step: 0.1 },
-        baseColor: '#222222',
-        whiteColor: '#ffffff',
-        blackColor: '#333333'
-    });
+    // Fixed spacing settings for now, can be added to store if needed
+    const stickSpacing = 2.5;
 
     // Calculate positions efficiently
     const pillars = useMemo(() => {
@@ -34,10 +29,10 @@ export const Board = () => {
 
     return (
         <group>
-            {/* Board Base */}
-            <mesh position={[0, -0.5, 0]} receiveShadow>
+            {/* Board Base - Moved up to touch pillars properly */}
+            <mesh position={[0, -0.25, 0]} receiveShadow>
                 <boxGeometry args={[stickSpacing * 4 + 1, 0.5, stickSpacing * 4 + 1]} />
-                <meshStandardMaterial color={baseColor} />
+                <meshStandardMaterial color={theme.base} />
             </mesh>
 
             {/* Pillars and Beads */}
@@ -46,7 +41,8 @@ export const Board = () => {
                     <Pillar
                         x={p.x}
                         y={p.y}
-                        position={[p.posX, 2, p.posZ]}
+                        // Pillars start at y=0. Height=4 means center is at y=2.
+                        position={[p.posX, 0, p.posZ]}
                         height={4}
                         onDrop={dropBead}
                         beads={board[p.x][p.y]}
@@ -58,7 +54,7 @@ export const Board = () => {
                             <Bead
                                 key={zIndex}
                                 position={[p.posX, zIndex * 0.8 + 0.5, p.posZ]} // 0.8 spacing, 0.5 initial offset
-                                color={player === 'white' ? whiteColor : blackColor}
+                                color={player === 'white' ? theme.white : theme.black}
                                 player={player}
                             />
                         ) : null
