@@ -9,7 +9,8 @@ export const GameUI = () => {
         isAiEnabled,
         setAiEnabled,
         theme,
-        setTheme
+        setTheme,
+        scores
     } = useGameStore();
 
     const [showSettings, setShowSettings] = useState(false);
@@ -17,13 +18,28 @@ export const GameUI = () => {
     return (
         <>
             {/* Minimal Status - Top Left */}
-            <div className="absolute top-4 left-4 pointer-events-auto z-10">
+            <div className="absolute top-4 left-4 pointer-events-auto z-10 flex flex-col gap-2">
                 <h1 className="text-2xl font-bold text-white/80 drop-shadow-md m-0">3dBd</h1>
-                <div className="flex items-center gap-2 mt-1">
+
+                {/* Turn Indicator */}
+                <div className="flex items-center gap-2">
                     <div className={`w-3 h-3 rounded-full ${currentPlayer === 'white' ? 'bg-white' : 'bg-gray-800 border border-white'}`} />
                     <span className="text-white/80 font-sans text-sm font-bold">
                         {currentPlayer === 'white' ? "White's Turn" : "Black's Turn"}
                     </span>
+                </div>
+
+                {/* Scoreboard */}
+                <div className="bg-black/50 backdrop-blur-sm p-3 rounded-lg border border-white/10 flex gap-4 mt-2">
+                    <div className="flex flex-col items-center">
+                        <span className="text-[10px] uppercase font-bold text-gray-400">White</span>
+                        <span className="text-xl font-mono font-bold text-white">{scores.white}</span>
+                    </div>
+                    <div className="w-px bg-white/20"></div>
+                    <div className="flex flex-col items-center">
+                        <span className="text-[10px] uppercase font-bold text-gray-400">Black</span>
+                        <span className="text-xl font-mono font-bold text-white">{scores.black}</span>
+                    </div>
                 </div>
             </div>
 
@@ -45,14 +61,17 @@ export const GameUI = () => {
 
             {/* Winner Overlay */}
             {winner && (
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-auto z-50 bg-black/40 backdrop-blur-sm">
-                    <div className="bg-black/80 p-8 rounded-xl border border-white/20 text-center shadow-2xl">
-                        <h2 className="text-5xl font-bold text-white mb-6">
-                            {winner === 'draw' ? 'Draw' : `${winner.toUpperCase()} WINS`}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-auto z-50 bg-black/60 backdrop-blur-md">
+                    <div className="bg-black/80 p-10 rounded-2xl border border-white/20 text-center shadow-2xl animate-fade-in">
+                        <h2 className="text-6xl font-black text-white mb-2">
+                            {winner === 'draw' ? 'DRAW' : `${winner.toUpperCase()} WINS`}
                         </h2>
+                        <div className="text-gray-300 mb-8 font-mono text-lg">
+                            Final Score: White <span className="text-white font-bold">{scores.white}</span> - <span className="text-white font-bold">{scores.black}</span> Black
+                        </div>
                         <button
                             onClick={resetGame}
-                            className="bg-white text-black px-8 py-3 rounded-lg font-bold text-lg hover:bg-gray-200 transition-colors"
+                            className="bg-white text-black px-8 py-3 rounded-lg font-bold text-lg hover:scale-105 transition-transform"
                         >
                             Play Again
                         </button>
