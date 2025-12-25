@@ -8,9 +8,10 @@ interface BeadProps {
     position: [number, number, number];
     color: string;
     player: Player;
+    isWinning?: boolean;
 }
 
-export const Bead = ({ position, color, player }: BeadProps) => {
+export const Bead = ({ position, color, player, isWinning = false }: BeadProps) => {
     const meshRef = useRef<Mesh>(null);
     const targetY = position[1];
     const startY = targetY + 10; // Drop from height
@@ -41,8 +42,10 @@ export const Bead = ({ position, color, player }: BeadProps) => {
             <sphereGeometry args={[0.35, 32, 32]} />
             <meshStandardMaterial
                 color={color}
-                roughness={0.1}
-                metalness={0.5}
+                roughness={isWinning ? 0.2 : 0.1}
+                metalness={isWinning ? 0.8 : 0.5}
+                emissive={isWinning ? color : undefined}
+                emissiveIntensity={isWinning ? 0.5 : 0}
             />
         </mesh>
     );

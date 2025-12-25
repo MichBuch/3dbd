@@ -17,6 +17,7 @@ interface GameState {
     moveHistory: { x: number; y: number; player: Player }[];
     isAiEnabled: boolean;
     scores: { white: number; black: number };
+    winningCells: string[]; // "x-y-z"
     theme: Theme;
 
     // Actions
@@ -28,21 +29,28 @@ interface GameState {
     setTheme: (theme: Partial<Theme>) => void;
 }
 
-const calculateScores = (board: BoardState): { white: number, black: number } => {
+const calculateScores = (board: BoardState): { white: number, black: number, winningCells: string[] } => {
     const size = 4;
     let wScore = 0;
     let bScore = 0;
+    const winning: string[] = [];
 
-    const checkLine = (cells: (Player | null)[]) => {
-        if (cells.every(c => c === 'white')) wScore++;
-        if (cells.every(c => c === 'black')) bScore++;
+    const checkLine = (cells: { val: Player | null, key: string }[]) => {
+        if (cells.every(c => c.val === 'white')) {
+            wScore++;
+            cells.forEach(c => winning.push(c.key));
+        }
+        if (cells.every(c => c.val === 'black')) {
+            bScore++;
+            cells.forEach(c => winning.push(c.key));
+        }
     };
 
     // 1. Vertical Columns
     for (let x = 0; x < size; x++) {
         for (let y = 0; y < size; y++) {
-            const col: (Player | null)[] = [];
-            for (let z = 0; z < size; z++) col.push(board[x][y][z]);
+            const col = [];
+            for (let z = 0; z < size; z++) col.push({ val: board[x][y][z], key: `${x}-${y}-${z}` });
             checkLine(col);
         }
     }
@@ -50,19 +58,19 @@ const calculateScores = (board: BoardState): { white: number, black: number } =>
     // 2. Horizontal Rows & Diagonals on Z-planes
     for (let z = 0; z < size; z++) {
         for (let y = 0; y < size; y++) {
-            const row: (Player | null)[] = [];
-            for (let x = 0; x < size; x++) row.push(board[x][y][z]);
+            const row = [];
+            for (let x = 0; x < size; x++) row.push({ val: board[x][y][z], key: `${x}-${y}-${z}` });
             checkLine(row);
         }
         for (let x = 0; x < size; x++) {
-            const row: (Player | null)[] = [];
-            for (let y = 0; y < size; y++) row.push(board[x][y][z]);
+            const row = [];
+            for (let y = 0; y < size; y++) row.push({ val: board[x][y][z], key: `${x}-${y}-${z}` });
             checkLine(row);
         }
-        const d1: (Player | null)[] = [], d2: (Player | null)[] = [];
+        const d1 = [], d2 = [];
         for (let i = 0; i < size; i++) {
-            d1.push(board[i][i][z]);
-            d2.push(board[i][size - 1 - i][z]);
+            d1.push({ val: board[i][i][z], key: `${i}-${i}-${z}` });
+            d2.push({ val: board[i][size - 1 - i][z], key: `${i}-${size - 1 - i}-${z}` });
         }
         checkLine(d1);
         checkLine(d2);
@@ -70,37 +78,37 @@ const calculateScores = (board: BoardState): { white: number, black: number } =>
 
     // 3. 3D Diagonals
     for (let i = 0; i < size; i++) {
-        const d1: (Player | null)[] = [], d2: (Player | null)[] = [];
+        const d1 = [], d2 = [];
         for (let j = 0; j < size; j++) {
-            d1.push(board[j][i][j]);
-            d2.push(board[j][i][size - 1 - j]);
+            d1.push({ val: board[j][i][j], key: `${j}-${i}-${j}` });
+            d2.push({ val: board[j][i][size - 1 - j], key: `${j}-${i}-${size - 1 - j}` });
         }
         checkLine(d1);
         checkLine(d2);
 
-        const d3: (Player | null)[] = [], d4: (Player | null)[] = [];
+        const d3 = [], d4 = [];
         for (let j = 0; j < size; j++) {
-            d3.push(board[i][j][j]);
-            d4.push(board[i][j][size - 1 - j]);
+            d3.push({ val: board[i][j][j], key: `${i}-${j}-${j}` });
+            d4.push({ val: board[i][j][size - 1 - j], key: `${i}-${j}-${size - 1 - j}` });
         }
         checkLine(d3);
         checkLine(d4);
     }
 
     // Pure 3D Cross Diagonals
-    const d3d1: (Player | null)[] = [], d3d2: (Player | null)[] = [], d3d3: (Player | null)[] = [], d3d4: (Player | null)[] = [];
+    const d3d1 = [], d3d2 = [], d3d3 = [], d3d4 = [];
     for (let i = 0; i < size; i++) {
-        d3d1.push(board[i][i][i]);
-        d3d2.push(board[i][i][size - 1 - i]);
-        d3d3.push(board[i][size - 1 - i][i]);
-        d3d4.push(board[i][size - 1 - i][size - 1 - i]);
+        d3d1.push({ val: board[i][i][i], key: `${i}-${i}-${i}` });
+        d3d2.push({ val: board[i][i][size - 1 - i], key: `${i}-${i}-${size - 1 - i}` });
+        d3d3.push({ val: board[i][size - 1 - i][i], key: `${i}-${size - 1 - i}-${i}` });
+        d3d4.push({ val: board[i][size - 1 - i][size - 1 - i], key: `${i}-${size - 1 - i}-${size - 1 - i}` });
     }
     checkLine(d3d1);
     checkLine(d3d2);
     checkLine(d3d3);
     checkLine(d3d4);
 
-    return { white: wScore, black: bScore };
+    return { white: wScore, black: bScore, winningCells: [...new Set(winning)] };
 }
 
 export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' | 'hard', setDifficulty: (d: 'easy' | 'medium' | 'hard') => void }>()(
@@ -113,6 +121,7 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
             isAiEnabled: true,
             difficulty: 'hard',
             scores: { white: 0, black: 0 },
+            winningCells: [],
             // Xmas Default: Red (White Player) & Green (Black Player)
             theme: { base: '#222222', white: '#ff0000', black: '#00ff00' },
 
@@ -121,6 +130,7 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
                 currentPlayer: 'white',
                 winner: null,
                 scores: { white: 0, black: 0 },
+                winningCells: [],
                 moveHistory: []
             }),
 
@@ -141,7 +151,8 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
                 newBoard[x][y][zIndex] = currentPlayer;
 
                 // Update Scores dynamically
-                const newScores = calculateScores(newBoard);
+                const { white, black, winningCells } = calculateScores(newBoard);
+                const newScores = { white, black };
 
                 // Check End Condition: 64 moves (Board Full)
                 const totalMoves = moveHistory.length + 1;
@@ -158,6 +169,7 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
                     currentPlayer: state.currentPlayer === 'white' ? 'black' : 'white',
                     winner: newWinner,
                     scores: newScores,
+                    winningCells,
                     moveHistory: [...state.moveHistory, { x, y, player: state.currentPlayer }]
                 }));
 
@@ -181,11 +193,6 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
 
                 if (validMoves.length === 0) return;
 
-                // Strategy:
-                // 1. Check if any move gives me a point (Win)
-                // 2. Check if any move blocks opponent from getting a point (Block)
-                // 3. Random fallback
-
                 let bestMove = validMoves[Math.floor(Math.random() * validMoves.length)];
 
                 // On Hard/Medium, try to find better moves
@@ -197,8 +204,8 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
                         const z = col.findIndex((val: Player | null) => val === null);
                         newBoard[move.x][move.y][z] = 'black'; // AI
 
-                        const newScores = calculateScores(newBoard);
-                        if (newScores.black > scores.black) {
+                        const { black } = calculateScores(newBoard);
+                        if (black > scores.black) {
                             bestMove = move;
                             get().dropBead(bestMove.x, bestMove.y);
                             return;
@@ -212,8 +219,8 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
                             const z = col.findIndex((val: Player | null) => val === null);
                             newBoard[move.x][move.y][z] = 'white'; // Opponent
 
-                            const newScores = calculateScores(newBoard);
-                            if (newScores.white > scores.white) {
+                            const { white } = calculateScores(newBoard);
+                            if (white > scores.white) {
                                 bestMove = move;
                                 get().dropBead(bestMove.x, bestMove.y);
                                 return;

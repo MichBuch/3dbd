@@ -42,7 +42,7 @@ export const GameUI = () => {
         <>
             {/* 1. BRAND / TURN INDICATOR (Fixed Top-Left) */}
             <div style={{ position: 'fixed', top: '24px', left: '24px', zIndex: 50, pointerEvents: 'none' }}>
-                <div className="pointer-events-auto glass-panel px-6 py-3 rounded-2xl flex items-center justify-center gap-4 min-w-[200px]" style={{ border: 'none' }}>
+                <div className="pointer-events-auto bg-black px-5 py-3 rounded-2xl flex items-center gap-2" style={{ border: 'none' }}>
                     {/* Kept 3dBd for branding but centered contents */}
                     <h1 className="text-xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-neonBlue to-neonPink drop-shadow-sm">
                         3dBd

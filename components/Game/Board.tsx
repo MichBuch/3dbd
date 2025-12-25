@@ -4,7 +4,7 @@ import { Pillar } from './Pillar';
 import { Bead } from './Bead';
 
 export const Board = () => {
-    const { board, dropBead, theme } = useGameStore();
+    const { board, dropBead, theme, winningCells } = useGameStore();
 
     // Fixed spacing settings for now, can be added to store if needed
     const stickSpacing = 2.5;
@@ -43,7 +43,7 @@ export const Board = () => {
                         y={p.y}
                         // Pillars start at y=0. Height=4 means center is at y=2.
                         position={[p.posX, 0, p.posZ]}
-                        height={4}
+                        height={3.35}
                         onDrop={dropBead}
                         beads={board[p.x][p.y]}
                     />
@@ -56,6 +56,7 @@ export const Board = () => {
                                 position={[p.posX, zIndex * 0.8 + 0.5, p.posZ]} // 0.8 spacing, 0.5 initial offset
                                 color={player === 'white' ? theme.white : theme.black}
                                 player={player}
+                                isWinning={winningCells.includes(`${p.x}-${p.y}-${zIndex}`)}
                             />
                         ) : null
                     ))}
