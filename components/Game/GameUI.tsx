@@ -109,7 +109,7 @@ export const GameUI = () => {
                     {/* Mode Toggles */}
                     <div className="flex gap-2 mt-2">
                         <div className="glass-panel p-1 rounded-lg flex items-center">
-                            {['easy', 'medium', 'hard'].map((d) => (
+                            {(['easy', 'medium', 'hard'] as const).map((d) => (
                                 <button
                                     key={d}
                                     onClick={() => setDifficulty(d)}
