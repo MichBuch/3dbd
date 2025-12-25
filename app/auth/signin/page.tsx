@@ -10,7 +10,7 @@ export default function SignIn() {
 
     const handleEmailLogin = (e: React.FormEvent) => {
         e.preventDefault();
-        signIn("resend", { email, callbackUrl: "/" });
+        signIn("nodemailer", { email, callbackUrl: "/" });
     };
 
     return (
@@ -47,14 +47,16 @@ export default function SignIn() {
 
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginTop: '10px' }}>
                     <div style={{
-                        width: '48px', height: '48px', borderRadius: '50%',
+                        width: '80px', height: '80px', borderRadius: '50%',
                         background: 'linear-gradient(135deg, #00f3ff, #ff00ff)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        marginBottom: '16px', fontWeight: '900', color: 'white', fontSize: '20px',
-                        boxShadow: '0 0 20px rgba(0, 243, 255, 0.3)'
-                    }}>3d</div>
+                        marginBottom: '16px', fontWeight: '900', color: 'white', fontSize: '32px',
+                        boxShadow: '0 0 30px rgba(0, 243, 255, 0.4)'
+                    }}>3dBd</div>
                     <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>Welcome Back</h1>
-                    <p style={{ fontSize: '14px', color: '#888' }}>Sign in to 3dBd SaaS</p>
+                    <p style={{ fontSize: '14px', color: '#888' }}>
+                        Sign in or <Link href="/signup" style={{ color: '#00f3ff', textDecoration: 'none', fontWeight: 'bold' }}>Sign up</Link>
+                    </p>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
