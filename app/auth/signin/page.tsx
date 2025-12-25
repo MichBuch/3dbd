@@ -4,7 +4,6 @@ import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { ArrowLeft, Mail } from "lucide-react";
 import Link from "next/link";
-import { loadEnvConfig } from "@next/env";
 
 export default function SignIn() {
     const [email, setEmail] = useState("");
@@ -15,72 +14,120 @@ export default function SignIn() {
     };
 
     return (
-        <div className="min-h-screen bg-black text-white flex items-center justify-center p-4 relative overflow-hidden">
-            {/* Background Effects */}
-            <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(0,100,255,0.1),transparent_70%)]" />
-
-            <div className="glass-panel max-w-md w-full p-8 rounded-3xl border border-white/10 relative z-10">
-                <Link href="/" className="absolute top-6 left-6 text-white/50 hover:text-white transition-colors">
+        <div style={{
+            minHeight: '100vh',
+            backgroundColor: 'black',
+            backgroundImage: 'radial-gradient(ellipse at center, #1a1a1a 0%, #000000 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+            position: 'relative',
+            fontFamily: 'sans-serif'
+        }}>
+            {/* Main Card */}
+            <div style={{
+                width: '100%',
+                maxWidth: '400px',
+                backgroundColor: 'rgba(20, 20, 20, 0.8)',
+                backdropFilter: 'blur(20px)',
+                borderRadius: '24px',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                padding: '40px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '24px',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+                position: 'relative',
+                zIndex: 10
+            }}>
+                <Link href="/" style={{ position: 'absolute', top: '24px', left: '24px', color: 'rgba(255,255,255,0.5)', transition: 'color 0.2s' }}>
                     <ArrowLeft size={20} />
                 </Link>
 
-                <div className="text-center mb-10 mt-4">
-                    <h1 className="text-3xl font-black tracking-tighter mb-2">Welcome Back</h1>
-                    <p className="text-gray-400 text-sm">Sign in to track your victory</p>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginTop: '10px' }}>
+                    <div style={{
+                        width: '48px', height: '48px', borderRadius: '50%',
+                        background: 'linear-gradient(135deg, #00f3ff, #ff00ff)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        marginBottom: '16px', fontWeight: '900', color: 'white', fontSize: '20px',
+                        boxShadow: '0 0 20px rgba(0, 243, 255, 0.3)'
+                    }}>3d</div>
+                    <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>Welcome Back</h1>
+                    <p style={{ fontSize: '14px', color: '#888' }}>Sign in to 3dBd SaaS</p>
                 </div>
 
-                {/* Social Logins */}
-                <div className="space-y-3">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <button
                         onClick={() => signIn("google", { callbackUrl: "/" })}
-                        className="w-full py-3 rounded-xl bg-white text-black font-bold hover:bg-gray-200 transition-colors flex items-center justify-center gap-3"
+                        style={{
+                            width: '100%', height: '44px', borderRadius: '8px', border: 'none',
+                            backgroundColor: 'white', color: '#333', fontWeight: '600', fontSize: '14px',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer'
+                        }}
                     >
-                        <img src="https://authjs.dev/img/providers/google.svg" className="w-5 h-5" alt="Google" />
+                        <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.84z" fill="#FBBC05" />
+                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                        </svg>
                         Continue with Google
                     </button>
                     <button
                         onClick={() => signIn("github", { callbackUrl: "/" })}
-                        className="w-full py-3 rounded-xl bg-[#24292F] text-white font-bold hover:bg-[#24292F]/90 transition-colors flex items-center justify-center gap-3 border border-white/10"
+                        style={{
+                            width: '100%', height: '44px', borderRadius: '8px',
+                            backgroundColor: '#24292F', color: 'white', fontWeight: '600', fontSize: '14px',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer',
+                            border: '1px solid rgba(255,255,255,0.1)'
+                        }}
                     >
-                        <img src="https://authjs.dev/img/providers/github.svg" className="w-5 h-5 invert" alt="GitHub" />
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
+                        </svg>
                         Continue with GitHub
                     </button>
-                    {/* Facebook & X placeholders - keys needed to work */}
-                    <button
-                        onClick={() => signIn("facebook", { callbackUrl: "/" })}
-                        className="w-full py-3 rounded-xl bg-[#1877F2] text-white font-bold hover:bg-[#1877F2]/90 transition-colors flex items-center justify-center gap-3"
-                    >
-                        {/* SVG Icon would go here */}
-                        <span>Continue with Facebook</span>
-                    </button>
                 </div>
 
-                <div className="my-8 flex items-center gap-4">
-                    <div className="h-px bg-white/10 flex-1" />
-                    <span className="text-xs text-gray-500 font-bold uppercase">Or with Email</span>
-                    <div className="h-px bg-white/10 flex-1" />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
+                    <span style={{ fontSize: '10px', color: '#666', fontWeight: 'bold', textTransform: 'uppercase' }}>OR</span>
+                    <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
                 </div>
 
-                {/* Email Form */}
-                <form onSubmit={handleEmailLogin} className="space-y-4">
-                    <div className="relative">
-                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+                <form onSubmit={handleEmailLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div style={{ position: 'relative' }}>
+                        <Mail style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#666' }} size={16} />
                         <input
                             type="email"
-                            placeholder="name@example.com"
+                            placeholder="name@company.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full bg-black/50 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-neonBlue transition-colors"
+                            style={{
+                                width: '100%', height: '44px', backgroundColor: 'rgba(0,0,0,0.3)',
+                                border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px',
+                                paddingLeft: '40px', paddingRight: '16px', color: 'white', fontSize: '14px',
+                                outline: 'none'
+                            }}
                             required
                         />
                     </div>
                     <button
                         type="submit"
-                        className="w-full py-3 rounded-xl bg-gradient-to-r from-neonBlue to-neonPink text-black font-bold hover:scale-[1.02] transition-transform"
+                        style={{
+                            width: '100%', height: '44px', borderRadius: '8px', border: 'none',
+                            background: 'linear-gradient(90deg, #00f3ff, #0099ff)', color: 'black', fontWeight: 'bold',
+                            fontSize: '14px', cursor: 'pointer', boxShadow: '0 0 15px rgba(0, 243, 255, 0.2)'
+                        }}
                     >
                         Sign in with Email
                     </button>
                 </form>
+
+                <p style={{ textAlign: 'center', fontSize: '10px', color: '#666' }}>
+                    Protected by reCAPTCHA and subject to the Privacy Policy.
+                </p>
             </div>
         </div>
     );

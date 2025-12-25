@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Force reset for buttons to avoid default browser styles interfering */
+button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
 :root {
   --background: #000000;
   --foreground: #ffffff;

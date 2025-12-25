@@ -5,67 +5,159 @@ import Link from 'next/link';
 
 export default function Signup() {
     return (
-        <div className="min-h-screen bg-black text-white p-8 flex flex-col relative overflow-hidden">
-            {/* Background Decor */}
-            <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,rgba(0,243,255,0.1),transparent_50%)]" />
+        <div style={{
+            minHeight: '100vh',
+            backgroundColor: 'black',
+            color: 'white',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+            position: 'relative',
+            overflow: 'hidden'
+        }}>
+            {/* Background Gradient Fallback */}
+            <div style={{
+                position: 'absolute',
+                top: 0, left: 0, right: 0, bottom: 0,
+                background: 'radial-gradient(ellipse at center, #1a1a1a 0%, #000000 100%)',
+                zIndex: 0
+            }} />
 
-            <Link href="/" className="z-10 absolute top-6 left-6 flex items-center gap-2 text-white/50 hover:text-white transition-colors">
-                <ArrowLeft size={20} /> Back to Game
+            {/* Back Link */}
+            <Link href="/" style={{
+                position: 'absolute',
+                top: '20px',
+                left: '20px',
+                color: '#888',
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                zIndex: 20,
+                fontSize: '14px',
+                fontWeight: 'bold'
+            }}>
+                ← Back to Game
             </Link>
 
-            <div className="z-10 max-w-5xl mx-auto w-full mt-12">
-                <div className="text-center mb-16">
-                    <h1 className="text-6xl font-black mb-4 tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-neonBlue to-neonPink">
-                        LEVEL UP YOUR GAME
-                    </h1>
-                    <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-                        Create an account to track your stats, or go Premium to dominate the global leaderboards.
+            {/* Main Card Container */}
+            <div style={{
+                width: '100%',
+                maxWidth: '900px',
+                backgroundColor: 'rgba(20, 20, 20, 0.8)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '24px',
+                display: 'flex',
+                flexDirection: 'row',
+                overflow: 'hidden',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+                position: 'relative',
+                zIndex: 10,
+                // Make it stack on mobile
+                flexWrap: 'wrap'
+            }}>
+
+                {/* Left Column: Casual */}
+                <div style={{
+                    flex: '1',
+                    minWidth: '300px',
+                    padding: '48px',
+                    borderRight: '1px solid rgba(255, 255, 255, 0.05)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center'
+                }}>
+                    <h2 className="text-2xl font-bold mb-2 text-white">Casual Player</h2>
+                    <div className="text-4xl font-black mb-6 text-white/50">$0</div>
+
+                    <p className="text-gray-400 text-sm mb-8 leading-relaxed">
+                        Perfect for learning the ropes. Play against the AI and track your local progress.
                     </p>
+
+                    <ul className="space-y-4 mb-8 text-sm cursor-default">
+                        <li className="flex items-center gap-3 text-gray-300"><Check size={16} className="text-neonBlue" /> Play vs AI (Easy/Hard)</li>
+                        <li className="flex items-center gap-3 text-gray-300"><Check size={16} className="text-neonBlue" /> Local Stats</li>
+                    </ul>
+
+                    <button
+                        onClick={() => signIn()}
+                        style={{
+                            width: '100%',
+                            padding: '12px',
+                            backgroundColor: 'rgba(255,255,255,0.05)',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            borderRadius: '12px',
+                            color: 'white',
+                            fontWeight: 'bold',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                        }}
+                    >
+                        Create Free Account
+                    </button>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                    {/* Free Tier */}
-                    <div className="glass-panel p-8 rounded-3xl border-t border-white/10 hover:border-white/20 transition-all flex flex-col">
-                        <h2 className="text-2xl font-bold mb-2">Player Account</h2>
-                        <div className="text-4xl font-black mb-6">$0<span className="text-lg font-normal text-gray-500">/forever</span></div>
-
-                        <ul className="space-y-4 mb-8 flex-1">
-                            <li className="flex items-center gap-3 text-gray-300"><Check className="text-neonBlue" /> Play vs AI (Easy)</li>
-                            <li className="flex items-center gap-3 text-gray-300"><Check className="text-neonBlue" /> Save Local Stats</li>
-                            <li className="flex items-center gap-3 text-gray-300"><Check className="text-neonBlue" /> Customizable Themes</li>
-                        </ul>
-
-                        <button
-                            onClick={() => signIn()}
-                            className="w-full py-4 rounded-xl font-bold bg-white/5 hover:bg-white/10 border border-white/10 transition-all"
-                        >
-                            Create Free Account
-                        </button>
+                {/* Right Column: Premium */}
+                <div style={{
+                    flex: '1',
+                    minWidth: '300px',
+                    padding: '48px',
+                    background: 'linear-gradient(135deg, rgba(0, 243, 255, 0.05) 0%, rgba(200, 0, 255, 0.05) 100%)',
+                    position: 'relative',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center'
+                }}>
+                    <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        right: 0,
+                        backgroundColor: '#00f3ff',
+                        color: 'black',
+                        fontSize: '10px',
+                        fontWeight: '900',
+                        padding: '4px 12px',
+                        borderBottomLeftRadius: '12px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '1px'
+                    }}>
+                        Recommended
                     </div>
 
-                    {/* Premium Tier */}
-                    <div className="glass-panel p-8 rounded-3xl border border-neonBlue/30 relative flex flex-col overflow-hidden bg-neonBlue/5">
-                        <div className="absolute top-0 right-0 bg-neonBlue text-black text-xs font-bold px-3 py-1 rounded-bl-xl">POPULAR</div>
-
-                        <h2 className="text-2xl font-bold mb-2 text-neonBlue">Pro Competitor</h2>
-                        <div className="text-4xl font-black mb-6 flex items-baseline gap-1">
-                            $9.99<span className="text-lg font-normal text-gray-500">/year</span>
-                        </div>
-
-                        <ul className="space-y-4 mb-8 flex-1">
-                            <li className="flex items-center gap-3 text-white"><Check className="text-neonPink" /> Everything in Free</li>
-                            <li className="flex items-center gap-3 text-white"><Check className="text-neonPink" /> <b>Online Multiplayer</b></li>
-                            <li className="flex items-center gap-3 text-white"><Check className="text-neonPink" /> Global Leaderboards</li>
-                            <li className="flex items-center gap-3 text-white"><Check className="text-neonPink" /> Advanced AI (Hard Mode)</li>
-                        </ul>
-
-                        <button
-                            onClick={() => signIn(undefined, { callbackUrl: '/?upgrade=true' })}
-                            className="w-full py-4 rounded-xl font-bold bg-gradient-to-r from-neonBlue to-neonPink text-black hover:scale-105 transition-transform shadow-[0_0_20px_rgba(0,243,255,0.3)]"
-                        >
-                            Get Premium
-                        </button>
+                    <h2 className="text-2xl font-bold mb-2 text-white">Pro Competitor</h2>
+                    <div className="text-4xl font-black mb-6 text-white">
+                        $9.99 <span style={{ fontSize: '14px', fontWeight: 'normal', color: '#666' }}>/year</span>
                     </div>
+
+                    <p className="text-gray-400 text-sm mb-8 leading-relaxed">
+                        Unlock the full SaaS experience. Challenge real players worldwide and climb the ranks.
+                    </p>
+
+                    <ul className="space-y-4 mb-8 text-sm cursor-default">
+                        <li className="flex items-center gap-3 text-white"><Check size={16} className="text-neonPink" /> <b>Online Multiplayer</b></li>
+                        <li className="flex items-center gap-3 text-white"><Check size={16} className="text-neonPink" /> Global Leaderboards</li>
+                        <li className="flex items-center gap-3 text-white"><Check size={16} className="text-neonPink" /> Priority Support</li>
+                    </ul>
+
+                    <button
+                        onClick={() => signIn(undefined, { callbackUrl: '/?upgrade=true' })}
+                        style={{
+                            width: '100%',
+                            padding: '12px',
+                            background: 'linear-gradient(90deg, #00f3ff, #ff00ff)',
+                            border: 'none',
+                            borderRadius: '12px',
+                            color: 'black',
+                            fontWeight: 'bold',
+                            cursor: 'pointer',
+                            boxShadow: '0 0 20px rgba(0, 243, 255, 0.3)',
+                            marginTop: 'auto'
+                        }}
+                    >
+                        Upgrade Now
+                    </button>
                 </div>
             </div>
         </div>

@@ -24,6 +24,7 @@
     "lucide-react": "^0.562.0",
     "next": "latest",
     "next-auth": "^5.0.0-beta.30",
+    "nodemailer": "^7.0.12",
     "react": "latest",
     "react-dom": "latest",
     "stripe": "^20.1.0",

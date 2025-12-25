@@ -111,7 +111,7 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
             winner: null,
             moveHistory: [],
             isAiEnabled: true,
-            difficulty: 'medium',
+            difficulty: 'hard',
             scores: { white: 0, black: 0 },
             // Xmas Default: Red (White Player) & Green (Black Player)
             theme: { base: '#222222', white: '#ff0000', black: '#00ff00' },
@@ -167,10 +167,10 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
             },
 
             makeAiMove: () => {
-                const { board, dropBead, winner, difficulty } = get();
+                const { board, dropBead, winner, difficulty, scores } = get();
                 if (winner) return;
 
-                let validMoves = [];
+                let validMoves: { x: number, y: number }[] = [];
                 for (let x = 0; x < 4; x++) {
                     for (let y = 0; y < 4; y++) {
                         if (board[x][y].some(cell => cell === null)) {
@@ -179,23 +179,57 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
                     }
                 }
 
-                if (validMoves.length > 0) {
-                    // Hard: 20% randomness (mostly tactical - blocking logic implied but random for MVP + bias)
-                    // Medium: 50% randomness
-                    // Easy: 100% randomness
+                if (validMoves.length === 0) return;
 
-                    // For now, MVP implementation of difficulty is purely chance-based "Best Move" stub
-                    // In a real Minimax, we'd limit depth based on difficulty.
-                    // Here we just pick random for now as placeholder for "AI Logic"
-                    const move = validMoves[Math.floor(Math.random() * validMoves.length)];
-                    get().dropBead(move.x, move.y);
+                // Strategy:
+                // 1. Check if any move gives me a point (Win)
+                // 2. Check if any move blocks opponent from getting a point (Block)
+                // 3. Random fallback
+
+                let bestMove = validMoves[Math.floor(Math.random() * validMoves.length)];
+
+                // On Hard/Medium, try to find better moves
+                if (difficulty === 'medium' || difficulty === 'hard') {
+                    // 1. Try to Score
+                    for (const move of validMoves) {
+                        const newBoard = JSON.parse(JSON.stringify(board));
+                        const col = newBoard[move.x][move.y];
+                        const z = col.findIndex((val: Player | null) => val === null);
+                        newBoard[move.x][move.y][z] = 'black'; // AI
+
+                        const newScores = calculateScores(newBoard);
+                        if (newScores.black > scores.black) {
+                            bestMove = move;
+                            get().dropBead(bestMove.x, bestMove.y);
+                            return;
+                        }
+                    }
+                    // 2. Try to Block (Only Hard)
+                    if (difficulty === 'hard') {
+                        for (const move of validMoves) {
+                            const newBoard = JSON.parse(JSON.stringify(board));
+                            const col = newBoard[move.x][move.y];
+                            const z = col.findIndex((val: Player | null) => val === null);
+                            newBoard[move.x][move.y][z] = 'white'; // Opponent
+
+                            const newScores = calculateScores(newBoard);
+                            if (newScores.white > scores.white) {
+                                bestMove = move;
+                                get().dropBead(bestMove.x, bestMove.y);
+                                return;
+                            }
+                        }
+                    }
                 }
+
+                // Execute
+                get().dropBead(bestMove.x, bestMove.y);
             },
 
             checkWin: () => null
         }),
         {
-            name: '3dbd-storage',
+            name: '3dbd-storage-v2', // New key to force reset and valid defaults
             partialize: (state) => ({ theme: state.theme, isAiEnabled: state.isAiEnabled, difficulty: state.difficulty }),
         }
     )

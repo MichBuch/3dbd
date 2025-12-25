@@ -40,126 +40,93 @@ export const GameUI = () => {
 
     return (
         <>
-            {/* Top Bar (Glass) */}
-            <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-start pointer-events-none z-10">
+            {/* 1. BRAND / TURN INDICATOR (Fixed Top-Left) */}
+            <div style={{ position: 'fixed', top: '24px', left: '24px', zIndex: 50, pointerEvents: 'none' }}>
+                <div className="pointer-events-auto glass-panel px-6 py-3 rounded-2xl flex items-center justify-center gap-4 min-w-[200px]" style={{ border: 'none' }}>
+                    {/* Kept 3dBd for branding but centered contents */}
+                    <h1 className="text-xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-neonBlue to-neonPink drop-shadow-sm">
+                        3dBd
+                    </h1>
+                    <div className="h-6 w-px bg-white/10" />
+                    <div className="flex items-center gap-2 justify-center">
+                        <div className={`w-3 h-3 rounded-full shadow-[0_0_10px_currentColor] transition-colors duration-500 ${currentPlayer === 'white' ? 'bg-[red] shadow-[0_0_10px_red]' : 'bg-[green] shadow-[0_0_10px_green]'}`} />
+                        <span className="text-sm font-bold text-white/90 text-center">
+                            {currentPlayer === 'white' ? "Player 1's Turn" : "Player 2's Turn"}
+                        </span>
+                    </div>
+                </div>
+            </div>
 
-                {/* Left: Brand & Status */}
-                <div className="pointer-events-auto flex flex-col gap-4">
-                    <div className="glass-panel px-6 py-3 rounded-2xl flex items-center gap-4">
-                        <h1 className="text-2xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-neonBlue to-neonPink drop-shadow-sm">
-                            3dBd
-                        </h1>
-                        <div className="h-6 w-px bg-white/10" />
-                        <div className="flex items-center gap-2">
-                            <div className={`w-3 h-3 rounded-full shadow-[0_0_10px_currentColor] transition-colors duration-500 ${currentPlayer === 'white' ? 'bg-[red] shadow-[0_0_10px_red]' : 'bg-[green] shadow-[0_0_10px_green]'}`} />
-                            <span className="text-sm font-bold text-white/90">
-                                {currentPlayer === 'white' ? "Red's Turn" : "Green's Turn"}
-                            </span>
-                        </div>
+            {/* 2. SCORE BOARD (Fixed Top-Center) */}
+            <div style={{ position: 'fixed', top: '24px', left: '50%', transform: 'translateX(-50%)', zIndex: 50, pointerEvents: 'none' }}>
+                {/* Score Widget */}
+                <div className="glass-panel p-4 rounded-2xl flex gap-12 min-w-[350px] justify-center relative overflow-hidden items-center" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', gap: '40px' }}>
+                    <div className="flex flex-col items-center flex-1">
+                        <span className="text-2xl font-black text-white tracking-tight mb-1 whitespace-nowrap drop-shadow-md">Player 1</span>
+                        <span className="text-4xl font-mono font-black text-red-500 drop-shadow-[0_0_15px_rgba(255,0,0,0.5)] flex items-center gap-3">
+                            {scores.white}
+                        </span>
                     </div>
 
-                    {/* Score Widget */}
-                    <div className="glass-panel p-4 rounded-2xl flex gap-6 min-w-[200px] justify-center relative overflow-hidden">
-                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-white via-transparent to-gray-900 opacity-50" />
-                        <div className="flex flex-col items-center">
-                            <span className="text-[10px] uppercase font-bold text-white/50 tracking-widest mb-1">Red</span>
-                            <span className="text-3xl font-mono font-black text-white drop-shadow-[0_0_15px_rgba(255,0,0,0.5)]">
-                                {scores.white}
-                            </span>
-                        </div>
-                        <div className="w-px bg-white/10" />
-                        <div className="flex flex-col items-center">
-                            <span className="text-[10px] uppercase font-bold text-white/50 tracking-widest mb-1">Green</span>
-                            <span className="text-3xl font-mono font-black text-white drop-shadow-[0_0_15px_rgba(0,255,0,0.5)]">
-                                {scores.black}
-                            </span>
-                        </div>
+                    <div className="h-12 w-px bg-white/10" />
+
+                    <div className="flex flex-col items-center flex-1">
+                        <span className="text-2xl font-black text-white tracking-tight mb-1 whitespace-nowrap drop-shadow-md">Player 2</span>
+                        <span className="text-4xl font-mono font-black text-green-500 drop-shadow-[0_0_15px_rgba(0,255,0,0.5)] flex items-center gap-3">
+                            {scores.black}
+                        </span>
                     </div>
                 </div>
 
-                {/* Right: Auth & Leaderboard Placeholder */}
-                <div className="pointer-events-auto flex flex-col gap-2 items-end">
-                    {session ? (
-                        <div className="glass-panel px-4 py-2 rounded-xl flex items-center gap-3">
-                            {session.user?.image ? (
-                                <img src={session.user.image} alt="User" className="w-8 h-8 rounded-full border border-neonBlue shadow-[0_0_10px_#00f3ff]" />
-                            ) : (
-                                <div className="w-8 h-8 rounded-full bg-neonBlue/20 flex items-center justify-center border border-neonBlue text-neonBlue">
-                                    <User size={16} />
-                                </div>
-                            )}
-                            <div className="flex flex-col items-end leading-none">
-                                <span className="text-sm font-bold text-white">{session.user?.name || 'Player'}</span>
-                                {/* @ts-ignore */}
-                                <span className="text-[10px] text-neonPink font-bold uppercase tracking-wider">{session.user?.plan === 'premium' ? 'PREMIUM' : 'FREE'}</span>
-                            </div>
-                            <button onClick={() => signOut()} className="ml-2 hover:bg-white/10 p-2 rounded-lg transition-colors">
-                                <LogOut size={16} className="text-white/50" />
-                            </button>
-                        </div>
-                    ) : (
-                        <Link href="/signup">
-                            <button className="glass-panel px-6 py-2 rounded-xl text-sm font-bold hover:bg-neonBlue/20 hover:border-neonBlue transition-all duration-300 flex items-center gap-2 group cursor-pointer">
-                                <User size={16} className="group-hover:text-neonBlue transition-colors" />
-                                Login / Sign Up
-                            </button>
-                        </Link>
-                    )}
+                {/* Game Controls (VS AI & Settings) - Moved from Right Panel */}
+                <div className="flex gap-2 justify-center">
+                    <button
+                        onClick={() => setAiEnabled(!isAiEnabled)}
+                        style={{ border: '1px solid rgba(255,255,255,0.1)' }}
+                        className={`glass-panel px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${isAiEnabled ? 'bg-neonBlue/10 border-neonBlue text-neonBlue' : 'text-white/70 hover:text-white'}`}
+                    >
+                        {isAiEnabled ? <Cpu size={16} /> : <Users size={16} />}
+                        {isAiEnabled ? 'VS AI' : 'PVP'}
+                    </button>
 
-                    {/* Mode Toggles */}
-                    <div className="flex gap-2 mt-2">
-                        <div className="glass-panel p-1 rounded-lg flex items-center">
-                            {(['easy', 'medium', 'hard'] as const).map((d) => (
-                                <button
-                                    key={d}
-                                    onClick={() => setDifficulty(d)}
-                                    className={`px-3 py-1 text-[10px] uppercase font-bold rounded-md transition-all ${difficulty === d ? 'bg-white/20 text-white' : 'text-gray-500 hover:text-gray-300'}`}
-                                >
-                                    {d}
-                                </button>
-                            ))}
-                        </div>
+                    <button
+                        onClick={() => setShowSettings(!showSettings)}
+                        className={`glass-panel p-2 rounded-xl transition-all border border-white/10 text-white${showSettings ? ' bg-white/10' : ' hover:text-white'}`}
+                    >
+                        <Settings size={20} />
+                    </button>
+                </div>
+            </div>
 
-                        <button
-                            onClick={() => setAiEnabled(!isAiEnabled)}
-                            className={`glass-panel px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${isAiEnabled ? 'bg-neonBlue/10 border-neonBlue text-neonBlue' : 'text-white/70 hover:text-white'}`}
-                        >
-                            {isAiEnabled ? <Cpu size={14} /> : <Users size={14} />}
-                            {isAiEnabled ? 'VS AI' : 'PVP'}
-                        </button>
+            {/* 3. RIGHT PANEL (Fixed Top-Right) */}
+            <div style={{ position: 'fixed', top: '24px', right: '24px', zIndex: 50, pointerEvents: 'none', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px' }}>
 
-                        <button
-                            onClick={() => setShowSettings(!showSettings)}
-                            className={`glass-panel p-2 rounded-lg transition-all ${showSettings ? 'bg-white/10' : 'text-white/70 hover:text-white'}`}
-                        >
-                            <Settings size={16} />
-                        </button>
-                    </div>
+                {/* Wrapper for Leaderboard + Login to enforce Center Alignment relative to each other */}
+                <div className="flex flex-col items-center gap-3">
 
-                    {/* Fake Leaderboard with Margins */}
-                    <div className="glass-panel p-5 rounded-xl mt-4 w-64 opacity-90 transition-opacity">
-                        <div className="flex items-center gap-2 mb-4 text-neonPink text-xs font-bold uppercase tracking-widest border-b border-white/10 pb-2">
+                    {/* Leaderboard */}
+                    <div className="pointer-events-auto glass-panel p-4 rounded-xl w-60 opacity-90 transition-opacity border border-white/10 bg-black/80">
+                        <div className="flex items-center gap-2 mb-3 text-neonPink text-[10px] font-bold uppercase tracking-widest border-b border-white/10 pb-2">
                             <Trophy size={14} /> Top Players
                         </div>
                         <ul className="space-y-3">
                             {[
                                 { name: "MainBoss", score: 1450 },
                                 { name: "NeonKing", score: 1200 },
-                                { name: "BeadMaster", score: 980 }
+                                { name: "BeadMstr", score: 980 }
                             ].map((p, i) => (
-                                <li key={i} className="flex justify-between text-xs items-center">
-                                    <span className="text-white/80 flex items-center gap-2">
+                                <li key={i} className="flex justify-between text-xs items-center w-full">
+                                    <span className="text-white/80 flex items-center gap-2 flex-1">
                                         <span className="text-gray-500 font-mono w-4">{i + 1}.</span>
                                         {p.name}
                                     </span>
-                                    <span className="font-mono text-neonBlue bg-neonBlue/10 px-2 py-0.5 rounded ml-4">{p.score}</span>
+                                    <span style={{ marginLeft: '16px' }} className="font-mono text-neonBlue bg-neonBlue/10 px-2 py-0.5 rounded min-w-[50px] text-center">{p.score}</span>
                                 </li>
                             ))}
                         </ul>
                         {/* @ts-ignore */}
                         {session?.user?.plan !== 'premium' && (
                             <div className="mt-4 pt-4 border-t border-white/10 text-center">
-                                <p className="text-[10px] text-gray-400 mb-2">Want to compete?</p>
                                 <button
                                     onClick={handleUpgrade}
                                     className="w-full bg-gradient-to-r from-neonBlue to-neonPink text-black font-bold py-2 rounded-lg text-xs hover:scale-105 transition-transform"
@@ -168,6 +135,66 @@ export const GameUI = () => {
                                 </button>
                             </div>
                         )}
+                    </div>
+
+                    {/* Login / Auth */}
+                    <div className="pointer-events-auto w-full flex justify-center">
+                        {session ? (
+                            <div className="glass-panel px-4 py-2 rounded-xl flex items-center gap-3 w-60 justify-between">
+                                <div className="flex items-center gap-3">
+                                    {session.user?.image ? (
+                                        <img src={session.user.image} alt="User" className="w-8 h-8 rounded-full border border-neonBlue shadow-[0_0_10px_#00f3ff]" />
+                                    ) : (
+                                        <div className="w-8 h-8 rounded-full bg-neonBlue/20 flex items-center justify-center border border-neonBlue text-neonBlue">
+                                            <User size={16} />
+                                        </div>
+                                    )}
+                                    <div className="flex flex-col items-start leading-none text-left">
+                                        <span className="text-sm font-bold text-white max-w-[80px] truncate">{session.user?.name || 'Player'}</span>
+                                        {/* @ts-ignore */}
+                                        <span className="text-[10px] text-neonPink font-bold uppercase tracking-wider">{session.user?.plan === 'premium' ? 'PREMIUM' : 'FREE'}</span>
+                                    </div>
+                                </div>
+                                <button onClick={() => signOut()} className="hover:bg-white/10 p-2 rounded-lg transition-colors border-0">
+                                    <LogOut size={16} className="text-white/50" />
+                                </button>
+                            </div>
+                        ) : (
+                            <Link href="/auth/signin" className="no-underline block w-full">
+                                <button
+                                    style={{ background: 'rgba(0, 243, 255, 0.1)', border: '1px solid rgba(255,255,255,0.2)', color: 'white' }}
+                                    className="w-60 px-8 py-3 rounded-xl text-base font-black hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3 group cursor-pointer shadow-[0_0_20px_rgba(0,243,255,0.2)] mx-auto"
+                                >
+                                    <User size={20} color="white" />
+                                    Login
+                                </button>
+                            </Link>
+                        )}
+                    </div>
+
+                    {/* Divider */}
+                    <div className="w-full h-px bg-white/10 my-2" />
+
+                    {/* Difficulty Selector */}
+                    <div className="pointer-events-auto flex justify-center w-60">
+                        {/* Difficulty Selector */}
+                        <div className="glass-panel p-2 rounded-lg flex items-center border border-white/10 bg-black/50 justify-center flex-1">
+                            {(['easy', 'medium', 'hard'] as const).map((d) => (
+                                <button
+                                    key={d}
+                                    onClick={() => setDifficulty(d)}
+                                    style={{
+                                        border: 'none',
+                                        background: difficulty === d ? 'rgba(255,255,255,0.2)' : 'transparent',
+                                        color: difficulty === d ? 'white' : '#888',
+                                        margin: '0 4px'
+                                    }}
+                                    className={`px-2 py-2 text-[10px] uppercase font-bold rounded-md transition-all cursor-pointer`}
+                                >
+                                    {d}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -195,7 +222,6 @@ export const GameUI = () => {
             {/* Settings Components */}
             {showSettings && (
                 <div className="absolute bottom-4 right-4 w-60 glass-panel p-4 rounded-xl pointer-events-auto z-10">
-                    {/* ... Settings ... */}
                     <p className="text-white text-xs">Settings Placeholder</p>
                 </div>
             )}
