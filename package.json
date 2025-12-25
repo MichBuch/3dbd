@@ -8,27 +8,43 @@
     "start": "next start",
     "lint": "next lint",
     "electron:dev": "electron .",
-    "electron:build": "next build && electron-builder"
+    "electron:build": "next build && electron-builder",
+    "db:push": "drizzle-kit push"
   },
   "dependencies": {
-    "next": "latest",
-    "react": "latest",
-    "react-dom": "latest",
+    "@auth/drizzle-adapter": "^1.11.1",
+    "@neondatabase/serverless": "^1.0.2",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.4.2",
     "@types/three": "^0.182.0",
+    "clsx": "^2.1.1",
+    "drizzle-orm": "^0.45.1",
+    "framer-motion": "^12.23.26",
     "leva": "^0.10.1",
+    "lucide-react": "^0.562.0",
+    "next": "latest",
+    "next-auth": "^5.0.0-beta.30",
+    "react": "latest",
+    "react-dom": "latest",
+    "stripe": "^20.1.0",
+    "tailwind-merge": "^3.4.0",
     "three": "^0.182.0",
     "zustand": "^5.0.9"
   },
   "devDependencies": {
+    "@capacitor/cli": "^6.0.0",
+    "@capacitor/core": "^6.0.0",
+    "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "typescript": "^5",
-    "@capacitor/cli": "^6.0.0",
-    "@capacitor/core": "^6.0.0",
+    "autoprefixer": "^10.4.23",
+    "dotenv": "^17.2.3",
+    "drizzle-kit": "^0.31.8",
     "electron": "^28.0.0",
-    "electron-builder": "^24.0.0"
+    "electron-builder": "^24.0.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.18",
+    "typescript": "^5"
   }
 }

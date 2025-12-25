@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { Providers } from './providers';
+
 
 export const metadata: Metadata = {
     title: '3dBd - 3D Board Game',
@@ -13,7 +15,12 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en">
-            <body>{children}</body>
+            <body className="bg-black text-white antialiased overflow-hidden selection:bg-neonPink selection:text-white">
+                <Providers>
+                    {children}
+                </Providers>
+            </body>
+
         </html>
     );
 }
