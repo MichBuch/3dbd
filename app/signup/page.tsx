@@ -44,7 +44,7 @@ export default function Signup() {
             {/* Main Card Container */}
             <div style={{
                 width: '100%',
-                maxWidth: '900px',
+                maxWidth: '800px',
                 backgroundColor: 'rgba(20, 20, 20, 0.8)',
                 backdropFilter: 'blur(20px)',
                 border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -55,55 +55,58 @@ export default function Signup() {
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
                 position: 'relative',
                 zIndex: 10,
-                // Make it stack on mobile
                 flexWrap: 'wrap'
             }}>
 
                 {/* Left Column: Casual */}
                 <div style={{
                     flex: '1',
-                    minWidth: '300px',
-                    padding: '48px',
+                    minWidth: '280px',
+                    padding: '32px',
                     borderRight: '1px solid rgba(255, 255, 255, 0.05)',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'center'
                 }}>
-                    <h2 className="text-2xl font-bold mb-2 text-white">Casual Player</h2>
-                    <div className="text-4xl font-black mb-6 text-white/50">$0</div>
+                    <h2 className="text-xl font-bold mb-2 text-white">Casual Player</h2>
+                    <div className="text-3xl font-black mb-4 text-white/50">$0</div>
 
-                    <p className="text-gray-400 text-sm mb-8 leading-relaxed">
+                    <p className="text-gray-400 text-xs mb-6 leading-relaxed">
                         Perfect for learning the ropes. Play against the AI and track your local progress.
                     </p>
 
-                    <ul className="space-y-4 mb-8 text-sm cursor-default">
-                        <li className="flex items-center gap-3 text-gray-300"><Check size={16} className="text-neonBlue" /> Play vs AI (Easy/Hard)</li>
-                        <li className="flex items-center gap-3 text-gray-300"><Check size={16} className="text-neonBlue" /> Local Stats</li>
+                    <ul className="space-y-3 mb-6 text-xs cursor-default">
+                        <li className="flex items-center gap-2 text-gray-300"><Check size={14} className="text-neonBlue" /> Play vs AI (Easy/Hard)</li>
+                        <li className="flex items-center gap-2 text-gray-300"><Check size={14} className="text-neonBlue" /> Local Stats</li>
                     </ul>
 
-                    <button
-                        onClick={() => signIn()}
+                    <Link
+                        href="/auth/signin?mode=signup"
                         style={{
+                            display: 'block',
                             width: '100%',
-                            padding: '12px',
+                            padding: '10px',
                             backgroundColor: 'rgba(255,255,255,0.05)',
                             border: '1px solid rgba(255,255,255,0.1)',
                             borderRadius: '12px',
                             color: 'white',
                             fontWeight: 'bold',
                             cursor: 'pointer',
+                            textAlign: 'center',
+                            textDecoration: 'none',
+                            fontSize: '14px',
                             transition: 'all 0.2s'
                         }}
                     >
                         Create Free Account
-                    </button>
+                    </Link>
                 </div>
 
                 {/* Right Column: Premium */}
                 <div style={{
                     flex: '1',
-                    minWidth: '300px',
-                    padding: '48px',
+                    minWidth: '280px',
+                    padding: '32px',
                     background: 'linear-gradient(135deg, rgba(0, 243, 255, 0.05) 0%, rgba(200, 0, 255, 0.05) 100%)',
                     position: 'relative',
                     display: 'flex',
@@ -116,9 +119,9 @@ export default function Signup() {
                         right: 0,
                         backgroundColor: '#00f3ff',
                         color: 'black',
-                        fontSize: '10px',
+                        fontSize: '9px',
                         fontWeight: '900',
-                        padding: '4px 12px',
+                        padding: '4px 10px',
                         borderBottomLeftRadius: '12px',
                         textTransform: 'uppercase',
                         letterSpacing: '1px'
@@ -126,32 +129,33 @@ export default function Signup() {
                         Recommended
                     </div>
 
-                    <h2 className="text-2xl font-bold mb-2 text-white">Pro Competitor</h2>
-                    <div className="text-4xl font-black mb-6 text-white">
-                        $9.99 <span style={{ fontSize: '14px', fontWeight: 'normal', color: '#666' }}>/year</span>
+                    <h2 className="text-xl font-bold mb-2 text-white">Pro Competitor</h2>
+                    <div className="text-3xl font-black mb-4 text-white">
+                        $9.99 <span style={{ fontSize: '12px', fontWeight: 'normal', color: '#666' }}>/year</span>
                     </div>
 
-                    <p className="text-gray-400 text-sm mb-8 leading-relaxed">
+                    <p className="text-gray-400 text-xs mb-6 leading-relaxed">
                         Unlock the full SaaS experience. Challenge real players worldwide and climb the ranks.
                     </p>
 
-                    <ul className="space-y-4 mb-8 text-sm cursor-default">
-                        <li className="flex items-center gap-3 text-white"><Check size={16} className="text-neonPink" /> <b>Online Multiplayer</b></li>
-                        <li className="flex items-center gap-3 text-white"><Check size={16} className="text-neonPink" /> Global Leaderboards</li>
-                        <li className="flex items-center gap-3 text-white"><Check size={16} className="text-neonPink" /> Priority Support</li>
+                    <ul className="space-y-3 mb-6 text-xs cursor-default">
+                        <li className="flex items-center gap-2 text-white"><Check size={14} className="text-neonPink" /> <b>Online Multiplayer</b></li>
+                        <li className="flex items-center gap-2 text-white"><Check size={14} className="text-neonPink" /> Global Leaderboards</li>
+                        <li className="flex items-center gap-2 text-white"><Check size={14} className="text-neonPink" /> Priority Support</li>
                     </ul>
 
                     <button
                         onClick={() => signIn(undefined, { callbackUrl: '/?upgrade=true' })}
                         style={{
                             width: '100%',
-                            padding: '12px',
+                            padding: '10px',
                             background: 'linear-gradient(90deg, #00f3ff, #ff00ff)',
                             border: 'none',
                             borderRadius: '12px',
                             color: 'black',
                             fontWeight: 'bold',
                             cursor: 'pointer',
+                            fontSize: '14px',
                             boxShadow: '0 0 20px rgba(0, 243, 255, 0.3)',
                             marginTop: 'auto'
                         }}
