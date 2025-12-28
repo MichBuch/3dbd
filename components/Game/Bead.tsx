@@ -9,13 +9,13 @@ interface BeadProps {
     color: string;
     player: Player;
     isWinning?: boolean;
+    scale?: number;
 }
 
-export const Bead = ({ position, color, player, isWinning = false }: BeadProps) => {
+export const Bead = ({ position, color, player, isWinning = false, scale = 1 }: BeadProps) => {
     const meshRef = useRef<Mesh>(null);
     const targetY = position[1];
     const startY = targetY + 10; // Drop from height
-    // We use a ref to track if we've initialized the position
     const initialized = useRef(false);
 
     useFrame((state, delta) => {
@@ -27,8 +27,6 @@ export const Bead = ({ position, color, player, isWinning = false }: BeadProps) 
         }
 
         // Lerp to target
-        // Simple easing: move 10% of the distance per frame (adjusted for delta for some frame independence)
-        // For physics feel, we can just lerp.
         const currentY = meshRef.current.position.y;
         if (Math.abs(currentY - targetY) > 0.01) {
             meshRef.current.position.y = THREE.MathUtils.lerp(currentY, targetY, 10 * delta);
@@ -37,15 +35,22 @@ export const Bead = ({ position, color, player, isWinning = false }: BeadProps) 
         }
     });
 
+    const beadRadius = 0.35 * scale;
+
+    // Darken non-winning beads by 10%, brighten winning beads by 20%
+    const adjustedColor = isWinning
+        ? new THREE.Color(color).multiplyScalar(1.2) // 20% brighter
+        : new THREE.Color(color).multiplyScalar(0.9); // 10% darker
+
     return (
         <mesh ref={meshRef} position={position} castShadow receiveShadow>
-            <sphereGeometry args={[0.35, 32, 32]} />
+            <sphereGeometry args={[beadRadius, 32, 32]} />
             <meshStandardMaterial
-                color={color}
-                roughness={isWinning ? 0.2 : 0.1}
-                metalness={isWinning ? 0.8 : 0.5}
+                color={adjustedColor}
+                roughness={isWinning ? 0.1 : 0.3}
+                metalness={isWinning ? 0.9 : 0.4}
                 emissive={isWinning ? color : undefined}
-                emissiveIntensity={isWinning ? 0.5 : 0}
+                emissiveIntensity={isWinning ? 0.8 : 0}
             />
         </mesh>
     );

@@ -10,6 +10,13 @@ interface Theme {
     black: string;
 }
 
+interface UserPreferences {
+    showScoreboard: boolean;
+    showLeaderboard: boolean;
+    showTurnIndicator: boolean;
+    boardScale: number;
+}
+
 interface GameState {
     board: BoardState;
     currentPlayer: Player;
@@ -19,6 +26,7 @@ interface GameState {
     scores: { white: number; black: number };
     winningCells: string[]; // "x-y-z"
     theme: Theme;
+    preferences: UserPreferences;
 
     // Actions
     resetGame: () => void;
@@ -27,6 +35,8 @@ interface GameState {
     setAiEnabled: (enabled: boolean) => void;
     makeAiMove: () => void;
     setTheme: (theme: Partial<Theme>) => void;
+    setPreference: <K extends keyof UserPreferences>(key: K, value: UserPreferences[K]) => void;
+    resetPreferences: () => void;
 }
 
 const calculateScores = (board: BoardState): { white: number, black: number, winningCells: string[] } => {
@@ -124,6 +134,12 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
             winningCells: [],
             // Xmas Default: Red (White Player) & Green (Black Player)
             theme: { base: '#222222', white: '#ff0000', black: '#00ff00' },
+            preferences: {
+                showScoreboard: true,
+                showLeaderboard: true,
+                showTurnIndicator: true,
+                boardScale: 1.0,
+            },
 
             resetGame: () => set({
                 board: Array(4).fill(null).map(() => Array(4).fill(null).map(() => Array(4).fill(null))),
@@ -137,6 +153,19 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
             setAiEnabled: (enabled) => set({ isAiEnabled: enabled }),
             setDifficulty: (d) => set({ difficulty: d }),
             setTheme: (newTheme) => set((state) => ({ theme: { ...state.theme, ...newTheme } })),
+
+            setPreference: (key, value) => set((state) => ({
+                preferences: { ...state.preferences, [key]: value }
+            })),
+
+            resetPreferences: () => set({
+                preferences: {
+                    showScoreboard: true,
+                    showLeaderboard: true,
+                    showTurnIndicator: true,
+                    boardScale: 1.0,
+                }
+            }),
 
             dropBead: (x, y) => {
                 const { board, currentPlayer, winner, isAiEnabled, moveHistory } = get();
@@ -236,8 +265,13 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
             checkWin: () => null
         }),
         {
-            name: '3dbd-storage-v2', // New key to force reset and valid defaults
-            partialize: (state) => ({ theme: state.theme, isAiEnabled: state.isAiEnabled, difficulty: state.difficulty }),
+            name: '3dbd-storage-v3', // Updated version to include preferences
+            partialize: (state) => ({
+                theme: state.theme,
+                isAiEnabled: state.isAiEnabled,
+                difficulty: state.difficulty,
+                preferences: state.preferences
+            }),
         }
     )
 );

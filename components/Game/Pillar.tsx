@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Player } from '@/store/gameStore';
+import { Player, useGameStore } from '@/store/gameStore';
 
 interface PillarProps {
     x: number;
@@ -12,6 +12,10 @@ interface PillarProps {
 
 export const Pillar = ({ x, y, position, height, onDrop, beads }: PillarProps) => {
     const [hovered, setHovered] = useState(false);
+    const { preferences } = useGameStore();
+
+    const pillarRadius = 0.1 * preferences.boardScale;
+    const baseRadius = 0.4 * preferences.boardScale;
 
     return (
         <group position={position}>
@@ -25,13 +29,13 @@ export const Pillar = ({ x, y, position, height, onDrop, beads }: PillarProps) =
                 onPointerOver={() => setHovered(true)}
                 onPointerOut={() => setHovered(false)}
             >
-                <cylinderGeometry args={[0.1, 0.1, height, 16]} />
+                <cylinderGeometry args={[pillarRadius, pillarRadius, height, 16]} />
                 <meshStandardMaterial color={hovered ? "#66aaff" : "#888888"} />
             </mesh>
 
             {/* Base of Pillar (optional visual) */}
             <mesh position={[0, 0, 0]}>
-                <cylinderGeometry args={[0.4, 0.4, 0.2, 32]} />
+                <cylinderGeometry args={[baseRadius, baseRadius, 0.2, 32]} />
                 <meshStandardMaterial color="#444" />
             </mesh>
         </group>

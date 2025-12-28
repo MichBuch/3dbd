@@ -5,8 +5,17 @@ import { OrbitControls, PerspectiveCamera, Environment } from '@react-three/drei
 import { Board } from '@/components/Game/Board';
 import { GameUI } from '@/components/Game/GameUI';
 import { Header } from '@/components/Layout/Header';
+import { useGameStore } from '@/store/gameStore';
 
 export default function Home() {
+    const { preferences } = useGameStore();
+
+    // Adjust camera distance based on board scale
+    const baseCameraDistance = 12;
+    const cameraZ = baseCameraDistance / preferences.boardScale;
+    const minDistance = 5 / preferences.boardScale;
+    const maxDistance = 20 / preferences.boardScale;
+
     return (
         <>
             <Header />
@@ -14,12 +23,12 @@ export default function Home() {
                 <GameUI />
 
                 <Canvas shadows>
-                    <PerspectiveCamera makeDefault position={[0, 8, 12]} fov={45} />
+                    <PerspectiveCamera makeDefault position={[0, 8, cameraZ]} fov={45} />
                     <OrbitControls
                         enablePan={false}
                         maxPolarAngle={Math.PI / 2.2}
-                        minDistance={5}
-                        maxDistance={20}
+                        minDistance={minDistance}
+                        maxDistance={maxDistance}
                         target={[0, 0, 0]}
                     />
 

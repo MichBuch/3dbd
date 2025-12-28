@@ -166,12 +166,12 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
 
                 {/* Signup View */}
                 {view === 'signup' && (
-                    <div className="p-12">
-                        <button onClick={() => setView('pricing')} className="text-gray-400 hover:text-white mb-6">
+                    <div className="p-8 max-h-[80vh] overflow-y-auto">
+                        <button onClick={() => setView('pricing')} className="text-gray-400 hover:text-white mb-4">
                             ← Back
                         </button>
 
-                        <h2 className="text-3xl font-bold text-white mb-2">Create your account</h2>
+                        <h2 className="text-2xl font-bold text-white mb-2">Create your account</h2>
                         <p className="text-gray-400 mb-6">
                             Sign up for the {selectedPlan === 'pro' ? 'Pro Competitor' : 'Casual Player'} plan
                         </p>
@@ -209,7 +209,7 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                                 className="w-full bg-[#1877F2] text-white font-semibold py-3 px-4 rounded-lg hover:bg-[#166FE5] transition-colors flex items-center justify-center gap-3"
                             >
                                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                                 </svg>
                                 Continue with Facebook
                             </button>
@@ -262,13 +262,17 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full bg-gradient-to-r from-neonBlue to-neonPink text-black font-bold py-3 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+                                className="w-full bg-white text-black font-bold py-4 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 shadow-lg border-2 border-white text-lg"
                             >
                                 {loading ? 'Creating account...' : 'Create Account'}
                             </button>
+
+                            <p className="text-xs text-gray-500 text-center">
+                                Email verification will be sent after signup
+                            </p>
                         </form>
 
-                        <p className="text-xs text-gray-500 mt-6 text-center">
+                        <p className="text-xs text-gray-500 mt-6 text-center border-t border-gray-700 pt-4">
                             By creating an account you agree to the Terms of Service and Privacy Policy
                         </p>
                     </div>
@@ -317,7 +321,7 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                                 className="w-full bg-[#1877F2] text-white font-semibold py-3 px-4 rounded-lg hover:bg-[#166FE5] transition-colors flex items-center justify-center gap-3"
                             >
                                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                                 </svg>
                                 Continue with Facebook
                             </button>
@@ -370,7 +374,7 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full bg-gradient-to-r from-neonBlue to-neonPink text-black font-bold py-3 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+                                className="w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 shadow-lg border-2 border-white"
                             >
                                 {loading ? 'Logging in...' : 'Log In'}
                             </button>

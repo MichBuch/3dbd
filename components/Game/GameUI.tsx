@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useGameStore } from '@/store/gameStore';
-import { useSession, signOut } from "next-auth/react";
-import { User, Trophy, Settings, LogOut, Cpu, Users, BarChart3 } from 'lucide-react';
-import Link from 'next/link';
+import { useSession } from "next-auth/react";
+import { Trophy, Settings } from 'lucide-react';
 import { AdContainer } from '@/components/Ads/AdContainer';
 import { Lobby } from '@/components/Game/Lobby';
 import { saveGameResult } from '@/app/actions/game';
+import { SettingsPanel } from '@/components/Game/SettingsPanel';
 
 export const GameUI = () => {
     const { data: session } = useSession();
@@ -14,12 +14,10 @@ export const GameUI = () => {
         winner,
         resetGame,
         isAiEnabled,
-        setAiEnabled,
         theme,
-        setTheme,
         scores,
-        // @ts-ignore
-        difficulty, setDifficulty
+        preferences,
+        difficulty
     } = useGameStore();
 
     const [showSettings, setShowSettings] = useState(false);
@@ -58,80 +56,63 @@ export const GameUI = () => {
 
     return (
         <>
-            {/* 1. BRAND / TURN INDICATOR (Fixed Top-Left) */}
-            <div style={{ position: 'fixed', top: '24px', left: '24px', zIndex: 50, pointerEvents: 'none' }}>
-                <div className="pointer-events-auto bg-black px-5 py-3 rounded-2xl flex items-center gap-2" style={{ border: 'none' }}>
-                    <h1 className="text-xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-neonBlue to-neonPink drop-shadow-sm">
-                        3dBd
-                    </h1>
-                    <div className="h-6 w-px bg-white/10" />
-                    <div className="flex items-center gap-2 justify-center">
-                        <div className={`w-3 h-3 rounded-full shadow-[0_0_10px_currentColor] transition-colors duration-500 ${currentPlayer === 'white' ? 'bg-[red] shadow-[0_0_10px_red]' : 'bg-[green] shadow-[0_0_10px_green]'}`} />
-                        <span className="text-sm font-bold text-white/90 text-center">
-                            {currentPlayer === 'white'
-                                ? `${session?.user?.name || "Player 1"}'s Turn`
-                                : `${isAiEnabled ? "AI" : "Player 2"}'s Turn`}
-                        </span>
-                    </div>
-                </div>
+            {/* Settings Button - Top Left */}
+            <div style={{ position: 'fixed', top: '100px', left: '24px', zIndex: 50 }}>
+                <button
+                    onClick={() => setShowSettings(true)}
+                    className="glass-panel p-3 rounded-xl transition-all border border-white/10 text-white hover:bg-white/10"
+                    title="Settings"
+                >
+                    <Settings size={24} />
+                </button>
             </div>
 
-            {/* 2. SCORE BOARD (Fixed Top-Center) */}
-            <div style={{ position: 'fixed', top: '24px', left: '50%', transform: 'translateX(-50%)', zIndex: 50, pointerEvents: 'none' }}>
-                <div className="glass-panel p-4 rounded-2xl flex gap-12 min-w-[350px] justify-center relative overflow-hidden items-center" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', gap: '40px' }}>
-                    <div className="flex flex-col items-center flex-1">
-                        <span className="text-2xl font-black text-white tracking-tight mb-1 whitespace-nowrap drop-shadow-md">
-                            {session?.user?.name || 'Player 1'}
-                        </span>
-                        <span className="text-4xl font-mono font-black text-red-500 drop-shadow-[0_0_15px_rgba(255,0,0,0.5)] flex items-center gap-3">
-                            {scores.white}
-                        </span>
-                    </div>
+            {/* Compact Scoreboard - Top Center */}
+            {preferences.showScoreboard && (
+                <div style={{ position: 'fixed', top: '24px', left: '50%', transform: 'translateX(-50%)', zIndex: 50 }}>
+                    <div className="glass-panel px-6 py-3 rounded-2xl flex items-center gap-6 border border-white/10">
+                        {/* Player 1 / White */}
+                        <div className="flex items-center gap-3">
+                            <span className="text-lg font-bold text-white">
+                                {session?.user?.name || 'Player 1'}
+                            </span>
+                            <span className="text-3xl font-mono font-black text-red-500 drop-shadow-[0_0_15px_rgba(255,0,0,0.5)] min-w-[40px] text-center">
+                                {scores.white}
+                            </span>
+                        </div>
 
-                    <div className="h-12 w-px bg-white/10" />
+                        {/* Divider */}
+                        <div className="h-8 w-px bg-white/20" />
 
-                    <div className="flex flex-col items-center flex-1">
-                        <span className="text-2xl font-black text-white tracking-tight mb-1 whitespace-nowrap drop-shadow-md">
-                            {isAiEnabled ? 'AI' : 'Player 2'}
-                        </span>
-                        <span className="text-4xl font-mono font-black text-green-500 drop-shadow-[0_0_15px_rgba(0,255,0,0.5)] flex items-center gap-3">
-                            {scores.black}
-                        </span>
+                        {/* Player 2 / Black */}
+                        <div className="flex items-center gap-3">
+                            <span className="text-3xl font-mono font-black text-green-500 drop-shadow-[0_0_15px_rgba(0,255,0,0.5)] min-w-[40px] text-center">
+                                {scores.black}
+                            </span>
+                            <span className="text-lg font-bold text-white">
+                                {isAiEnabled ? 'AI' : 'Player 2'}
+                            </span>
+                        </div>
+
+                        {/* Turn Indicator - Only show in PVP mode if enabled */}
+                        {preferences.showTurnIndicator && !isAiEnabled && (
+                            <>
+                                <div className="h-8 w-px bg-white/20" />
+                                <div className="flex items-center gap-2">
+                                    <div className={`w-3 h-3 rounded-full shadow-[0_0_10px_currentColor] transition-colors duration-500 ${currentPlayer === 'white' ? 'bg-[red] shadow-[0_0_10px_red]' : 'bg-[green] shadow-[0_0_10px_green]'}`} />
+                                    <span className="text-sm font-bold text-white/90">
+                                        {currentPlayer === 'white' ? `${session?.user?.name || "Player 1"}'s Turn` : "Player 2's Turn"}
+                                    </span>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
+            )}
 
-                <div className="flex gap-2 justify-center mt-2 pointer-events-auto">
-                    <button
-                        onClick={() => {
-                            if (!isPremium && isAiEnabled) {
-                                // Default to AI if free, but if they try to toggle...
-                                const allow = confirm("Multiplayer is a Premium feature. Upgrade?");
-                                if (allow) handleUpgrade();
-                                return;
-                            }
-                            setAiEnabled(!isAiEnabled);
-                        }}
-                        style={{ border: '1px solid rgba(255,255,255,0.1)' }}
-                        className={`glass-panel px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${isAiEnabled ? 'bg-neonBlue/10 border-neonBlue text-neonBlue' : 'text-white/70 hover:text-white'}`}
-                    >
-                        {isAiEnabled ? <Cpu size={16} /> : <Users size={16} />}
-                        {isAiEnabled ? 'VS AI' : 'PVP'}
-                    </button>
-
-                    <button
-                        onClick={() => setShowSettings(!showSettings)}
-                        className={`glass-panel p-2 rounded-xl transition-all border border-white/10 text-white${showSettings ? ' bg-white/10' : ' hover:text-white'}`}
-                    >
-                        <Settings size={20} />
-                    </button>
-                </div>
-            </div>
-
-            {/* 3. RIGHT PANEL (Fixed Top-Right) */}
-            <div style={{ position: 'fixed', top: '24px', right: '24px', zIndex: 50, pointerEvents: 'none', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px' }}>
-                <div className="flex flex-col items-center gap-3 pointer-events-auto">
-
-                    {/* Premium Lobby or Leaderboard */}
+            {/* Right Panel - Leaderboard */}
+            {preferences.showLeaderboard && (
+                <div style={{ position: 'fixed', top: '24px', right: '24px', zIndex: 50 }}>
                     {isPremium && !isAiEnabled ? (
                         <Lobby />
                     ) : (
@@ -166,64 +147,8 @@ export const GameUI = () => {
                             )}
                         </div>
                     )}
-
-                    {/* Login / Auth */}
-                    <div className="w-full flex justify-center">
-                        {session ? (
-                            <div className="glass-panel px-4 py-2 rounded-xl flex items-center gap-3 w-60 justify-between">
-                                <div className="flex items-center gap-3">
-                                    {session.user?.image ? (
-                                        <img src={session.user.image} alt="User" className="w-8 h-8 rounded-full border border-neonBlue shadow-[0_0_10px_#00f3ff]" />
-                                    ) : (
-                                        <div className="w-8 h-8 rounded-full bg-neonBlue/20 flex items-center justify-center border border-neonBlue text-neonBlue">
-                                            <User size={16} />
-                                        </div>
-                                    )}
-                                    <div className="flex flex-col items-start leading-none text-left">
-                                        <span className="text-sm font-bold text-white max-w-[80px] truncate">{session.user?.name || 'Player'}</span>
-                                        <span className="text-[10px] text-neonPink font-bold uppercase tracking-wider">{isPremium ? 'PREMIUM' : 'FREE'}</span>
-                                    </div>
-                                </div>
-                                <button onClick={() => signOut()} className="hover:bg-white/10 p-2 rounded-lg transition-colors border-0">
-                                    <LogOut size={16} className="text-white/50" />
-                                </button>
-                            </div>
-                        ) : (
-                            <Link href="/auth/signin" className="no-underline block w-full">
-                                <button
-                                    style={{ background: 'rgba(0, 243, 255, 0.1)', border: '1px solid rgba(255,255,255,0.2)', color: 'white' }}
-                                    className="w-60 px-8 py-3 rounded-xl text-base font-black hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3 group cursor-pointer shadow-[0_0_20px_rgba(0,243,255,0.2)] mx-auto"
-                                >
-                                    <User size={20} color="white" />
-                                    Login
-                                </button>
-                            </Link>
-                        )}
-                    </div>
-
-                    {/* Divider and Difficulty */}
-                    <div className="w-full h-px bg-white/10 my-2" />
-                    <div className="flex justify-center w-60">
-                        <div className="glass-panel p-2 rounded-lg flex items-center border border-white/10 bg-black/50 justify-center flex-1">
-                            {(['easy', 'medium', 'hard'] as const).map((d) => (
-                                <button
-                                    key={d}
-                                    onClick={() => setDifficulty(d)}
-                                    style={{
-                                        border: 'none',
-                                        background: difficulty === d ? 'rgba(255,255,255,0.2)' : 'transparent',
-                                        color: difficulty === d ? 'white' : '#888',
-                                        margin: '0 4px'
-                                    }}
-                                    className={`px-2 py-2 text-[10px] uppercase font-bold rounded-md transition-all cursor-pointer`}
-                                >
-                                    {d}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Winner Overlay */}
             {winner && (
@@ -245,7 +170,7 @@ export const GameUI = () => {
                 </div>
             )}
 
-            {/* 4. AD BANNER (Fixed Bottom - Free Tier Only) */}
+            {/* Ad Banner - Free Tier Only */}
             {!isPremium && (
                 <div style={{ position: 'fixed', bottom: '0', left: '0', right: '0', height: '90px', zIndex: 40, pointerEvents: 'none', display: 'flex', justifyContent: 'center', alignItems: 'end', paddingBottom: '10px' }}>
                     <div className="pointer-events-auto bg-black/80 backdrop-blur-md border-t border-white/10 w-full max-w-3xl h-full rounded-t-xl overflow-hidden shadow-[0_0_30px_rgba(0,0,0,0.5)]">
@@ -254,12 +179,8 @@ export const GameUI = () => {
                 </div>
             )}
 
-            {/* Settings Components */}
-            {showSettings && (
-                <div className="absolute bottom-24 right-4 w-60 glass-panel p-4 rounded-xl pointer-events-auto z-50">
-                    <p className="text-white text-xs">Settings Placeholder</p>
-                </div>
-            )}
+            {/* Settings Panel */}
+            <SettingsPanel isOpen={showSettings} onClose={() => setShowSettings(false)} />
         </>
     );
 };

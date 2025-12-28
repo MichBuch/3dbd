@@ -4,10 +4,11 @@ import { Pillar } from './Pillar';
 import { Bead } from './Bead';
 
 export const Board = () => {
-    const { board, dropBead, theme, winningCells } = useGameStore();
+    const { board, dropBead, theme, winningCells, preferences } = useGameStore();
 
-    // Fixed spacing settings for now, can be added to store if needed
-    const stickSpacing = 2.5;
+    // Use board scale from preferences
+    const baseSpacing = 2.5;
+    const stickSpacing = baseSpacing * preferences.boardScale;
 
     // Calculate positions efficiently
     const pillars = useMemo(() => {
@@ -27,9 +28,12 @@ export const Board = () => {
         return items;
     }, [stickSpacing]);
 
+    const beadSize = 0.4 * preferences.boardScale;
+    const beadSpacing = 0.8 * preferences.boardScale;
+
     return (
         <group>
-            {/* Board Base - Moved up to touch pillars properly */}
+            {/* Board Base - Scaled appropriately */}
             <mesh position={[0, -0.25, 0]} receiveShadow>
                 <boxGeometry args={[stickSpacing * 4 + 1, 0.5, stickSpacing * 4 + 1]} />
                 <meshStandardMaterial color={theme.base} />
@@ -41,7 +45,6 @@ export const Board = () => {
                     <Pillar
                         x={p.x}
                         y={p.y}
-                        // Pillars start at y=0. Height=4 means center is at y=2.
                         position={[p.posX, 0, p.posZ]}
                         height={3.35}
                         onDrop={dropBead}
@@ -53,10 +56,11 @@ export const Board = () => {
                         player ? (
                             <Bead
                                 key={zIndex}
-                                position={[p.posX, zIndex * 0.8 + 0.5, p.posZ]} // 0.8 spacing, 0.5 initial offset
+                                position={[p.posX, zIndex * beadSpacing + 0.5, p.posZ]}
                                 color={player === 'white' ? theme.white : theme.black}
                                 player={player}
                                 isWinning={winningCells.includes(`${p.x}-${p.y}-${zIndex}`)}
+                                scale={preferences.boardScale}
                             />
                         ) : null
                     ))}
