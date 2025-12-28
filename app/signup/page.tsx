@@ -81,7 +81,7 @@ export default function Signup() {
                     </ul>
 
                     <Link
-                        href="/auth/signin?mode=signup"
+                        href="/auth/signin"
                         style={{
                             display: 'block',
                             width: '100%',

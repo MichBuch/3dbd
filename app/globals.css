@@ -1,6 +1,5 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@import "@neondatabase/neon-js/ui/tailwind";
 
 /* Force reset for buttons to avoid default browser styles interfering */
 button {

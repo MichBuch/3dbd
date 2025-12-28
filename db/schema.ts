@@ -21,6 +21,16 @@ export const users = pgTable("user", {
     plan: text("plan").$type<"free" | "premium">().default("free"),
     stripeCustomerId: text("stripe_customer_id"),
     stripeSubscriptionId: text("stripe_subscription_id"),
+    points: integer("points").default(0).notNull(),
+    wins: integer("wins").default(0).notNull(),
+    losses: integer("losses").default(0).notNull(),
+    lastSeen: timestamp("last_seen", { mode: "date" }),
+    rankTier: text("rank_tier").default("bronze"),
+    // Subscription Cache
+    subscriptionStatus: text("subscription_status"),
+    subscriptionEndDate: timestamp("subscription_end_date", { mode: "date" }),
+    // Calculated Rating
+    rating: integer("rating").default(0),
 });
 
 export const accounts = pgTable(
@@ -76,7 +86,13 @@ export const games = pgTable("game", {
     blackPlayerId: text("black_player_id").references(() => users.id),
     winnerId: text("winner_id").references(() => users.id),
     state: json("state").notNull(), // Stores the 4x4x4 board + currentTurn
+    whiteScore: integer("white_score"),
+    blackScore: integer("black_score"),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
+    endedAt: timestamp("ended_at"),
     isFinished: boolean("is_finished").default(false),
+    // Context
+    difficulty: text("difficulty"), // 'easy', 'medium', 'hard'
+    mode: text("mode").default('ai'), // 'ai', 'pvp'
 });
