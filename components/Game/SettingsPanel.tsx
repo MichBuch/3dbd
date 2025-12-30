@@ -42,99 +42,76 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                 {/* Close Button */}
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors z-10"
+                    className="absolute top-3 right-3 text-gray-400 hover:text-white transition-colors z-10"
                 >
                     <X size={24} />
                 </button>
 
                 {/* Header */}
-                <div className="p-8 border-b border-white/10">
-                    <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-neonBlue to-neonPink">
+                <div className="px-6 pt-6 pb-4">
+                    <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-neonBlue to-neonPink">
                         Settings
                     </h2>
-                    <p className="text-gray-400 mt-2">Changes save automatically</p>
                 </div>
 
                 {/* Settings Content */}
-                <div className="p-8 space-y-8">
-                    {/* UI Visibility Section */}
-                    <div>
-                        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                            <Eye size={20} className="text-neonBlue" />
-                            UI Visibility
-                        </h3>
-                        <div className="space-y-3">
-                            {/* Show Scoreboard */}
-                            <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10">
-                                <div>
-                                    <label className="text-white font-semibold">Show Scoreboard</label>
-                                    <p className="text-gray-400 text-sm">Display player scores</p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span className={`text-xs font-bold ${preferences.showScoreboard ? 'text-gray-500' : 'text-white'}`}>OFF</span>
-                                    <button
-                                        onClick={() => setPreference('showScoreboard', !preferences.showScoreboard)}
-                                        className={`relative w-14 h-8 rounded-full transition-colors ${preferences.showScoreboard ? 'bg-neonBlue' : 'bg-gray-600'
-                                            }`}
-                                    >
-                                        <div
-                                            className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${preferences.showScoreboard ? 'translate-x-6' : 'translate-x-0'
-                                                }`}
-                                        />
-                                    </button>
-                                    <span className={`text-xs font-bold ${preferences.showScoreboard ? 'text-neonBlue' : 'text-gray-500'}`}>ON</span>
-                                </div>
-                            </div>
-
-                            {/* Show Leaderboard */}
-                            <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10">
-                                <div>
-                                    <label className="text-white font-semibold">Show Leaderboard</label>
-                                    <p className="text-gray-400 text-sm">Display top players</p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span className={`text-xs font-bold ${preferences.showLeaderboard ? 'text-gray-500' : 'text-white'}`}>OFF</span>
-                                    <button
-                                        onClick={() => setPreference('showLeaderboard', !preferences.showLeaderboard)}
-                                        className={`relative w-14 h-8 rounded-full transition-colors ${preferences.showLeaderboard ? 'bg-neonBlue' : 'bg-gray-600'
-                                            }`}
-                                    >
-                                        <div
-                                            className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${preferences.showLeaderboard ? 'translate-x-6' : 'translate-x-0'
-                                                }`}
-                                        />
-                                    </button>
-                                    <span className={`text-xs font-bold ${preferences.showLeaderboard ? 'text-neonBlue' : 'text-gray-500'}`}>ON</span>
-                                </div>
-                            </div>
-
-                            {/* Show Turn Indicator */}
-                            <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10">
-                                <div>
-                                    <label className="text-white font-semibold">Show Turn Indicator</label>
-                                    <p className="text-gray-400 text-sm">Show whose turn (PVP)</p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span className={`text-xs font-bold ${preferences.showTurnIndicator ? 'text-gray-500' : 'text-white'}`}>OFF</span>
-                                    <button
-                                        onClick={() => setPreference('showTurnIndicator', !preferences.showTurnIndicator)}
-                                        className={`relative w-14 h-8 rounded-full transition-colors ${preferences.showTurnIndicator ? 'bg-neonBlue' : 'bg-gray-600'
-                                            }`}
-                                    >
-                                        <div
-                                            className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${preferences.showTurnIndicator ? 'translate-x-6' : 'translate-x-0'
-                                                }`}
-                                        />
-                                    </button>
-                                    <span className={`text-xs font-bold ${preferences.showTurnIndicator ? 'text-neonBlue' : 'text-gray-500'}`}>ON</span>
-                                </div>
-                            </div>
+                <div className="px-6 pb-6 space-y-4">
+                    {/* Show Scoreboard */}
+                    <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+                        <div>
+                            <label className="text-white font-semibold text-sm">Show Scoreboard</label>
+                            <p className="text-gray-400 text-xs">Display player scores</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className={`text-xs font-bold ${preferences.showScoreboard ? 'text-gray-500' : 'text-white'}`}>OFF</span>
+                            <button
+                                onClick={() => setPreference('showScoreboard', !preferences.showScoreboard)}
+                                className={`relative w-14 h-8 rounded-full transition-colors ${preferences.showScoreboard ? 'bg-neonBlue' : 'bg-gray-600'}`}
+                            >
+                                <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${preferences.showScoreboard ? 'translate-x-6' : 'translate-x-0'}`} />
+                            </button>
+                            <span className={`text-xs font-bold ${preferences.showScoreboard ? 'text-neonBlue' : 'text-gray-500'}`}>ON</span>
                         </div>
                     </div>
 
-                    {/* Game Settings Section */}
+                    {/* Show Leaderboard */}
+                    <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+                        <div>
+                            <label className="text-white font-semibold text-sm">Show Leaderboard</label>
+                            <p className="text-gray-400 text-xs">Display top players</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className={`text-xs font-bold ${preferences.showLeaderboard ? 'text-gray-500' : 'text-white'}`}>OFF</span>
+                            <button
+                                onClick={() => setPreference('showLeaderboard', !preferences.showLeaderboard)}
+                                className={`relative w-14 h-8 rounded-full transition-colors ${preferences.showLeaderboard ? 'bg-neonBlue' : 'bg-gray-600'}`}
+                            >
+                                <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${preferences.showLeaderboard ? 'translate-x-6' : 'translate-x-0'}`} />
+                            </button>
+                            <span className={`text-xs font-bold ${preferences.showLeaderboard ? 'text-neonBlue' : 'text-gray-500'}`}>ON</span>
+                        </div>
+                    </div>
+
+                    {/* Show Turn Indicator */}
+                    <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+                        <div>
+                            <label className="text-white font-semibold text-sm">Show Turn Indicator</label>
+                            <p className="text-gray-400 text-xs">Show whose turn (PVP)</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className={`text-xs font-bold ${preferences.showTurnIndicator ? 'text-gray-500' : 'text-white'}`}>OFF</span>
+                            <button
+                                onClick={() => setPreference('showTurnIndicator', !preferences.showTurnIndicator)}
+                                className={`relative w-14 h-8 rounded-full transition-colors ${preferences.showTurnIndicator ? 'bg-neonBlue' : 'bg-gray-600'}`}
+                            >
+                                <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${preferences.showTurnIndicator ? 'translate-x-6' : 'translate-x-0'}`} />
+                            </button>
+                            <span className={`text-xs font-bold ${preferences.showTurnIndicator ? 'text-neonBlue' : 'text-gray-500'}`}>ON</span>
+                        </div>
+                    </div>
+
+                    {/* Game Settings */}
                     <div>
-                        <h3 className="text-xl font-bold text-white mb-4">Game Settings</h3>
                         <div className="space-y-4">
                             {/* Board Scale Slider */}
                             <div className="p-4 bg-white/5 rounded-lg border border-white/10">
@@ -174,17 +151,17 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                                 <p className="text-gray-400 text-sm mt-2">Changes bead colors, shapes & backdrop</p>
                             </div>
 
-                            {/* Difficulty Selector - IMPROVED CONTRAST */}
+                            {/* Difficulty Selector - IMPROVED VISIBILITY */}
                             <div className="p-4 bg-white/5 rounded-lg border border-white/10">
-                                <label className="text-white font-semibold block mb-3">AI Difficulty</label>
+                                <label className="text-white font-semibold block mb-3">Algorithm Difficulty</label>
                                 <div className="flex gap-2">
                                     {(['easy', 'medium', 'hard'] as const).map((d) => (
                                         <button
                                             key={d}
                                             onClick={() => setDifficulty(d)}
-                                            className={`flex-1 px-4 py-3 rounded-lg font-bold uppercase text-sm transition-all border-2 ${difficulty === d
-                                                ? 'bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.5)]'
-                                                : 'bg-transparent text-white border-white/20 hover:border-white/40 hover:bg-white/5'
+                                            className={`flex-1 px-4 py-3 rounded-lg font-bold uppercase text-sm transition-all ${difficulty === d
+                                                ? 'bg-neonBlue text-white shadow-[0_0_20px_rgba(0,243,255,0.5)]'
+                                                : 'bg-white/10 text-white hover:bg-white/20'
                                                 }`}
                                         >
                                             {d}
@@ -193,24 +170,24 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                                 </div>
                             </div>
 
-                            {/* AI vs PVP Toggle - IMPROVED CONTRAST */}
+                            {/* AI vs PVP Toggle - IMPROVED VISIBILITY */}
                             <div className="p-4 bg-white/5 rounded-lg border border-white/10">
                                 <label className="text-white font-semibold block mb-3">Game Mode</label>
                                 <div className="flex gap-2">
                                     <button
                                         onClick={() => setAiEnabled(true)}
-                                        className={`flex-1 px-4 py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2 border-2 ${isAiEnabled
-                                            ? 'bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.5)]'
-                                            : 'bg-transparent text-white border-white/20 hover:border-white/40 hover:bg-white/5'
+                                        className={`flex-1 px-4 py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2 ${isAiEnabled
+                                            ? 'bg-neonBlue text-white shadow-[0_0_20px_rgba(0,243,255,0.5)]'
+                                            : 'bg-white/10 text-white hover:bg-white/20'
                                             }`}
                                     >
-                                        VS AI
+                                        VS COMPUTER
                                     </button>
                                     <button
                                         onClick={() => setAiEnabled(false)}
-                                        className={`flex-1 px-4 py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2 border-2 ${!isAiEnabled
-                                            ? 'bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.5)]'
-                                            : 'bg-transparent text-white border-white/20 hover:border-white/40 hover:bg-white/5'
+                                        className={`flex-1 px-4 py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2 ${!isAiEnabled
+                                            ? 'bg-neonPink text-white shadow-[0_0_20px_rgba(255,0,255,0.5)]'
+                                            : 'bg-white/10 text-white hover:bg-white/20'
                                             }`}
                                     >
                                         PVP
@@ -223,7 +200,12 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
 
                 {/* Footer Actions - CLEAR BUTTONS */}
                 <div className="p-6 border-t border-white/10 space-y-3">
-                    <p className="text-xs text-center text-gray-400">Settings are saved automatically</p>
+                    <p className="text-xs text-center text-gray-400 flex items-center justify-center gap-1.5">
+                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z" />
+                        </svg>
+                        Settings are saved automatically
+                    </p>
                     <div className="flex gap-3">
                         <button
                             onClick={resetPreferences}

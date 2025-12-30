@@ -67,40 +67,40 @@ export const GameUI = () => {
                 </button>
             </div>
 
-            {/* Compact Scoreboard - Top Center */}
+            {/* Compact Scoreboard - Top Center - 20% Smaller */}
             {preferences.showScoreboard && (
                 <div style={{ position: 'fixed', top: '24px', left: '50%', transform: 'translateX(-50%)', zIndex: 50 }}>
-                    <div className="glass-panel px-6 py-3 rounded-2xl flex items-center gap-6 border border-white/10">
+                    <div className="glass-panel px-5 py-2 rounded-2xl flex items-center gap-5 border border-white/10">
                         {/* Player 1 / White */}
-                        <div className="flex items-center gap-3">
-                            <span className="text-lg font-bold text-white">
+                        <div className="flex items-center gap-2">
+                            <span className="text-base font-bold text-white">
                                 {session?.user?.name || 'Player 1'}
                             </span>
-                            <span className="text-3xl font-mono font-black text-red-500 drop-shadow-[0_0_15px_rgba(255,0,0,0.5)] min-w-[40px] text-center">
+                            <span className="text-2xl font-mono font-black text-red-500 drop-shadow-[0_0_12px_rgba(255,0,0,0.5)] min-w-[32px] text-center">
                                 {scores.white}
                             </span>
                         </div>
 
                         {/* Divider */}
-                        <div className="h-8 w-px bg-white/20" />
+                        <div className="h-6 w-px bg-white/20" />
 
                         {/* Player 2 / Black */}
-                        <div className="flex items-center gap-3">
-                            <span className="text-3xl font-mono font-black text-green-500 drop-shadow-[0_0_15px_rgba(0,255,0,0.5)] min-w-[40px] text-center">
+                        <div className="flex items-center gap-2">
+                            <span className="text-2xl font-mono font-black text-green-500 drop-shadow-[0_0_12px_rgba(0,255,0,0.5)] min-w-[32px] text-center">
                                 {scores.black}
                             </span>
-                            <span className="text-lg font-bold text-white">
-                                {isAiEnabled ? 'AI' : 'Player 2'}
+                            <span className="text-base font-bold text-white">
+                                {isAiEnabled ? 'Computer' : 'Player 2'}
                             </span>
                         </div>
 
                         {/* Turn Indicator - Only show in PVP mode if enabled */}
                         {preferences.showTurnIndicator && !isAiEnabled && (
                             <>
-                                <div className="h-8 w-px bg-white/20" />
-                                <div className="flex items-center gap-2">
-                                    <div className={`w-3 h-3 rounded-full shadow-[0_0_10px_currentColor] transition-colors duration-500 ${currentPlayer === 'white' ? 'bg-[red] shadow-[0_0_10px_red]' : 'bg-[green] shadow-[0_0_10px_green]'}`} />
-                                    <span className="text-sm font-bold text-white/90">
+                                <div className="h-6 w-px bg-white/20" />
+                                <div className="flex items-center gap-1.5">
+                                    <div className={`w-2.5 h-2.5 rounded-full shadow-[0_0_8px_currentColor] transition-colors duration-500 ${currentPlayer === 'white' ? 'bg-[red] shadow-[0_0_8px_red]' : 'bg-[green] shadow-[0_0_8px_green]'}`} />
+                                    <span className="text-xs font-bold text-white/90">
                                         {currentPlayer === 'white' ? `${session?.user?.name || "Player 1"}'s Turn` : "Player 2's Turn"}
                                     </span>
                                 </div>

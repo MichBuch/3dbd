@@ -5,6 +5,7 @@ import { OrbitControls, PerspectiveCamera, Environment } from '@react-three/drei
 import { Board } from '@/components/Game/Board';
 import { GameUI } from '@/components/Game/GameUI';
 import { Header } from '@/components/Layout/Header';
+import { CookieConsent } from '@/components/Layout/CookieConsent';
 import { useGameStore } from '@/store/gameStore';
 
 export default function Home() {
@@ -41,6 +42,7 @@ export default function Home() {
                     <Board />
                 </Canvas>
             </main>
+            <CookieConsent />
         </>
     );
 }

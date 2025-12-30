@@ -96,3 +96,20 @@ export const games = pgTable("game", {
     difficulty: text("difficulty"), // 'easy', 'medium', 'hard'
     mode: text("mode").default('ai'), // 'ai', 'pvp'
 });
+
+// User Preferences Table
+export const userPreferences = pgTable("user_preferences", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    userId: text("user_id")
+        .notNull()
+        .references(() => users.id, { onDelete: "cascade" })
+        .unique(),
+    showScoreboard: boolean("show_scoreboard").default(true).notNull(),
+    showLeaderboard: boolean("show_leaderboard").default(true).notNull(),
+    showTurnIndicator: boolean("show_turn_indicator").default(true).notNull(),
+    boardScale: integer("board_scale").default(100).notNull(), // Store as percentage (100 = 1.0x)
+    theme: text("theme").default("dark").notNull(),
+    difficulty: text("difficulty").default("medium").notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+});

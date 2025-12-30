@@ -231,7 +231,7 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
                         const newBoard = JSON.parse(JSON.stringify(board));
                         const col = newBoard[move.x][move.y];
                         const z = col.findIndex((val: Player | null) => val === null);
-                        newBoard[move.x][move.y][z] = 'black'; // AI
+                        newBoard[move.x][move.y][z] = 'black'; // Algorithm
 
                         const { black } = calculateScores(newBoard);
                         if (black > scores.black) {
@@ -265,13 +265,27 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
             checkWin: () => null
         }),
         {
-            name: '3dbd-storage-v3', // Updated version to include preferences
+            name: '3d4bd-storage-v1', // Updated branding to 3D4BD
             partialize: (state) => ({
                 theme: state.theme,
                 isAiEnabled: state.isAiEnabled,
                 difficulty: state.difficulty,
                 preferences: state.preferences
             }),
+            // Migrate from old storage key if exists
+            migrate: (persistedState: any, version: number) => {
+                // Try to load from old key
+                const oldData = localStorage.getItem('3dbd-storage-v3');
+                if (oldData && !persistedState) {
+                    try {
+                        const parsed = JSON.parse(oldData);
+                        return parsed.state || persistedState;
+                    } catch (e) {
+                        console.error('Failed to migrate old storage:', e);
+                    }
+                }
+                return persistedState;
+            }
         }
     )
 );
