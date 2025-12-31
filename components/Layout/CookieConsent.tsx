@@ -46,7 +46,7 @@ export const CookieConsent = () => {
                     </button>
                     <button
                         onClick={acceptCookies}
-                        className="px-6 py-2 bg-neonBlue text-black rounded-lg hover:bg-neonBlue/90 transition-colors font-bold"
+                        className="px-6 py-2 bg-neonBlue text-white rounded-lg hover:bg-neonBlue/90 transition-colors font-bold"
                     >
                         Accept Cookies
                     </button>

@@ -336,7 +336,7 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full bg-gradient-to-r from-neonBlue to-neonPink text-white font-bold py-5 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 shadow-[0_0_30px_rgba(0,243,255,0.5)] text-xl mt-6"
+                                className="w-full bg-gradient-to-r from-neonBlue to-neonPink text-white font-semibold py-4 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 shadow-lg text-base mt-6"
                             >
                                 {loading ? 'Creating account...' : 'Create Account'}
                             </button>

@@ -51,7 +51,7 @@ export function Header() {
                                     onClick={() => setIsAuthDialogOpen(true)}
                                     className="text-white/80 hover:text-white font-medium text-sm"
                                 >
-                                    Log in
+                                    Login/Signup
                                 </button>
                                 <button
                                     onClick={() => setIsAuthDialogOpen(true)}
