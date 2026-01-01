@@ -57,55 +57,55 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                 {/* Settings Content */}
                 <div className="px-6 pb-6 space-y-4">
                     {/* Show Scoreboard */}
-                    <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+                    <div
+                        className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10 active:bg-white/10 transition-colors cursor-pointer"
+                        onClick={() => setPreference('showScoreboard', !preferences.showScoreboard)}
+                    >
                         <div>
-                            <label className="text-white font-semibold text-sm">Show Scoreboard</label>
-                            <p className="text-gray-400 text-xs">Display player scores</p>
+                            <label className="text-white font-semibold text-sm pointer-events-none">Show Scoreboard</label>
+                            <p className="text-gray-400 text-xs pointer-events-none">Display player scores</p>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 pointer-events-none">
                             <span className={`text-xs font-bold ${preferences.showScoreboard ? 'text-gray-500' : 'text-white'}`}>OFF</span>
-                            <button
-                                onClick={() => setPreference('showScoreboard', !preferences.showScoreboard)}
-                                className={`relative w-14 h-8 rounded-full transition-colors ${preferences.showScoreboard ? 'bg-neonBlue' : 'bg-gray-600'}`}
-                            >
+                            <div className={`relative w-14 h-8 rounded-full transition-colors ${preferences.showScoreboard ? 'bg-neonBlue' : 'bg-gray-600'}`}>
                                 <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${preferences.showScoreboard ? 'translate-x-6' : 'translate-x-0'}`} />
-                            </button>
+                            </div>
                             <span className={`text-xs font-bold ${preferences.showScoreboard ? 'text-neonBlue' : 'text-gray-500'}`}>ON</span>
                         </div>
                     </div>
 
                     {/* Show Leaderboard */}
-                    <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+                    <div
+                        className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10 active:bg-white/10 transition-colors cursor-pointer"
+                        onClick={() => setPreference('showLeaderboard', !preferences.showLeaderboard)}
+                    >
                         <div>
-                            <label className="text-white font-semibold text-sm">Show Leaderboard</label>
-                            <p className="text-gray-400 text-xs">Display top players</p>
+                            <label className="text-white font-semibold text-sm pointer-events-none">Show Leaderboard</label>
+                            <p className="text-gray-400 text-xs pointer-events-none">Display top players</p>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 pointer-events-none">
                             <span className={`text-xs font-bold ${preferences.showLeaderboard ? 'text-gray-500' : 'text-white'}`}>OFF</span>
-                            <button
-                                onClick={() => setPreference('showLeaderboard', !preferences.showLeaderboard)}
-                                className={`relative w-14 h-8 rounded-full transition-colors ${preferences.showLeaderboard ? 'bg-neonBlue' : 'bg-gray-600'}`}
-                            >
+                            <div className={`relative w-14 h-8 rounded-full transition-colors ${preferences.showLeaderboard ? 'bg-neonBlue' : 'bg-gray-600'}`}>
                                 <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${preferences.showLeaderboard ? 'translate-x-6' : 'translate-x-0'}`} />
-                            </button>
+                            </div>
                             <span className={`text-xs font-bold ${preferences.showLeaderboard ? 'text-neonBlue' : 'text-gray-500'}`}>ON</span>
                         </div>
                     </div>
 
                     {/* Show Turn Indicator */}
-                    <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+                    <div
+                        className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10 active:bg-white/10 transition-colors cursor-pointer"
+                        onClick={() => setPreference('showTurnIndicator', !preferences.showTurnIndicator)}
+                    >
                         <div>
-                            <label className="text-white font-semibold text-sm">Show Turn Indicator</label>
-                            <p className="text-gray-400 text-xs">Show whose turn (PVP)</p>
+                            <label className="text-white font-semibold text-sm pointer-events-none">Show Turn Indicator</label>
+                            <p className="text-gray-400 text-xs pointer-events-none">Show whose turn (PVP)</p>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 pointer-events-none">
                             <span className={`text-xs font-bold ${preferences.showTurnIndicator ? 'text-gray-500' : 'text-white'}`}>OFF</span>
-                            <button
-                                onClick={() => setPreference('showTurnIndicator', !preferences.showTurnIndicator)}
-                                className={`relative w-14 h-8 rounded-full transition-colors ${preferences.showTurnIndicator ? 'bg-neonBlue' : 'bg-gray-600'}`}
-                            >
+                            <div className={`relative w-14 h-8 rounded-full transition-colors ${preferences.showTurnIndicator ? 'bg-neonBlue' : 'bg-gray-600'}`}>
                                 <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${preferences.showTurnIndicator ? 'translate-x-6' : 'translate-x-0'}`} />
-                            </button>
+                            </div>
                             <span className={`text-xs font-bold ${preferences.showTurnIndicator ? 'text-neonBlue' : 'text-gray-500'}`}>ON</span>
                         </div>
                     </div>

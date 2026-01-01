@@ -2,6 +2,14 @@ import NextAuth from "next-auth"
 import Google from "next-auth/providers/google"
 import GitHub from "next-auth/providers/github"
 import Facebook from "next-auth/providers/facebook"
+import TikTok from "next-auth/providers/tiktok"
+import Apple from "next-auth/providers/apple"
+import Discord from "next-auth/providers/discord"
+import Twitter from "next-auth/providers/twitter"
+import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id"
+import LinkedIn from "next-auth/providers/linkedin"
+// import Amazon from "next-auth/providers/amazon"
+import WeChat from "next-auth/providers/wechat"
 import { DrizzleAdapter } from "@auth/drizzle-adapter"
 import { db } from "./db"
 
@@ -17,7 +25,39 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     providers: [
         Google,
         GitHub,
-        Facebook,
+        Facebook({
+            clientId: process.env.FACEBOOK_CLIENT_ID,
+            clientSecret: process.env.FACEBOOK_CLIENT_SECRET
+        }),
+        TikTok({
+            clientId: process.env.TIKTOK_CLIENT_ID,
+            clientSecret: process.env.TIKTOK_CLIENT_SECRET
+        }),
+        Apple({
+            clientId: process.env.APPLE_ID,
+            clientSecret: process.env.APPLE_SECRET
+        }),
+        Discord({
+            clientId: process.env.DISCORD_CLIENT_ID,
+            clientSecret: process.env.DISCORD_CLIENT_SECRET
+        }),
+        Twitter({
+            clientId: process.env.TWITTER_CLIENT_ID,
+            clientSecret: process.env.TWITTER_CLIENT_SECRET
+        }),
+        MicrosoftEntraID({
+            clientId: process.env.MICROSOFT_ENTRA_ID_CLIENT_ID,
+            clientSecret: process.env.MICROSOFT_ENTRA_ID_CLIENT_SECRET
+        }),
+        LinkedIn({
+            clientId: process.env.LINKEDIN_CLIENT_ID,
+            clientSecret: process.env.LINKEDIN_CLIENT_SECRET
+        }),
+        // Amazon, // specific provider import issue
+        WeChat({
+            clientId: process.env.AUTH_WECHAT_APP_ID,
+            clientSecret: process.env.AUTH_WECHAT_APP_SECRET
+        }),
 
         // AWS SES Email (SSL bypass for corporate proxies)
         Nodemailer({
@@ -42,6 +82,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 console.log('🖥️  SMTP:', process.env.EMAIL_SERVER_HOST);
 
                 try {
+                    // @ts-ignore
                     const { createTransport } = await import('nodemailer');
                     const transport = createTransport(provider.server);
 
