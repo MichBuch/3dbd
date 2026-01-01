@@ -4,10 +4,12 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { AuthDialog } from '@/components/Auth/AuthDialog';
-import { User, LogOut } from 'lucide-react';
+import { User, LogOut, Settings } from 'lucide-react';
+import { SettingsPanel } from '@/components/Game/SettingsPanel';
 
 export function Header() {
     const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
     const { data: session } = useSession();
     // @ts-ignore
     const isPremium = session?.user?.plan === 'premium';
@@ -21,11 +23,20 @@ export function Header() {
                         <div className="w-6 h-6 bg-gradient-to-br from-neonBlue to-neonPink rounded-md flex items-center justify-center">
                             <span className="text-black font-black text-xs">3D</span>
                         </div>
-                        <span className="text-white font-bold text-base">3D4BD</span>
+                        <span className="logo-neon font-bold text-base">3DBD</span>
                     </Link>
 
                     {/* User Panel or Auth Buttons */}
                     <div className="flex items-center gap-4">
+                        {/* Settings Button */}
+                        <button
+                            onClick={() => setShowSettings(true)}
+                            className="p-2 text-white/50 hover:text-white transition-colors"
+                            title="Settings"
+                        >
+                            <Settings size={20} />
+                        </button>
+
                         {session ? (
                             <div className="glass-panel px-4 py-2 rounded-xl flex items-center gap-3 justify-between">
                                 <div className="flex items-center gap-3">
@@ -51,7 +62,7 @@ export function Header() {
                                     onClick={() => setIsAuthDialogOpen(true)}
                                     className="text-white/80 hover:text-white font-medium text-sm"
                                 >
-                                    Login/Signup
+                                    Login or Signup
                                 </button>
                                 <button
                                     onClick={() => setIsAuthDialogOpen(true)}
@@ -66,6 +77,7 @@ export function Header() {
             </header>
 
             <AuthDialog isOpen={isAuthDialogOpen} onClose={() => setIsAuthDialogOpen(false)} />
+            <SettingsPanel isOpen={showSettings} onClose={() => setShowSettings(false)} />
         </>
     );
 }

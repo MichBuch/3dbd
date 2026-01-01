@@ -3,8 +3,8 @@ import './globals.css';
 import { Providers } from './providers';
 
 export const metadata: Metadata = {
-    title: '3D4BD - Premium 3D Board Game',
-    description: 'Play the ultimate 3D Connect Four game online with friends',
+    title: '3DBD - Premium 3D Board Game',
+    description: 'Play the ultimate 3D Connect Four game (3DBD) online with friends',
 };
 
 export default function RootLayout({

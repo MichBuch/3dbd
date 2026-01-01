@@ -89,9 +89,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     const result = await transport.sendMail({
                         to: email,
                         from: provider.from,
-                        subject: `Sign in to 3D4BD`,
-                        text: `Sign in to 3D4BD\n\nClick here to log in: ${url}\n\n`,
-                        html: `<div><h2>Sign in to 3D4BD</h2><p><a href="${url}">Click here to log in</a></p></div>`,
+                        subject: `Sign in to 3DBD`,
+                        text: `Sign in to 3DBD\n\nClick here to log in: ${url}\n\n`,
+                        html: `<div><h2>Sign in to 3DBD</h2><p><a href="${url}">Click here to log in</a></p></div>`,
                     });
 
                     console.log('✅ Email sent successfully!', result);

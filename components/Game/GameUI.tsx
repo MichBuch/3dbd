@@ -5,7 +5,6 @@ import { Trophy, Settings } from 'lucide-react';
 import { AdContainer } from '@/components/Ads/AdContainer';
 import { Lobby } from '@/components/Game/Lobby';
 import { saveGameResult } from '@/app/actions/game';
-import { SettingsPanel } from '@/components/Game/SettingsPanel';
 
 export const GameUI = () => {
     const { data: session } = useSession();
@@ -19,8 +18,6 @@ export const GameUI = () => {
         preferences,
         difficulty
     } = useGameStore();
-
-    const [showSettings, setShowSettings] = useState(false);
 
     // Save Game Result
     useEffect(() => {
@@ -56,20 +53,11 @@ export const GameUI = () => {
 
     return (
         <>
-            {/* Settings Button - Top Left */}
-            <div style={{ position: 'fixed', top: '100px', left: '24px', zIndex: 50 }}>
-                <button
-                    onClick={() => setShowSettings(true)}
-                    className="glass-panel p-3 rounded-xl transition-all border border-white/10 text-white hover:bg-white/10"
-                    title="Settings"
-                >
-                    <Settings size={24} />
-                </button>
-            </div>
+            {/* Settings Button Removed - Moved to Header */}
 
             {/* Compact Scoreboard - Top Center - 20% Smaller */}
             {preferences.showScoreboard && (
-                <div style={{ position: 'fixed', top: '24px', left: '50%', transform: 'translateX(-50%)', zIndex: 50 }}>
+                <div style={{ position: 'fixed', top: '0', left: '50%', transform: 'translateX(-50%)', zIndex: 60 }} className="h-16 flex items-center">
                     <div className="glass-panel px-5 py-2 rounded-2xl flex items-center gap-5 border border-white/10">
                         {/* Player 1 / White */}
                         <div className="flex items-center gap-2">
@@ -179,8 +167,7 @@ export const GameUI = () => {
                 </div>
             )}
 
-            {/* Settings Panel */}
-            <SettingsPanel isOpen={showSettings} onClose={() => setShowSettings(false)} />
+            {/* Settings Panel Removed */}
         </>
     );
 };
