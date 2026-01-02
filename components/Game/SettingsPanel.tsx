@@ -239,6 +239,16 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                             Save & Close
                         </button>
                     </div>
+                    <div className="pt-6 mt-6 border-t border-white/10 text-center space-y-2">
+                        <div className="flex justify-center gap-4 text-xs text-gray-500">
+                            <Link href="/terms" target="_blank" className="hover:text-white transition-colors">Terms of Service</Link>
+                            <span>•</span>
+                            <Link href="/privacy" target="_blank" className="hover:text-white transition-colors">Privacy Policy</Link>
+                        </div>
+                        <div className="text-xs text-gray-600">
+                            v1.0.0 • 3DBD
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
