@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { useGameStore } from '@/store/gameStore';
 import { X, Eye, Palette } from 'lucide-react';
 
