@@ -16,8 +16,6 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
     const [view, setView] = useState<AuthView>('initial');
     const [selectedPlan, setSelectedPlan] = useState<PlanType>('free');
     const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
 
     const [alertMessage, setAlertMessage] = useState<string | null>(null);
@@ -28,8 +26,8 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
         // Find provider name
         const providerName = PROVIDERS.find(p => p.id === providerId)?.name || providerId;
 
-        // Intercept clicks for providers other than Google and GitHub
-        if (providerId !== 'google' && providerId !== 'github') {
+        // Intercept clicks for providers other than Google, GitHub, and Facebook
+        if (providerId !== 'google' && providerId !== 'github' && providerId !== 'facebook') {
             setAlertMessage(`Coming soon! ${providerName} is not fully configured yet.`);
             return;
         }
@@ -166,8 +164,7 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
     const resetDialog = () => {
         setView('initial');
         setEmail('');
-        setPassword('');
-        setShowPassword(false);
+        setEmail('');
         setLoading(false);
         setAlertMessage(null);
     };
@@ -358,33 +355,12 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                                 />
                             </div>
 
-                            <div>
-                                <label className="block text-sm text-gray-300 mb-2">Password</label>
-                                <div className="relative">
-                                    <input
-                                        type={showPassword ? "text" : "password"}
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        placeholder="Enter a unique password"
-                                        required
-                                        className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neonBlue"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300"
-                                    >
-                                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                                    </button>
-                                </div>
-                            </div>
-
                             <button
                                 type="submit"
                                 disabled={loading}
                                 className="w-full bg-gradient-to-r from-neonBlue to-neonPink text-white font-semibold py-4 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 shadow-lg text-base mt-6"
                             >
-                                {loading ? 'Creating account...' : 'Create Account'}
+                                {loading ? 'Sending Magic Link...' : 'Continue with Email'}
                             </button>
 
                             <p className="text-xs text-gray-500 text-center">
@@ -399,95 +375,75 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                 )}
 
                 {/* Login View */}
-                {view === 'login' && (
-                    <div className="p-12">
-                        <button onClick={() => setView('initial')} className="text-gray-400 hover:text-white mb-6">
-                            ← Back
-                        </button>
+                {
+                    view === 'login' && (
+                        <div className="p-12">
+                            <button onClick={() => setView('initial')} className="text-gray-400 hover:text-white mb-6">
+                                ← Back
+                            </button>
 
-                        <h2 className="text-3xl font-bold text-white mb-2">Welcome back</h2>
-                        <p className="text-gray-400 mb-6">Log in to continue playing</p>
+                            <h2 className="text-3xl font-bold text-white mb-2">Welcome back</h2>
+                            <p className="text-gray-400 mb-6">Log in to continue playing</p>
 
-                        {/* OAuth Providers - Same Modern Icon Grid */}
-                        <div className="mb-6">
-                            <p className="text-gray-400 text-sm mb-4 text-center">Sign in with</p>
-                            <div className="grid grid-cols-5 gap-3">
-                                {PROVIDERS.map((provider) => (
-                                    <button
-                                        key={provider.id}
-                                        onClick={() => handleOAuthSignIn(provider.id)}
-                                        disabled={loading}
-                                        className={`relative p-3 rounded-xl transition-all group flex items-center justify-center ${provider.className}`}
-                                        title={provider.name}
-                                    >
-                                        {provider.icon}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="relative my-6">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-gray-700"></div>
-                            </div>
-                            <div className="relative flex justify-center text-xs uppercase">
-                                <span className="bg-black px-2 text-gray-400">Or continue with email</span>
-                            </div>
-                        </div>
-
-                        {/* Email Form */}
-                        <form onSubmit={handleEmailSignIn} className="space-y-4">
-                            <div>
-                                <label className="block text-sm text-gray-300 mb-2">Email</label>
-                                <input
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="youremail@email.com"
-                                    required
-                                    className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neonBlue"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm text-gray-300 mb-2">Password</label>
-                                <div className="relative">
-                                    <input
-                                        type={showPassword ? "text" : "password"}
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        placeholder="Enter your password"
-                                        required
-                                        className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neonBlue"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300"
-                                    >
-                                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                                    </button>
+                            {/* OAuth Providers - Same Modern Icon Grid */}
+                            <div className="mb-6">
+                                <p className="text-gray-400 text-sm mb-4 text-center">Sign in with</p>
+                                <div className="grid grid-cols-5 gap-3">
+                                    {PROVIDERS.map((provider) => (
+                                        <button
+                                            key={provider.id}
+                                            onClick={() => handleOAuthSignIn(provider.id)}
+                                            disabled={loading}
+                                            className={`relative p-3 rounded-xl transition-all group flex items-center justify-center ${provider.className}`}
+                                            title={provider.name}
+                                        >
+                                            {provider.icon}
+                                        </button>
+                                    ))}
                                 </div>
                             </div>
 
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full bg-white text-black font-bold py-4 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 shadow-lg border-2 border-white text-lg mt-6"
-                            >
-                                {loading ? 'Logging in...' : 'Log In'}
-                            </button>
-                        </form>
+                            <div className="relative my-6">
+                                <div className="absolute inset-0 flex items-center">
+                                    <div className="w-full border-t border-gray-700"></div>
+                                </div>
+                                <div className="relative flex justify-center text-xs uppercase">
+                                    <span className="bg-black px-2 text-gray-400">Or continue with email</span>
+                                </div>
+                            </div>
 
-                        <p className="text-sm text-gray-400 mt-6 text-center">
-                            Don't have an account?{' '}
-                            <button onClick={() => setView('pricing')} className="text-neonBlue hover:underline">
-                                Sign up
-                            </button>
-                        </p>
-                    </div>
-                )}
-            </div>
-        </div>
+                            {/* Email Form */}
+                            <form onSubmit={handleEmailSignIn} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm text-gray-300 mb-2">Email</label>
+                                    <input
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        placeholder="youremail@email.com"
+                                        required
+                                        className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neonBlue"
+                                    />
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full bg-white text-black font-bold py-4 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 shadow-lg border-2 border-white text-lg mt-6"
+                                >
+                                    {loading ? 'Sending Link...' : 'Send Magic Link'}
+                                </button>
+                            </form>
+
+                            <p className="text-sm text-gray-400 mt-6 text-center">
+                                Don't have an account?{' '}
+                                <button onClick={() => setView('pricing')} className="text-neonBlue hover:underline">
+                                    Sign up
+                                </button>
+                            </p>
+                        </div>
+                    )}
+            </div >
+        </div >
     );
 }

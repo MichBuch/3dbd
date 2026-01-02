@@ -61,6 +61,7 @@ export const Board = () => {
                                 player={player}
                                 isWinning={winningCells.includes(`${p.x}-${p.y}-${zIndex}`)}
                                 scale={preferences.boardScale}
+                                skin={preferences.beadSkin}
                             />
                         ) : null
                     ))}

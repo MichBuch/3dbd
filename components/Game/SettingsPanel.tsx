@@ -194,6 +194,25 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                                     </button>
                                 </div>
                             </div>
+
+                            {/* Bead Skin Selector */}
+                            <div className="p-4 bg-white/5 rounded-lg border border-white/10">
+                                <label className="text-white font-semibold block mb-3 flex items-center gap-2">
+                                    <Eye size={18} className="text-neonBlue" />
+                                    Bead Skin
+                                </label>
+                                <select
+                                    value={preferences.beadSkin}
+                                    onChange={(e) => setPreference('beadSkin', e.target.value as any)}
+                                    className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white font-medium focus:outline-none focus:border-neonBlue transition-colors cursor-pointer"
+                                >
+                                    <option value="default">Default (Spheres)</option>
+                                    <option value="tennis">Tennis Balls (Red vs Yellow)</option>
+                                    <option value="easter">Easter Eggs</option>
+                                    <option value="xmas">Christmas Baubles</option>
+                                    <option value="coin">Coins</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>

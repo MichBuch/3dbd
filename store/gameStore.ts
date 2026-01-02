@@ -15,6 +15,7 @@ interface UserPreferences {
     showLeaderboard: boolean;
     showTurnIndicator: boolean;
     boardScale: number;
+    beadSkin: 'default' | 'tennis' | 'easter' | 'xmas' | 'coin';
 }
 
 interface GameState {
@@ -139,6 +140,7 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
                 showLeaderboard: true,
                 showTurnIndicator: true,
                 boardScale: 1.0,
+                beadSkin: 'default',
             },
 
             resetGame: () => set({
@@ -164,6 +166,7 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
                     showLeaderboard: true,
                     showTurnIndicator: true,
                     boardScale: 1.0,
+                    beadSkin: 'default',
                 }
             }),
 

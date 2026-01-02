@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { useSession } from "next-auth/react";
-import { Trophy, Settings } from 'lucide-react';
+import { Trophy, Settings, X } from 'lucide-react';
 import { AdContainer } from '@/components/Ads/AdContainer';
 import { Lobby } from '@/components/Game/Lobby';
 import { saveGameResult } from '@/app/actions/game';
@@ -18,6 +18,14 @@ export const GameUI = () => {
         preferences,
         difficulty
     } = useGameStore();
+
+    const [showWinnerDialog, setShowWinnerDialog] = useState(false);
+
+    useEffect(() => {
+        if (winner) {
+            setShowWinnerDialog(true);
+        }
+    }, [winner]);
 
     // Save Game Result
     useEffect(() => {
@@ -57,27 +65,27 @@ export const GameUI = () => {
 
             {/* Compact Scoreboard - Top Center - 20% Smaller */}
             {preferences.showScoreboard && (
-                <div style={{ position: 'fixed', top: '0', left: '50%', transform: 'translateX(-50%)', zIndex: 60 }} className="h-16 flex items-center">
-                    <div className="glass-panel px-5 py-2 rounded-2xl flex items-center gap-5 border border-white/10">
+                <div style={{ position: 'fixed', top: '0', left: '50%', transform: 'translateX(-50%)', zIndex: 60 }} className="h-16 flex items-center pointer-events-none">
+                    <div className="glass-panel px-3 md:px-5 py-1 md:py-2 rounded-2xl flex items-center gap-3 md:gap-5 border border-white/10 pointer-events-auto">
                         {/* Player 1 / White */}
                         <div className="flex items-center gap-2">
-                            <span className="text-base font-bold text-white">
+                            <span className="hidden md:inline text-base font-bold text-white">
                                 {session?.user?.name || 'Player 1'}
                             </span>
-                            <span className="text-2xl font-mono font-black text-red-500 drop-shadow-[0_0_12px_rgba(255,0,0,0.5)] min-w-[32px] text-center">
+                            <span className="text-xl md:text-2xl font-mono font-black text-red-500 drop-shadow-[0_0_12px_rgba(255,0,0,0.5)] min-w-[24px] md:min-w-[32px] text-center">
                                 {scores.white}
                             </span>
                         </div>
 
                         {/* Divider */}
-                        <div className="h-6 w-px bg-white/20" />
+                        <div className="h-4 md:h-6 w-px bg-white/20" />
 
                         {/* Player 2 / Black */}
                         <div className="flex items-center gap-2">
-                            <span className="text-2xl font-mono font-black text-green-500 drop-shadow-[0_0_12px_rgba(0,255,0,0.5)] min-w-[32px] text-center">
+                            <span className="text-xl md:text-2xl font-mono font-black text-green-500 drop-shadow-[0_0_12px_rgba(0,255,0,0.5)] min-w-[24px] md:min-w-[32px] text-center">
                                 {scores.black}
                             </span>
-                            <span className="text-base font-bold text-white">
+                            <span className="hidden md:inline text-base font-bold text-white">
                                 {isAiEnabled ? 'Computer' : 'Player 2'}
                             </span>
                         </div>
@@ -98,9 +106,9 @@ export const GameUI = () => {
                 </div>
             )}
 
-            {/* Right Panel - Leaderboard */}
+            {/* Right Panel - Leaderboard - HIDDEN ON MOBILE */}
             {preferences.showLeaderboard && (
-                <div style={{ position: 'fixed', top: '24px', right: '24px', zIndex: 50 }}>
+                <div className="hidden md:block" style={{ position: 'fixed', top: '80px', right: '24px', zIndex: 50 }}>
                     {isPremium && !isAiEnabled ? (
                         <Lobby />
                     ) : (
@@ -139,11 +147,24 @@ export const GameUI = () => {
             )}
 
             {/* Winner Overlay */}
-            {winner && (
+            {winner && showWinnerDialog && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-auto z-50 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300">
-                    <div className="bg-black/40 p-12 rounded-3xl border border-white/10 text-center shadow-[0_0_50px_rgba(0,243,255,0.2)]">
+                    <div className="relative bg-black/40 p-12 rounded-3xl border border-white/10 text-center shadow-[0_0_50px_rgba(0,243,255,0.2)]">
+                        {/* Close Button */}
+                        <button
+                            onClick={() => setShowWinnerDialog(false)}
+                            className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors p-2"
+                        >
+                            <X size={24} />
+                        </button>
+
                         <h2 className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white to-gray-500 mb-4 tracking-tighter">
-                            {winner === 'draw' ? 'DRAW' : `${winner.toUpperCase()} WINS`}
+                            {winner === 'draw'
+                                ? 'DRAW'
+                                : winner === 'white'
+                                    ? `${(session?.user?.name || 'PLAYER 1').toUpperCase()} WINS`
+                                    : isAiEnabled ? 'COMPUTER WINS' : 'PLAYER 2 WINS'
+                            }
                         </h2>
                         <div className="text-gray-400 mb-10 font-mono text-xl">
                             Red <span className="text-white font-bold text-2xl mx-1">{scores.white}</span> - <span className="text-white font-bold text-2xl mx-1">{scores.black}</span> Green
