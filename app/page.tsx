@@ -7,6 +7,7 @@ import { GameUI } from '@/components/Game/GameUI';
 import { Header } from '@/components/Layout/Header';
 import { CookieConsent } from '@/components/Layout/CookieConsent';
 import { useGameStore } from '@/store/gameStore';
+import Link from 'next/link';
 
 export default function Home() {
     const { preferences } = useGameStore();
@@ -22,6 +23,13 @@ export default function Home() {
             <Header />
             <main className="relative bg-black" style={{ width: '100vw', height: '100vh' }}>
                 <GameUI />
+
+                {/* Legal Footer */}
+                <div className="absolute bottom-4 left-4 z-40 flex gap-4 text-[10px] md:text-xs text-white/30 hover:text-white/80 transition-colors pointer-events-auto">
+                    <Link href="/terms" target="_blank" className="hover:text-white transition-colors">Terms of Service</Link>
+                    <span>•</span>
+                    <Link href="/privacy" target="_blank" className="hover:text-white transition-colors">Privacy Policy</Link>
+                </div>
 
                 <Canvas shadows>
                     <PerspectiveCamera makeDefault position={[0, 8, cameraZ]} fov={45} />
