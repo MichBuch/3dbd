@@ -12,6 +12,7 @@ import LinkedIn from "next-auth/providers/linkedin"
 import WeChat from "next-auth/providers/wechat"
 import { DrizzleAdapter } from "@auth/drizzle-adapter"
 import { db } from "./db"
+import Credentials from "next-auth/providers/credentials"
 
 import Nodemailer from "next-auth/providers/nodemailer"
 
@@ -22,6 +23,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         error: '/auth/error',
     },
     adapter: DrizzleAdapter(db),
+    session: { strategy: "jwt" },
     providers: [
         Google,
         GitHub,
@@ -57,6 +59,52 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         WeChat({
             clientId: process.env.AUTH_WECHAT_APP_ID,
             clientSecret: process.env.AUTH_WECHAT_APP_SECRET
+        }),
+        Credentials({
+            credentials: {
+                email: { label: "Email", type: "email" },
+                password: { label: "Password", type: "password" },
+            },
+            authorize: async (credentials) => {
+                console.log("[Auth] Attempting login for:", credentials?.email);
+
+                if (!credentials?.email || !credentials?.password) {
+                    console.log("[Auth] Missing credentials");
+                    return null;
+                }
+
+                // Fetch user
+                // @ts-ignore
+                const user = await db.query.users.findFirst({
+                    // @ts-ignore
+                    where: (users, { eq }) => eq(users.email, credentials.email)
+                });
+
+                if (!user || !user.password) {
+                    console.log("[Auth] User not found or no password set");
+                    return null;
+                }
+
+                // Check password
+                // @ts-ignore
+                const bcrypt = await import("bcryptjs");
+                // @ts-ignore
+                const isValid = await bcrypt.compare(credentials.password, user.password);
+
+                if (!isValid) {
+                    console.log("[Auth] Invalid password");
+                    return null;
+                }
+
+                console.log("[Auth] Login successful for:", user.email);
+
+                return {
+                    ...user,
+                    plan: user.plan ?? undefined,
+                    rating: user.rating ?? undefined,
+                    stripeCustomerId: user.stripeCustomerId ?? undefined,
+                };
+            }
         }),
 
         // AWS SES Email (SSL bypass for corporate proxies)
@@ -103,13 +151,26 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         })
     ],
     callbacks: {
-        session({ session, user }) {
-            if (session.user) {
-                // @ts-ignore
-                session.user.plan = user.plan;
-                session.user.id = user.id;
+        async jwt({ token, user }: { token: any, user: any }) {
+            if (user) {
+                token.id = user.id;
+                token.plan = user.plan;
+                token.rating = user.rating;
+                token.picture = user.image;
+                token.name = user.name;
             }
-            return session
+            return token;
+        },
+        // @ts-ignore
+        async session({ session, token }: { session: any, token: any }) {
+            if (session.user && token) {
+                session.user.id = token.id;
+                session.user.plan = token.plan;
+                session.user.rating = token.rating;
+                session.user.name = token.name;
+                session.user.image = token.picture;
+            }
+            return session;
         },
     },
 })

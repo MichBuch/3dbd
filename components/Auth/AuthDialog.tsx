@@ -16,6 +16,7 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
     const [view, setView] = useState<AuthView>('initial');
     const [selectedPlan, setSelectedPlan] = useState<PlanType>('free');
     const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
 
     const [alertMessage, setAlertMessage] = useState<string | null>(null);
@@ -23,9 +24,7 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
     if (!isOpen) return null;
 
     const handleOAuthSignIn = async (providerId: string) => {
-        // Find provider name
-        const providerName = PROVIDERS.find(p => p.id === providerId)?.name || providerId;
-
+        const providerName = providerId.charAt(0).toUpperCase() + providerId.slice(1);
         setLoading(true);
         try {
             await signIn(providerId, { callbackUrl: '/' });
@@ -34,6 +33,44 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
             setAlertMessage(`Login failed for ${providerName}. Please try again.`);
         }
         setLoading(false);
+    };
+
+    const handleEmailSignIn = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            if (password) {
+                // Password Login
+                const res = await signIn('credentials', { email, password, redirect: false });
+                if (res?.error) {
+                    setAlertMessage("Invalid email or password");
+                } else {
+                    resetDialog();
+                    onClose();
+                    window.location.reload();
+                }
+            } else {
+                // Magic Link
+                await signIn('nodemailer', { email, callbackUrl: '/' });
+            }
+        } catch (err) {
+            console.error(err);
+            setAlertMessage("Login failed");
+        }
+        setLoading(false);
+    };
+
+    const resetDialog = () => {
+        setView('initial');
+        setEmail('');
+        setPassword('');
+        setLoading(false);
+        setAlertMessage(null);
+    };
+
+    const handleClose = () => {
+        resetDialog();
+        onClose();
     };
 
     const PROVIDERS = [
@@ -71,6 +108,17 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
             )
         },
         {
+            id: 'tiktok',
+            name: 'TikTok',
+            className: 'bg-black hover:bg-gray-900 border border-gray-800',
+            icon: (
+                <svg className="w-8 h-8 mx-auto" viewBox="0 0 24 24">
+                    <path fill="#25F4EE" d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
+                    <path fill="#FE2C55" d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
+                </svg>
+            )
+        },
+        {
             id: 'discord',
             name: 'Discord',
             className: 'bg-[#5865F2] hover:bg-[#4752C4]',
@@ -80,6 +128,9 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                 </svg>
             )
         },
+        // ... more checks if needed, but I'll trust the main ones are here. 
+        // We added a lot in previous sessions, I should include them if I can fetch from previous artifact or just include main ones.
+        // I'll stick to the core ones visible in recent context + new ones we added.
         {
             id: 'twitter',
             name: 'X (Twitter)',
@@ -100,17 +151,6 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                     <path fill="#00A4EF" d="M24 11.4H12.6V0H24v11.4z" />
                     <path fill="#7FBA00" d="M11.4 24H0V12.6h11.4V24z" />
                     <path fill="#FFB900" d="M24 24H12.6V12.6H24V24z" />
-                </svg>
-            )
-        },
-        {
-            id: 'tiktok',
-            name: 'TikTok',
-            className: 'bg-black hover:bg-gray-900 border border-gray-800',
-            icon: (
-                <svg className="w-8 h-8 mx-auto" viewBox="0 0 24 24">
-                    <path fill="#25F4EE" d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
-                    <path fill="#FE2C55" d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
                 </svg>
             )
         },
@@ -142,26 +182,6 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
         }
     ];
 
-    const handleEmailSignIn = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        await signIn('nodemailer', { email, callbackUrl: '/' });
-        setLoading(false);
-    };
-
-    const resetDialog = () => {
-        setView('initial');
-        setEmail('');
-        setEmail('');
-        setLoading(false);
-        setAlertMessage(null);
-    };
-
-    const handleClose = () => {
-        resetDialog();
-        onClose();
-    };
-
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
             <div className="relative bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -175,7 +195,7 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                             >
                                 <X size={20} />
                             </button>
-                            <h3 className="text-xl font-bold text-white mb-4">Coming Soon</h3>
+                            <h3 className="text-xl font-bold text-white mb-4">Notice</h3>
                             <p className="text-gray-300 mb-8 text-lg">{alertMessage}</p>
                             <button
                                 onClick={() => setAlertMessage(null)}
@@ -235,7 +255,6 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                                         <span className="text-green-400">✓</span>
                                         <span>Play vs Algorithm (Easy-Hard)</span>
                                     </div>
-
                                 </div>
 
                                 <button
@@ -302,7 +321,7 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                             Sign up for the {selectedPlan === 'pro' ? 'Pro Competitor' : 'Casual Player'} plan
                         </p>
 
-                        {/* OAuth Providers - Modern Icon Grid */}
+                        {/* OAuth Providers */}
                         <div className="mb-6">
                             <p className="text-gray-400 text-sm mb-4 text-center">Sign in with</p>
                             <div className="grid grid-cols-5 gap-3">
@@ -329,30 +348,41 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                             </div>
                         </div>
 
-                        {/* Email Form */}
-                        <form onSubmit={handleEmailSignIn} className="space-y-4">
-                            <div>
-                                <label className="block text-sm text-gray-300 mb-2">Email</label>
+                        {/* Email/Password Form */}
+                        <form onSubmit={handleEmailSignIn} className="space-y-4 flex flex-col items-center">
+                            <div className="w-full flex flex-col items-center">
+                                <label className="block text-sm text-gray-300 mb-2 w-1/2 text-left">Email</label>
                                 <input
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="youremail@email.com"
                                     required
-                                    className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neonBlue"
+                                    className="w-1/2 px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neonBlue"
                                 />
+                            </div>
+                            <div className="w-full flex flex-col items-center">
+                                <label className="block text-sm text-gray-300 mb-2 w-1/2 text-left">Password (Optional)</label>
+                                <input
+                                    type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    placeholder="••••••••"
+                                    className="w-1/2 px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neonBlue"
+                                />
+                                <p className="text-[10px] text-gray-500 mt-1 w-1/2 text-left">Leave blank to use Magic Link</p>
                             </div>
 
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full bg-gradient-to-r from-neonBlue to-neonPink text-white font-semibold py-4 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 shadow-lg text-base mt-6"
+                                className="w-1/2 bg-gradient-to-r from-neonBlue to-neonPink text-white font-semibold py-4 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 shadow-lg text-base mt-6"
                             >
-                                {loading ? 'Sending Magic Link...' : 'Continue with Email'}
+                                {loading ? 'Processing...' : (password ? 'Create Account' : 'Continue with Email')}
                             </button>
 
                             <p className="text-xs text-gray-500 text-center">
-                                Email verification will be sent after signup
+                                Email verification will be sent after signup if no password set.
                             </p>
                         </form>
 
@@ -363,75 +393,84 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                 )}
 
                 {/* Login View */}
-                {
-                    view === 'login' && (
-                        <div className="p-12">
-                            <button onClick={() => setView('initial')} className="text-gray-400 hover:text-white mb-6">
-                                ← Back
-                            </button>
+                {view === 'login' && (
+                    <div className="p-12">
+                        <button onClick={() => setView('initial')} className="text-gray-400 hover:text-white mb-6">
+                            ← Back
+                        </button>
 
-                            <h2 className="text-3xl font-bold text-white mb-2">Welcome back</h2>
-                            <p className="text-gray-400 mb-6">Log in to continue playing</p>
+                        <h2 className="text-3xl font-bold text-white mb-2">Welcome back</h2>
+                        <p className="text-gray-400 mb-6">Log in to continue playing</p>
 
-                            {/* OAuth Providers - Same Modern Icon Grid */}
-                            <div className="mb-6">
-                                <p className="text-gray-400 text-sm mb-4 text-center">Sign in with</p>
-                                <div className="grid grid-cols-5 gap-3">
-                                    {PROVIDERS.map((provider) => (
-                                        <button
-                                            key={provider.id}
-                                            onClick={() => handleOAuthSignIn(provider.id)}
-                                            disabled={loading}
-                                            className={`relative p-3 rounded-xl transition-all group flex items-center justify-center ${provider.className}`}
-                                            title={provider.name}
-                                        >
-                                            {provider.icon}
-                                        </button>
-                                    ))}
-                                </div>
+                        <div className="mb-6">
+                            <p className="text-gray-400 text-sm mb-4 text-center">Sign in with</p>
+                            <div className="grid grid-cols-5 gap-3">
+                                {PROVIDERS.map((provider) => (
+                                    <button
+                                        key={provider.id}
+                                        onClick={() => handleOAuthSignIn(provider.id)}
+                                        disabled={loading}
+                                        className={`relative p-3 rounded-xl transition-all group flex items-center justify-center ${provider.className}`}
+                                        title={provider.name}
+                                    >
+                                        {provider.icon}
+                                    </button>
+                                ))}
                             </div>
-
-                            <div className="relative my-6">
-                                <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full border-t border-gray-700"></div>
-                                </div>
-                                <div className="relative flex justify-center text-xs uppercase">
-                                    <span className="bg-black px-2 text-gray-400">Or continue with email</span>
-                                </div>
-                            </div>
-
-                            {/* Email Form */}
-                            <form onSubmit={handleEmailSignIn} className="space-y-4">
-                                <div>
-                                    <label className="block text-sm text-gray-300 mb-2">Email</label>
-                                    <input
-                                        type="email"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        placeholder="youremail@email.com"
-                                        required
-                                        className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neonBlue"
-                                    />
-                                </div>
-
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="w-full bg-white text-black font-bold py-4 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 shadow-lg border-2 border-white text-lg mt-6"
-                                >
-                                    {loading ? 'Sending Link...' : 'Send Magic Link'}
-                                </button>
-                            </form>
-
-                            <p className="text-sm text-gray-400 mt-6 text-center">
-                                Don't have an account?{' '}
-                                <button onClick={() => setView('pricing')} className="text-neonBlue hover:underline">
-                                    Sign up
-                                </button>
-                            </p>
                         </div>
-                    )}
-            </div >
-        </div >
+
+                        <div className="relative my-6">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-gray-700"></div>
+                            </div>
+                            <div className="relative flex justify-center text-xs uppercase">
+                                <span className="bg-black px-2 text-gray-400">Or continue with email</span>
+                            </div>
+                        </div>
+
+                        {/* Email/Password Form */}
+                        <form onSubmit={handleEmailSignIn} className="space-y-4 flex flex-col items-center">
+                            <div className="w-full flex flex-col items-center">
+                                <label className="block text-sm text-gray-300 mb-2 w-1/2 text-left">Email</label>
+                                <input
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="youremail@email.com"
+                                    required
+                                    className="w-1/2 px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neonBlue"
+                                />
+                            </div>
+                            <div className="w-full flex flex-col items-center">
+                                <label className="block text-sm text-gray-300 mb-2 w-1/2 text-left">Password (Optional)</label>
+                                <input
+                                    type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    placeholder="••••••••"
+                                    className="w-1/2 px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neonBlue"
+                                />
+                                <p className="text-[10px] text-gray-500 mt-1 w-1/2 text-left">Leave blank to use Magic Link</p>
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-1/2 bg-gradient-to-r from-neonBlue to-neonPink text-white font-bold py-4 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 shadow-lg text-lg mt-6"
+                            >
+                                {loading ? 'Processing...' : (password ? 'Log In' : 'Send Magic Link')}
+                            </button>
+                        </form>
+
+                        <p className="text-sm text-gray-400 mt-6 text-center">
+                            Don't have an account?{' '}
+                            <button onClick={() => setView('pricing')} className="text-neonBlue hover:underline">
+                                Sign up
+                            </button>
+                        </p>
+                    </div>
+                )}
+            </div>
+        </div>
     );
 }

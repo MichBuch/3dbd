@@ -109,6 +109,18 @@ export const GameUI = () => {
             {/* Right Panel - Leaderboard - HIDDEN ON MOBILE */}
             {preferences.showLeaderboard && (
                 <div className="hidden md:block" style={{ position: 'fixed', top: '80px', right: '24px', zIndex: 50 }}>
+                    <div className="mb-4 text-right">
+                        <button
+                            onClick={async () => {
+                                const res = await fetch('/api/games/create', { method: 'POST', body: JSON.stringify({ difficulty: difficulty }) });
+                                const game = await res.json();
+                                if (game.id) window.location.href = `/game/${game.id}`;
+                            }}
+                            className="bg-neonBlue/20 hover:bg-neonBlue/40 text-neonBlue border border-neonBlue px-4 py-2 rounded-lg font-bold transition-all shadow-[0_0_10px_rgba(0,243,255,0.2)] hover:shadow-[0_0_20px_rgba(0,243,255,0.4)] text-xs uppercase tracking-widest"
+                        >
+                            ⚔️ Play Online
+                        </button>
+                    </div>
                     {isPremium && !isAiEnabled ? (
                         <Lobby />
                     ) : (

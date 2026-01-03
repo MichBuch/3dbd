@@ -38,6 +38,12 @@ interface GameState {
     setTheme: (theme: Partial<Theme>) => void;
     setPreference: <K extends keyof UserPreferences>(key: K, value: UserPreferences[K]) => void;
     resetPreferences: () => void;
+
+    // Multiplayer Sync setters
+    setBoard: (board: BoardState) => void;
+    setCurrentPlayer: (player: Player) => void;
+    setWinner: (winner: Player | 'draw' | null) => void;
+    setScores: (scores: { white: number; black: number }) => void;
 }
 
 const calculateScores = (board: BoardState): { white: number, black: number, winningCells: string[] } => {
@@ -159,6 +165,11 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
             setPreference: (key, value) => set((state) => ({
                 preferences: { ...state.preferences, [key]: value }
             })),
+
+            setBoard: (board) => set({ board }),
+            setCurrentPlayer: (player) => set({ currentPlayer: player }),
+            setWinner: (winner) => set({ winner }),
+            setScores: (scores) => set({ scores }),
 
             resetPreferences: () => set({
                 preferences: {
