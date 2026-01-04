@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { User, Gamepad2, messageCircle } from 'lucide-react';
+import { User, Gamepad2, MessageCircle } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 
 interface OnlineUser {

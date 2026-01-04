@@ -78,6 +78,46 @@ const createPatternTexture = (type: 'easter' | 'xmas', colorHex: string) => {
     return texture;
 };
 
+// Helper for Tennis Texture
+const createTennisTexture = (colorHex: string, text: string) => {
+    const key = `tennis-${colorHex}-${text}`;
+    if (textureCache[key]) return textureCache[key];
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    // Base Color
+    ctx.fillStyle = colorHex;
+    ctx.fillRect(0, 0, 512, 256);
+
+    // Tennis Seam (White Curve)
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 20;
+    ctx.beginPath();
+    // A wave pattern to look like the seam when wrapped
+    ctx.moveTo(0, 128);
+    ctx.bezierCurveTo(128, 0, 384, 256, 512, 128);
+    ctx.stroke();
+
+    if (text) {
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.font = 'bold 60px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.save();
+        ctx.translate(256, 128);
+        ctx.fillText(text, 0, 0);
+        ctx.restore();
+    }
+
+    const texture = new THREE.CanvasTexture(canvas);
+    textureCache[key] = texture;
+    return texture;
+};
+
 export const Bead = ({ position, color, player, isWinning = false, scale = 1, skin = 'default' }: BeadProps) => {
     const meshRef = useRef<Mesh>(null);
     const targetY = position[1];
