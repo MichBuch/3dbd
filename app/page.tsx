@@ -5,6 +5,7 @@ import { OrbitControls, PerspectiveCamera, Environment } from '@react-three/drei
 import { Board } from '@/components/Game/Board';
 import { GameUI } from '@/components/Game/GameUI';
 import { Header } from '@/components/Layout/Header';
+import { LobbyDashboard } from '@/components/Lobby/LobbyDashboard';
 import { CookieConsent } from '@/components/Layout/CookieConsent';
 import { useGameStore } from '@/store/gameStore';
 import Link from 'next/link';
@@ -22,6 +23,11 @@ export default function Home() {
         <>
             <Header />
             <main className="relative bg-black" style={{ width: '100vw', height: '100vh' }}>
+                <div className="absolute inset-0 z-30 pointer-events-none flex items-center justify-center">
+                    <div className="pointer-events-auto w-full max-w-6xl px-6">
+                        <LobbyDashboard />
+                    </div>
+                </div>
                 <GameUI />
 
                 {/* Legal Footer */}

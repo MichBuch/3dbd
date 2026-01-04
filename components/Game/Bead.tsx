@@ -10,58 +10,68 @@ interface BeadProps {
     player: Player;
     isWinning?: boolean;
     scale?: number;
-    skin?: 'default' | 'tennis' | 'easter' | 'xmas' | 'coin';
+    skin?: 'default' | 'tennis' | 'easter' | 'xmas';
 }
 
 // Texture Cache to prevent memory leaks and lag
 const textureCache: Record<string, THREE.CanvasTexture> = {};
 
-const createTennisTexture = (colorHex: string, text: string) => {
-    const key = `${colorHex}-${text}`;
+// Helper to create patterned textures
+const createPatternTexture = (type: 'easter' | 'xmas', colorHex: string) => {
+    const key = `${type}-${colorHex}`;
     if (textureCache[key]) return textureCache[key];
 
     const canvas = document.createElement('canvas');
     canvas.width = 512;
-    canvas.height = 256; // Rectangular for UV mapping approximation
+    canvas.height = 256;
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
 
-    // 1. Base Color
+    // Base Color
     ctx.fillStyle = colorHex;
     ctx.fillRect(0, 0, 512, 256);
 
-    // 2. Fuzz/Noise (Random dots)
-    for (let i = 0; i < 50000; i++) {
-        const x = Math.random() * 512;
-        const y = Math.random() * 256;
-        ctx.fillStyle = Math.random() > 0.5 ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
-        ctx.fillRect(x, y, 2, 2);
+    if (type === 'easter') {
+        // Easter Egg: ZigZags and Spots
+        ctx.fillStyle = 'rgba(255,255,255,0.3)';
+
+        // ZigZag Band
+        ctx.beginPath();
+        ctx.moveTo(0, 100);
+        for (let i = 0; i <= 512; i += 32) {
+            ctx.lineTo(i, 100 + (i % 64 === 0 ? -20 : 20));
+        }
+        ctx.lineTo(512, 140);
+        for (let i = 512; i >= 0; i -= 32) {
+            ctx.lineTo(i, 140 + (i % 64 === 0 ? -20 : 20));
+        }
+        ctx.fill();
+
+        // Dots
+        for (let i = 0; i < 20; i++) {
+            const x = Math.random() * 512;
+            const y = Math.random() * 256;
+            ctx.beginPath();
+            ctx.arc(x, y, 15, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    } else if (type === 'xmas') {
+        // Xmas Bauble: Stripes and Sparkle
+        // Gold/Silver Stripes
+        ctx.fillStyle = 'rgba(255,215,0, 0.5)'; // Gold
+        ctx.fillRect(0, 50, 512, 20);
+        ctx.fillRect(0, 180, 512, 20);
+
+        // Snowflakes / Sparkles
+        ctx.fillStyle = 'white';
+        for (let i = 0; i < 30; i++) {
+            const x = Math.random() * 512;
+            const y = Math.random() * 256;
+            ctx.fillRect(x, y, 4, 4);
+            ctx.fillRect(x + 1, y - 3, 2, 10); // Cross
+            ctx.fillRect(x - 3, y + 1, 10, 2);
+        }
     }
-
-    // 3. Tennis Lines (Approximation: Sine waves)
-    ctx.lineWidth = 12;
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineCap = 'round';
-
-    // Wave 1
-    ctx.beginPath();
-    for (let x = 0; x <= 512; x++) {
-        const y = 128 + Math.sin(x * 0.025) * 60;
-        if (x === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-    }
-    ctx.stroke();
-
-    // 4. Branding
-    ctx.save();
-    ctx.translate(256, 128); // Center
-    ctx.rotate(-0.2); // Slight tile
-    ctx.fillStyle = '#333333';
-    ctx.font = 'bold 60px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(text, 0, -40); // slightly above center curve
-    ctx.restore();
 
     const texture = new THREE.CanvasTexture(canvas);
     textureCache[key] = texture;
@@ -102,55 +112,42 @@ export const Bead = ({ position, color, player, isWinning = false, scale = 1, sk
     if (skin === 'tennis') {
         const hexColor = player === 'white' ? '#ff4444' : '#ccff00'; // Red vs Yellow-Green
         finalColor = new THREE.Color(hexColor);
-
-        // Generate Texture
         map = createTennisTexture(hexColor, '3DBD') || null;
-        bumpMap = map; // Reuse for bump to give depth to lines/text
-
-        roughness = 1.0; // Very fuzzy
+        bumpMap = map;
+        roughness = 1.0;
         metalness = 0.0;
-
         if (isWinning) {
             emissiveIntensity = 0.4;
             finalColor.multiplyScalar(1.2);
         }
     } else if (skin === 'easter') {
-        // Egg Shape
+        const hexColor = player === 'white' ? '#FFB7B2' : '#B5EAD7'; // Pastel Red/Green
+        finalColor = new THREE.Color(hexColor);
+        map = createPatternTexture('easter', hexColor) || null;
         geometry = <sphereGeometry args={[beadRadius, 32, 32]} />;
-        // Scale Y in the mesh prop below
-        roughness = 0.5; // Matte egg shell
+        roughness = 0.5;
         metalness = 0.1;
     } else if (skin === 'xmas') {
-        // Shiny Baubles
-        metalness = 1.0;
-        roughness = 0.0;
+        const hexColor = player === 'white' ? '#D42426' : '#165B33'; // Deep Red / Green
+        finalColor = new THREE.Color(hexColor);
+        map = createPatternTexture('xmas', hexColor) || null;
+        metalness = 0.9; // Shiny
+        roughness = 0.1;
         if (isWinning) emissiveIntensity = 1.0;
-    } else if (skin === 'coin') {
-        // Coins (Cylinders)
-        geometry = <cylinderGeometry args={[beadRadius, beadRadius, 0.15 * scale, 32]} />;
-        metalness = 0.8;
-        roughness = 0.2;
-        // Coin needs rotation to lie flat or stand up? Standard 3D connect 4 beads are spheres. 
-        // If we make them coins, they might stack oddly. Let's make them thick "checkers".
-        // Rotate 90 deg optionally or just lie flat.
     }
 
-    // Default adjustment for winning/non-winning if not overridden
     if (skin === 'default') {
         if (isWinning) finalColor.multiplyScalar(1.2);
         else finalColor.multiplyScalar(0.9);
     }
 
-    // Scale adjustments for shapes
     const scaleY = skin === 'easter' ? 1.3 : 1;
-    const rotationX = skin === 'coin' ? Math.PI / 2 : 0; // Stand coins up? Or lie flat? Lie flat = stack.
 
     return (
         <mesh
             ref={meshRef}
             position={position}
             scale={[1, scaleY, 1]}
-            rotation={[rotationX, 0, 0]}
             castShadow
             receiveShadow
         >

@@ -8,6 +8,7 @@ import {
     uuid,
     json,
 } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { type AdapterAccount } from "next-auth/adapters";
 
 export const users = pgTable("user", {
@@ -31,7 +32,9 @@ export const users = pgTable("user", {
     subscriptionStatus: text("subscription_status"),
     subscriptionEndDate: timestamp("subscription_end_date", { mode: "date" }),
     // Calculated Rating
-    rating: integer("rating").default(0),
+    rating: integer("rating").default(1200),
+    // Status
+    status: text("status").$type<"online" | "offline" | "playing">().default("offline"),
 });
 
 export const accounts = pgTable(
@@ -98,6 +101,14 @@ export const games = pgTable("game", {
     mode: text("mode").default('ai'), // 'ai', 'pvp'
 });
 
+export const chats = pgTable("chat", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    gameId: text("game_id").references(() => games.id, { onDelete: 'cascade' }),
+    senderId: text("sender_id").references(() => users.id),
+    message: text("message").notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+});
+
 // User Preferences Table
 export const userPreferences = pgTable("user_preferences", {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
@@ -114,3 +125,39 @@ export const userPreferences = pgTable("user_preferences", {
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+// RELATIONS
+export const usersRelations = relations(users, ({ many }) => ({
+    gamesAsWhite: many(games, { relationName: "whitePlayer" }),
+    gamesAsBlack: many(games, { relationName: "blackPlayer" }),
+    chats: many(chats),
+}));
+
+export const gamesRelations = relations(games, ({ one, many }) => ({
+    whitePlayer: one(users, {
+        fields: [games.whitePlayerId],
+        references: [users.id],
+        relationName: "whitePlayer"
+    }),
+    blackPlayer: one(users, {
+        fields: [games.blackPlayerId],
+        references: [users.id],
+        relationName: "blackPlayer"
+    }),
+    winner: one(users, {
+        fields: [games.winnerId],
+        references: [users.id],
+    }),
+    chats: many(chats),
+}));
+
+export const chatsRelations = relations(chats, ({ one }) => ({
+    game: one(games, {
+        fields: [chats.gameId],
+        references: [games.id],
+    }),
+    sender: one(users, {
+        fields: [chats.senderId],
+        references: [users.id],
+    }),
+}));

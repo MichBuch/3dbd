@@ -15,7 +15,8 @@ interface UserPreferences {
     showLeaderboard: boolean;
     showTurnIndicator: boolean;
     boardScale: number;
-    beadSkin: 'default' | 'tennis' | 'easter' | 'xmas' | 'coin';
+    beadSkin: 'default' | 'tennis' | 'easter' | 'xmas';
+    opponentName?: string;
 }
 
 interface GameState {

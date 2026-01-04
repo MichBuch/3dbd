@@ -86,7 +86,7 @@ export const GameUI = () => {
                                 {scores.black}
                             </span>
                             <span className="hidden md:inline text-base font-bold text-white">
-                                {isAiEnabled ? 'Computer' : 'Player 2'}
+                                {isAiEnabled ? 'Computer' : (preferences.opponentName || 'Player 2')}
                             </span>
                         </div>
 

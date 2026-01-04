@@ -4,9 +4,10 @@ import { useEffect, useState, useRef, use } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { Board } from '@/components/Game/Board';
-// import { GameUI } from '@/components/Game/GameUI';
+import { GameUI } from '@/components/Game/GameUI';
 import { Header } from '@/components/Layout/Header';
 import { useGameStore } from '@/store/gameStore';
+import { ChatWindow } from '@/components/Game/ChatWindow';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
@@ -70,12 +71,30 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
                 setCurrentPlayer(data.state.currentPlayer);
                 // setWinner(data.state.winner); // Optional if tracked
 
+                // Sync Scoreboard
+                useGameStore.setState({
+                    isAiEnabled: false,
+                    scores: { white: data.whiteScore || 0, black: data.blackScore || 0 }
+                });
+
+                // Update Opponent Name
+                if (data.players) {
+                    const amIWhite = data.whitePlayerId === session?.user?.id;
+                    const opponent = amIWhite ? data.players.black : data.players.white;
+                    useGameStore.setState({
+                        preferences: {
+                            ...useGameStore.getState().preferences,
+                            opponentName: opponent?.name || 'Waiting...'
+                        }
+                    });
+                }
+
                 setGameData(data);
             }
         }, 2000); // 2s polling
 
         return () => clearInterval(interval);
-    }, [id, setBoard, setCurrentPlayer]);
+    }, [id, setBoard, setCurrentPlayer, session]);
 
     // Camera
     const baseCameraDistance = 12;
@@ -92,27 +111,17 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
         <>
             <Header />
             <main className="relative bg-black h-screen w-screen overflow-hidden">
-                {/* HUD */}
+                {/* HUD Replaced by GameUI */}
+                <GameUI />
                 <div className="absolute top-24 left-0 right-0 z-10 flex flex-col items-center pointer-events-none">
-                    <div className="bg-white/10 p-4 rounded-xl text-white backdrop-blur-md pointer-events-auto border border-white/20">
-                        <div className="text-xl font-black mb-2 flex items-center gap-2">
-                            <div className={`w-3 h-3 rounded-full ${gameData.state.currentPlayer === 'white' ? 'bg-red-500 shadow-[0_0_10px_red]' : 'bg-blue-500 shadow-[0_0_10px_blue]'}`}></div>
-                            {gameData.state.currentPlayer === 'white' ? "Red's Turn" : "Blue's Turn"}
-                        </div>
-                        <div className="flex flex-col gap-1 text-xs text-gray-300 mb-2">
-                            <div>🔴 P1 (Red): {gameData.players.white?.name || "Player 1"} {amIWhite ? "(YOU)" : ""}</div>
-                            <div>🔵 P2 (Blue): {gameData.players.black?.name || "Waiting for P2..."} {amIBlack ? "(YOU)" : ""}</div>
-                        </div>
-
-                        {!isMyTurn && <div className="text-yellow-400 font-bold animate-pulse">Waiting for opponent...</div>}
-                        {isMyTurn && <div className="text-green-400 font-bold tracking-wider"> YOUR TURN </div>}
-
-                        <div className="mt-4 pt-4 border-t border-white/10 text-[10px] text-gray-500 flex justify-between items-center gap-4">
-                            <span>ID: {id.slice(0, 6)}..</span>
+                    <div className="bg-white/10 px-4 py-2 rounded-xl text-white backdrop-blur-md pointer-events-auto border border-white/20 text-xs">
+                        <div className="flex gap-4">
+                            <div className={isMyTurn ? "text-green-400 font-bold" : "text-gray-400"}>{isMyTurn ? "YOUR TURN" : "OPPONENT'S TURN"}</div>
+                            <div className="text-gray-500">|</div>
                             <button onClick={() => {
                                 navigator.clipboard.writeText(window.location.href);
                                 alert("Link Copied!");
-                            }} className="text-neonBlue hover:text-white transition-colors uppercase font-bold tracking-widest">Copy Link</button>
+                            }} className="text-neonBlue hover:text-white font-bold uppercase">Copy Invite Link</button>
                         </div>
                     </div>
                 </div>
@@ -126,6 +135,7 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
                     <SyncListener gameId={id} isMyTurn={isMyTurn} />
                     <Board />
                 </Canvas>
+                <ChatWindow gameId={id} />
             </main>
         </>
     );
