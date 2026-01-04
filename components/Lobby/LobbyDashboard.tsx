@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { User, Gamepad2, MessageCircle } from 'lucide-react';
+import { User, Gamepad2, MessageCircle, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
+import { useGameStore } from '@/store/gameStore';
 
 interface OnlineUser {
     id: string;
@@ -24,6 +25,7 @@ interface OpenGame {
 
 export const LobbyDashboard = () => {
     const { data: session } = useSession();
+    const { setPreference } = useGameStore();
     const [users, setUsers] = useState<OnlineUser[]>([]);
     const [games, setGames] = useState<OpenGame[]>([]);
     const [loading, setLoading] = useState(true);
@@ -58,7 +60,14 @@ export const LobbyDashboard = () => {
     }, [session]);
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-6xl mx-auto p-4 md:p-0">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-6xl mx-auto p-4 md:p-0 relative">
+            <button
+                onClick={() => setPreference('isLobbyVisible', false)}
+                className="absolute -top-12 right-0 p-2 text-white/50 hover:text-white transition-colors z-50 rounded-full hover:bg-white/10"
+                title="Close Lobby Overlay"
+            >
+                <X size={24} />
+            </button>
             {/* Left Col: Online Players */}
             <div className="glass-panel p-6 rounded-2xl border border-white/10 bg-black/60">
                 <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">

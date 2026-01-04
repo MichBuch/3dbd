@@ -17,6 +17,7 @@ interface UserPreferences {
     boardScale: number;
     beadSkin: 'default' | 'tennis' | 'easter' | 'xmas';
     opponentName?: string;
+    isLobbyVisible: boolean;
 }
 
 interface GameState {
@@ -148,6 +149,7 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
                 showTurnIndicator: true,
                 boardScale: 1.0,
                 beadSkin: 'default',
+                isLobbyVisible: true,
             },
 
             resetGame: () => set({
@@ -179,6 +181,7 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
                     showTurnIndicator: true,
                     boardScale: 1.0,
                     beadSkin: 'default',
+                    isLobbyVisible: true,
                 }
             }),
 
@@ -289,6 +292,11 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
             }),
             // Migrate from old storage key if exists
             migrate: (persistedState: any, version: number) => {
+                // Default new fields
+                if (persistedState && persistedState.preferences && persistedState.preferences.isLobbyVisible === undefined) {
+                    persistedState.preferences.isLobbyVisible = true;
+                }
+
                 // Try to load from old key
                 const oldData = localStorage.getItem('3dbd-storage-v3');
                 if (oldData && !persistedState) {

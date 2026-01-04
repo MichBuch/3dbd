@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { AuthDialog } from '@/components/Auth/AuthDialog';
-import { User, LogOut, Settings, RotateCcw, Trophy } from 'lucide-react';
+import { User, LogOut, Settings, RotateCcw, Trophy, Gamepad2 } from 'lucide-react';
 import { SettingsPanel } from '@/components/Game/SettingsPanel';
 import { useGameStore } from '@/store/gameStore';
 
@@ -83,6 +83,17 @@ export function Header() {
                         >
                             <RotateCcw size={20} />
                         </button>
+
+                        {/* Show Lobby Button (Only if hidden) */}
+                        {!useGameStore((state) => state.preferences.isLobbyVisible) && (
+                            <button
+                                onClick={() => useGameStore.getState().setPreference('isLobbyVisible', true)}
+                                className="p-2 text-neonBlue/80 hover:text-neonBlue transition-colors animate-in fade-in"
+                                title="Show Lobby"
+                            >
+                                <Gamepad2 size={20} />
+                            </button>
+                        )}
 
                         {/* Settings Button */}
                         <button
