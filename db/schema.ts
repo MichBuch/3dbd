@@ -126,6 +126,17 @@ export const invites = pgTable("invites", {
     createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const challenges = pgTable("challenges", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    fromId: text("from_id").notNull(), // Guest ID or User ID
+    fromName: text("from_name").notNull(),
+    toId: text("to_id").references(() => users.id).notNull(),
+    message: text("message"),
+    status: text("status").$type<'pending' | 'accepted' | 'declined'>().default('pending'),
+    gameId: text("game_id").references(() => games.id),
+    createdAt: timestamp("created_at").defaultNow(),
+});
+
 // User Preferences Table
 export const userPreferences = pgTable("user_preferences", {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
@@ -150,6 +161,7 @@ export const usersRelations = relations(users, ({ many }) => ({
     chats: many(chats),
     friends: many(friends, { relationName: "userFriends" }),
     invites: many(invites, { relationName: "userInvites" }),
+    challengesAsRecipient: many(challenges, { relationName: "userChallenges" }),
 }));
 
 export const invitesRelations = relations(invites, ({ one }) => ({
@@ -157,6 +169,18 @@ export const invitesRelations = relations(invites, ({ one }) => ({
         fields: [invites.referrerId],
         references: [users.id],
         relationName: "userInvites"
+    })
+}));
+
+export const challengesRelations = relations(challenges, ({ one }) => ({
+    recipient: one(users, {
+        fields: [challenges.toId],
+        references: [users.id],
+        relationName: "userChallenges"
+    }),
+    game: one(games, {
+        fields: [challenges.gameId],
+        references: [games.id]
     })
 }));
 

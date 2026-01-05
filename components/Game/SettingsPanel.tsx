@@ -1,9 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useGameStore } from '@/store/gameStore';
-import { X, Eye, Palette } from 'lucide-react';
+import { X, Eye, Palette, ChevronDown, ChevronUp, Monitor, Gamepad2, Settings as SettingsIcon } from 'lucide-react';
 
 interface SettingsPanelProps {
     isOpen: boolean;
@@ -33,224 +33,135 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
         setAiEnabled
     } = useGameStore();
 
-    const [selectedTheme, setSelectedTheme] = React.useState('dark');
+    const [selectedTheme, setSelectedTheme] = useState('dark');
+    // Collapsible Sections State
+    const [openSection, setOpenSection] = useState<'gameplay' | 'appearance' | 'interface' | null>('gameplay');
 
     if (!isOpen) return null;
 
+    const SectionHeader = ({ id, label, icon: Icon }: { id: string, label: string, icon: any }) => (
+        <button
+            onClick={() => setOpenSection(openSection === id ? null : id as any)}
+            className={`w-full flex items-center justify-between p-4 rounded-xl transition-all ${openSection === id ? 'bg-neonBlue/10 border-neonBlue text-white' : 'bg-white/5 border-transparent text-gray-400 hover:bg-white/10'
+                } border`}
+        >
+            <div className="flex items-center gap-3">
+                <Icon size={18} className={openSection === id ? 'text-neonBlue' : 'text-gray-500'} />
+                <span className="font-bold">{label}</span>
+            </div>
+            {openSection === id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        </button>
+    );
+
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-            <div className="relative bg-gradient-to-br from-gray-900 to-black border-2 border-neonBlue rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-[0_0_50px_rgba(0,243,255,0.3)]">
-                {/* Close Button */}
-                <button
-                    onClick={onClose}
-                    className="absolute top-3 right-3 text-gray-400 hover:text-white transition-colors z-10"
-                >
-                    <X size={24} />
-                </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="relative bg-[#111] border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[85vh]">
 
                 {/* Header */}
-                <div className="px-6 pt-6 pb-4">
-                    <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-neonBlue to-neonPink">
-                        Settings
+                <div className="p-6 border-b border-white/10 flex justify-between items-center">
+                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                        <SettingsIcon className="text-neonBlue" /> Settings
                     </h2>
+                    <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors">
+                        <X size={20} />
+                    </button>
                 </div>
 
-                {/* Settings Content */}
-                <div className="px-6 pb-6 space-y-4">
-                    {/* Show Scoreboard */}
-                    <div
-                        className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10 active:bg-white/10 transition-colors cursor-pointer"
-                        onClick={() => setPreference('showScoreboard', !preferences.showScoreboard)}
-                    >
-                        <div>
-                            <label className="text-white font-semibold text-sm pointer-events-none">Show Scoreboard</label>
-                            <p className="text-gray-400 text-xs pointer-events-none">Display player scores</p>
-                        </div>
-                        <div className="flex items-center gap-2 pointer-events-none">
-                            <span className={`text-xs font-bold ${preferences.showScoreboard ? 'text-gray-500' : 'text-white'}`}>OFF</span>
-                            <div className={`relative w-14 h-8 rounded-full transition-colors ${preferences.showScoreboard ? 'bg-neonBlue' : 'bg-gray-600'}`}>
-                                <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${preferences.showScoreboard ? 'translate-x-6' : 'translate-x-0'}`} />
-                            </div>
-                            <span className={`text-xs font-bold ${preferences.showScoreboard ? 'text-neonBlue' : 'text-gray-500'}`}>ON</span>
-                        </div>
-                    </div>
+                {/* Content - Scrollable if needed but minimized by collapsibles */}
+                <div className="p-6 space-y-3 overflow-y-auto custom-scrollbar flex-1">
 
-                    {/* Show Leaderboard */}
-                    <div
-                        className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10 active:bg-white/10 transition-colors cursor-pointer"
-                        onClick={() => setPreference('showLeaderboard', !preferences.showLeaderboard)}
-                    >
-                        <div>
-                            <label className="text-white font-semibold text-sm pointer-events-none">Show Leaderboard</label>
-                            <p className="text-gray-400 text-xs pointer-events-none">Display top players</p>
-                        </div>
-                        <div className="flex items-center gap-2 pointer-events-none">
-                            <span className={`text-xs font-bold ${preferences.showLeaderboard ? 'text-gray-500' : 'text-white'}`}>OFF</span>
-                            <div className={`relative w-14 h-8 rounded-full transition-colors ${preferences.showLeaderboard ? 'bg-neonBlue' : 'bg-gray-600'}`}>
-                                <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${preferences.showLeaderboard ? 'translate-x-6' : 'translate-x-0'}`} />
+                    {/* 1. Gameplay Section */}
+                    <SectionHeader id="gameplay" label="Gameplay" icon={Gamepad2} />
+                    {openSection === 'gameplay' && (
+                        <div className="space-y-4 p-2 animate-in slide-in-from-top-2 duration-200">
+                            {/* AI vs PVP */}
+                            <div className="p-4 bg-white/5 rounded-xl border border-white/5">
+                                <label className="text-white font-bold text-xs uppercase tracking-wider block mb-3">Game Mode</label>
+                                <div className="flex gap-2">
+                                    <button onClick={() => setAiEnabled(true)} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${isAiEnabled ? 'bg-neonBlue text-black' : 'bg-black/40 text-gray-500'}`}>VS AI</button>
+                                    <button onClick={() => setAiEnabled(false)} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${!isAiEnabled ? 'bg-neonPink text-black' : 'bg-black/40 text-gray-500'}`}>PVP</button>
+                                </div>
                             </div>
-                            <span className={`text-xs font-bold ${preferences.showLeaderboard ? 'text-neonBlue' : 'text-gray-500'}`}>ON</span>
-                        </div>
-                    </div>
 
-                    {/* Show Turn Indicator */}
-                    <div
-                        className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10 active:bg-white/10 transition-colors cursor-pointer"
-                        onClick={() => setPreference('showTurnIndicator', !preferences.showTurnIndicator)}
-                    >
-                        <div>
-                            <label className="text-white font-semibold text-sm pointer-events-none">Show Turn Indicator</label>
-                            <p className="text-gray-400 text-xs pointer-events-none">Show whose turn (PVP)</p>
-                        </div>
-                        <div className="flex items-center gap-2 pointer-events-none">
-                            <span className={`text-xs font-bold ${preferences.showTurnIndicator ? 'text-gray-500' : 'text-white'}`}>OFF</span>
-                            <div className={`relative w-14 h-8 rounded-full transition-colors ${preferences.showTurnIndicator ? 'bg-neonBlue' : 'bg-gray-600'}`}>
-                                <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${preferences.showTurnIndicator ? 'translate-x-6' : 'translate-x-0'}`} />
+                            {/* Difficulty */}
+                            <div className="p-4 bg-white/5 rounded-xl border border-white/5">
+                                <label className="text-white font-bold text-xs uppercase tracking-wider block mb-3">Difficulty</label>
+                                <div className="flex gap-2">
+                                    {(['easy', 'medium', 'hard'] as const).map(d => (
+                                        <button key={d} onClick={() => setDifficulty(d)} className={`flex-1 py-2 rounded-lg text-sm font-bold uppercase transition-all ${difficulty === d ? 'bg-white text-black' : 'bg-black/40 text-gray-500'}`}>{d}</button>
+                                    ))}
+                                </div>
                             </div>
-                            <span className={`text-xs font-bold ${preferences.showTurnIndicator ? 'text-neonBlue' : 'text-gray-500'}`}>ON</span>
                         </div>
-                    </div>
+                    )}
 
-                    {/* Game Settings */}
-                    <div>
-                        <div className="space-y-4">
-                            {/* Board Scale Slider */}
-                            <div className="p-4 bg-white/5 rounded-lg border border-white/10">
-                                <label className="text-white font-semibold block mb-2">
-                                    Board Scale: {preferences.boardScale.toFixed(1)}x
+                    {/* 2. Appearance Section */}
+                    <SectionHeader id="appearance" label="Appearance" icon={Palette} />
+                    {openSection === 'appearance' && (
+                        <div className="space-y-4 p-2 animate-in slide-in-from-top-2 duration-200">
+                            {/* Theme */}
+                            <div className="p-4 bg-white/5 rounded-xl border border-white/5">
+                                <label className="text-white font-bold text-xs uppercase tracking-wider block mb-3">Theme</label>
+                                <select value={selectedTheme} onChange={(e) => setSelectedTheme(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white text-sm focus:outline-none focus:border-neonBlue">
+                                    {THEMES.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                                </select>
+                            </div>
+                            {/* Bead Skin */}
+                            <div className="p-4 bg-white/5 rounded-xl border border-white/5">
+                                <label className="text-white font-bold text-xs uppercase tracking-wider block mb-3">Bead Skin</label>
+                                <select value={preferences.beadSkin} onChange={(e) => setPreference('beadSkin', e.target.value as any)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white text-sm focus:outline-none focus:border-neonBlue">
+                                    <option value="default">Default</option>
+                                    <option value="tennis">Tennis</option>
+                                    <option value="easter">Easter</option>
+                                    <option value="xmas">Christmas</option>
+                                </select>
+                            </div>
+                            {/* Board Scale */}
+                            <div className="p-4 bg-white/5 rounded-xl border border-white/5">
+                                <label className="text-white font-bold text-xs uppercase tracking-wider block mb-3 flex justify-between">
+                                    <span>Board Scale</span>
+                                    <span>{preferences.boardScale.toFixed(1)}x</span>
                                 </label>
                                 <input
-                                    type="range"
-                                    min="0.4"
-                                    max="1.5"
-                                    step="0.1"
+                                    type="range" min="0.5" max="1.5" step="0.1"
                                     value={preferences.boardScale}
                                     onChange={(e) => setPreference('boardScale', parseFloat(e.target.value))}
-                                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                                    style={{
-                                        background: `linear-gradient(to right, #00f3ff 0%, #00f3ff ${((preferences.boardScale - 0.4) / 1.1) * 100}%, #374151 ${((preferences.boardScale - 0.4) / 1.1) * 100}%, #374151 100%)`
-                                    }}
+                                    className="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-neonBlue"
                                 />
-                                <p className="text-gray-400 text-sm mt-2">Smaller for mobile, larger for desktop</p>
-                            </div>
-
-                            {/* Theme Selector */}
-                            <div className="p-4 bg-white/5 rounded-lg border border-white/10">
-                                <label className="text-white font-semibold block mb-3 flex items-center gap-2">
-                                    <Palette size={18} className="text-neonPink" />
-                                    Theme
-                                </label>
-                                <select
-                                    value={selectedTheme}
-                                    onChange={(e) => setSelectedTheme(e.target.value)}
-                                    className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white font-medium focus:outline-none focus:border-neonBlue transition-colors cursor-pointer"
-                                >
-                                    {THEMES.map(theme => (
-                                        <option key={theme.id} value={theme.id}>{theme.name}</option>
-                                    ))}
-                                </select>
-                                <p className="text-gray-400 text-sm mt-2">Changes bead colors, shapes & backdrop</p>
-                            </div>
-
-                            {/* Difficulty Selector - IMPROVED VISIBILITY */}
-                            <div className="p-4 bg-white/5 rounded-lg border border-white/10">
-                                <label className="text-white font-semibold block mb-3">Algorithm Difficulty</label>
-                                <div className="flex gap-2">
-                                    {(['easy', 'medium', 'hard'] as const).map((d) => (
-                                        <button
-                                            key={d}
-                                            onClick={() => setDifficulty(d)}
-                                            className={`flex-1 px-4 py-3 rounded-lg font-bold uppercase text-sm transition-all ${difficulty === d
-                                                ? 'bg-neonBlue text-white shadow-[0_0_20px_rgba(0,243,255,0.5)]'
-                                                : 'bg-white/10 text-white hover:bg-white/20'
-                                                }`}
-                                        >
-                                            {d}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* AI vs PVP Toggle - IMPROVED VISIBILITY */}
-                            <div className="p-4 bg-white/5 rounded-lg border border-white/10">
-                                <label className="text-white font-semibold block mb-3">Game Mode</label>
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => setAiEnabled(true)}
-                                        className={`flex-1 px-4 py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2 ${isAiEnabled
-                                            ? 'bg-neonBlue text-white shadow-[0_0_20px_rgba(0,243,255,0.5)]'
-                                            : 'bg-white/10 text-white hover:bg-white/20'
-                                            }`}
-                                    >
-                                        VS COMPUTER
-                                    </button>
-                                    <button
-                                        onClick={() => setAiEnabled(false)}
-                                        className={`flex-1 px-4 py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2 ${!isAiEnabled
-                                            ? 'bg-neonPink text-white shadow-[0_0_20px_rgba(255,0,255,0.5)]'
-                                            : 'bg-white/10 text-white hover:bg-white/20'
-                                            }`}
-                                    >
-                                        PVP
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Bead Skin Selector */}
-                            <div className="p-4 bg-white/5 rounded-lg border border-white/10">
-                                <label className="text-white font-semibold block mb-3 flex items-center gap-2">
-                                    <Eye size={18} className="text-neonBlue" />
-                                    Bead Skin
-                                </label>
-                                <select
-                                    value={preferences.beadSkin}
-                                    onChange={(e) => setPreference('beadSkin', e.target.value as any)}
-                                    className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white font-medium focus:outline-none focus:border-neonBlue transition-colors cursor-pointer"
-                                >
-                                    <option value="default">Default (Spheres)</option>
-                                    <option value="tennis">Tennis Balls (Red vs Yellow)</option>
-                                    <option value="easter">Easter Eggs</option>
-                                    <option value="xmas">Christmas Baubles</option>
-                                    <option value="coin">Coins</option>
-                                </select>
                             </div>
                         </div>
-                    </div>
+                    )}
+
+                    {/* 3. Interface Section */}
+                    <SectionHeader id="interface" label="Interface" icon={Monitor} />
+                    {openSection === 'interface' && (
+                        <div className="space-y-2 p-2 animate-in slide-in-from-top-2 duration-200">
+                            {(['showScoreboard', 'showLeaderboard', 'showTurnIndicator'] as const).map((key) => {
+                                const label = key === 'showScoreboard' ? 'Scoreboard' : key === 'showLeaderboard' ? 'Leaderboard' : 'Turn Indicator';
+                                return (
+                                    <div key={key} onClick={() => setPreference(key, !preferences[key])} className="flex items-center justify-between p-3 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors">
+                                        <span className="text-sm font-medium text-gray-300">{label}</span>
+                                        <div className={`w-10 h-6 rounded-full relative transition-colors ${preferences[key] ? 'bg-neonBlue' : 'bg-gray-700'}`}>
+                                            <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${preferences[key] ? 'translate-x-4' : 'translate-x-0'}`} />
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+
                 </div>
 
-                {/* Footer Actions - CLEAR BUTTONS */}
-                <div className="p-6 border-t border-white/10 space-y-3">
-                    <p className="text-xs text-center text-gray-400 flex items-center justify-center gap-1.5">
-                        <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z" />
-                        </svg>
-                        Settings are saved automatically
-                    </p>
-                    <div className="flex gap-3">
-                        <button
-                            onClick={resetPreferences}
-                            className="flex-1 px-6 py-3 bg-transparent text-white rounded-lg font-bold border-2 border-white/30 hover:border-white/60 hover:bg-white/5 transition-all"
-                        >
-                            Reset Defaults
-                        </button>
-                        <button
-                            onClick={onClose}
-                            className="flex-1 px-6 py-3 bg-white text-black rounded-lg font-bold hover:bg-gray-200 transition-colors shadow-lg border-2 border-white"
-                        >
-                            Save & Close
-                        </button>
-                    </div>
-                    <div className="pt-6 mt-6 border-t border-white/10 text-center space-y-2">
-                        <div className="flex justify-center gap-4 text-xs text-gray-500">
-                            <Link href="/terms" target="_blank" className="hover:text-white transition-colors">Terms of Service</Link>
-                            <span>•</span>
-                            <Link href="/privacy" target="_blank" className="hover:text-white transition-colors">Privacy Policy</Link>
-                        </div>
-                        <div className="text-xs text-gray-600">
-                            v1.0.0 • 3DBD
-                        </div>
-                    </div>
+                {/* Footer */}
+                <div className="p-6 border-t border-white/10 flex gap-3 bg-black/40 rounded-b-2xl">
+                    <button onClick={resetPreferences} className="flex-1 py-3 rounded-xl border border-white/10 text-gray-400 font-bold text-sm hover:text-white hover:bg-white/5 transition-colors">
+                        Reset
+                    </button>
+                    <button onClick={onClose} className="flex-1 py-3 rounded-xl bg-white text-black font-bold text-sm hover:scale-[1.02] transition-transform">
+                        Done
+                    </button>
                 </div>
+
             </div>
         </div>
     );

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { User, Gamepad2, MessageCircle, X, UserPlus, Users } from 'lucide-react';
+import { User, Gamepad2, MessageCircle, X, UserPlus, Users, Swords, Bell } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useGameStore } from '@/store/gameStore';
 
@@ -25,6 +25,15 @@ interface OpenGame {
     createdAt: string;
 }
 
+interface Challenge {
+    id: string;
+    fromId: string;
+    fromName: string;
+    message: string;
+    status: 'pending' | 'accepted' | 'declined';
+    gameId?: string;
+}
+
 export const LobbyDashboard = () => {
     const { data: session } = useSession();
     const { setPreference } = useGameStore();
@@ -35,6 +44,23 @@ export const LobbyDashboard = () => {
     const [friends, setFriends] = useState<OnlineUser[]>([]);
     const [activeTab, setActiveTab] = useState<'all' | 'friends'>('all');
 
+    // Challenge System State
+    const [guestId, setGuestId] = useState('');
+    const [challenges, setChallenges] = useState<Challenge[]>([]);
+    const [showChallengeModal, setShowChallengeModal] = useState<string | null>(null); // userId to challenge
+    const [challengeMessage, setChallengeMessage] = useState('Let\'s play!');
+    const [sentChallengeStatus, setSentChallengeStatus] = useState<string>(''); // For guest feedback
+
+    // Initialize Guest ID
+    useEffect(() => {
+        let id = localStorage.getItem('guest_id');
+        if (!id) {
+            id = 'guest-' + Math.random().toString(36).substring(2, 9);
+            localStorage.setItem('guest_id', id);
+        }
+        setGuestId(id);
+    }, []);
+
     const fetchLobby = async () => {
         try {
             const queryParam = searchQuery ? `?q=${encodeURIComponent(searchQuery)}` : '';
@@ -43,11 +69,34 @@ export const LobbyDashboard = () => {
             if (data.users) setUsers(data.users);
             if (data.openGames) setGames(data.openGames);
 
-            // Fetch Friends
-            const friendsRes = await fetch('/api/friends');
-            if (friendsRes.ok) {
-                const friendsData = await friendsRes.json();
-                setFriends(friendsData);
+            if (session?.user) {
+                // Fetch Friends
+                const friendsRes = await fetch('/api/friends');
+                if (friendsRes.ok) {
+                    const friendsData = await friendsRes.json();
+                    setFriends(friendsData);
+                }
+
+                // Fetch Incoming Challenges (Polling)
+                const challRes = await fetch(`/api/challenges?toId=${session.user.id}`);
+                if (challRes.ok) {
+                    const challData = await challRes.json();
+                    setChallenges(challData);
+                }
+            } else if (guestId) {
+                // Guest: Poll for status of sent challenges
+                const myChallRes = await fetch(`/api/challenges?fromId=${guestId}`);
+                if (myChallRes.ok) {
+                    const myChalls: Challenge[] = await myChallRes.json();
+                    // Check if any accepted
+                    const accepted = myChalls.find(c => c.status === 'accepted' && c.gameId);
+                    if (accepted && accepted.gameId) {
+                        window.location.href = `/game/${accepted.gameId}`;
+                    }
+                    if (myChalls.length > 0) {
+                        setSentChallengeStatus(myChalls[0].status === 'pending' ? 'Waiting for response...' : 'Challenge ' + myChalls[0].status);
+                    }
+                }
             }
         } catch (e) {
             console.error(e);
@@ -68,11 +117,51 @@ export const LobbyDashboard = () => {
         }
     };
 
+    const sendChallenge = async () => {
+        if (!showChallengeModal) return;
+        try {
+            await fetch('/api/challenges', {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: 'create',
+                    fromId: session?.user?.id || guestId,
+                    fromName: session?.user?.name || 'Guest',
+                    toId: showChallengeModal,
+                    message: challengeMessage
+                })
+            });
+            setSentChallengeStatus('Challenge Sent!');
+            setShowChallengeModal(null);
+            setChallengeMessage('Let\'s play!');
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const respondToChallenge = async (challengeId: string, action: 'accept' | 'decline') => {
+        try {
+            const res = await fetch('/api/challenges', {
+                method: 'POST',
+                body: JSON.stringify({ action, challengeId })
+            });
+            if (action === 'accept') {
+                const data = await res.json();
+                if (data.gameId) {
+                    window.location.href = `/game/${data.gameId}`;
+                }
+            } else {
+                fetchLobby();
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
     useEffect(() => {
         fetchLobby();
         const interval = setInterval(fetchLobby, 5000); // Poll every 5s
         return () => clearInterval(interval);
-    }, [searchQuery]); // Re-fetch when search changes
+    }, [searchQuery, session, guestId]); // Re-fetch when dependencies change
 
     // Heartbeat logic
     useEffect(() => {
@@ -94,11 +183,38 @@ export const LobbyDashboard = () => {
                 <X size={24} />
             </button>
             {/* Left Col: Online Players */}
-            <div className="glass-panel p-6 rounded-2xl border border-white/10 bg-black/60">
+            <div className="glass-panel p-6 rounded-2xl border border-white/10 bg-black/60 relative">
                 <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                     Online Players ({activeTab === 'all' ? users.length : friends.length})
                 </h3>
+
+                {/* CHALLENGE NOTIFICATIONS (User Only) */}
+                {challenges.length > 0 && (
+                    <div className="mb-4 bg-neonBlue/10 border border-neonBlue text-white p-3 rounded-xl animate-in fade-in slide-in-from-top-2">
+                        <h4 className="font-bold text-sm flex items-center gap-2 mb-2">
+                            <Bell size={14} className="text-neonBlue animate-bounce" /> Challenge Request!
+                        </h4>
+                        {challenges.map(c => (
+                            <div key={c.id} className="flex items-center justify-between text-xs bg-black/40 p-2 rounded-lg mb-2 last:mb-0">
+                                <div>
+                                    <span className="font-bold text-neonBlue">{c.fromName}</span>: "{c.message || 'Play?'}"
+                                </div>
+                                <div className="flex gap-2">
+                                    <button onClick={() => respondToChallenge(c.id, 'accept')} className="bg-green-500 text-black px-2 py-1 rounded font-bold hover:bg-green-400">Accept</button>
+                                    <button onClick={() => respondToChallenge(c.id, 'decline')} className="bg-red-500 text-white px-2 py-1 rounded font-bold hover:bg-red-400">Decline</button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {/* GUEST STATUS FEEDBACK */}
+                {!session && sentChallengeStatus && (
+                    <div className="mb-4 bg-white/10 border border-white/20 text-gray-300 p-2 rounded-lg text-xs text-center font-mono">
+                        STATUS: {sentChallengeStatus}
+                    </div>
+                )}
 
                 {/* Tabs */}
                 <div className="flex gap-2 mb-4">
@@ -167,28 +283,66 @@ export const LobbyDashboard = () => {
 
                                     <button
                                         disabled={u.status === 'playing'}
-                                        onClick={async () => {
-                                            // 1. Create a PVP Game
-                                            const res = await fetch('/api/games/create', {
-                                                method: 'POST',
-                                                body: JSON.stringify({ difficulty: 'medium' })
-                                            });
-                                            const game = await res.json();
-
-                                            // 2. Redirect to it
-                                            if (game.id) {
-                                                window.location.href = `/game/${game.id}`;
+                                        onClick={() => {
+                                            if (session) {
+                                                // Logged In: Same old logic (for now, or use challenge system too?)
+                                                // For robustness, let's use the challenge modal for everyone to message
+                                                setShowChallengeModal(u.id);
+                                            } else {
+                                                // Guest: Use Challenge Modal
+                                                setShowChallengeModal(u.id);
                                             }
                                         }}
-                                        className="opacity-0 group-hover:opacity-100 transition-opacity bg-neonBlue/20 text-neonBlue px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-neonBlue hover:text-black disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="opacity-0 group-hover:opacity-100 transition-opacity bg-neonBlue/20 text-neonBlue px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-neonBlue hover:text-black disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                                     >
-                                        {u.status === 'playing' ? 'In Game' : 'Invite'}
+                                        <Swords size={12} /> Challenge
                                     </button>
                                 </div>
                             </div>
                         ))
                     )}
                 </div>
+
+                {session?.user && (
+                    <div className="mt-6 pt-6 border-t border-white/10">
+                        <div className="bg-gradient-to-r from-neonPink/10 to-neonBlue/10 rounded-xl p-4 border border-white/10">
+                            <div className="flex items-start gap-3">
+                                <MessageCircle className="text-neonPink shrink-0 mt-1" size={20} />
+                                <div>
+                                    <h4 className="font-bold text-white text-sm mb-1">Make New Friends!</h4>
+                                    <p className="text-xs text-gray-400 leading-relaxed">
+                                        Click the <UserPlus size={12} className="inline mx-1 text-green-400" /> icon to add players to your friend list.
+                                        Filtering by "Friends" makes it easier to challenge them later!
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* CHALLENGE MODAL */}
+                {showChallengeModal && (
+                    <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md rounded-2xl flex items-center justify-center p-6 animate-in fade-in zoom-in duration-200">
+                        <div className="w-full bg-[#111] border border-white/20 p-6 rounded-xl shadow-2xl">
+                            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                <Swords className="text-neonBlue" /> Send Challenge
+                            </h3>
+                            <p className="text-gray-400 text-sm mb-4">
+                                Message to opponent:
+                            </p>
+                            <input
+                                type="text"
+                                value={challengeMessage}
+                                onChange={(e) => setChallengeMessage(e.target.value)}
+                                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white mb-4 focus:outline-none focus:border-neonBlue"
+                            />
+                            <div className="flex gap-3">
+                                <button onClick={() => setShowChallengeModal(null)} className="flex-1 py-2 bg-white/10 text-gray-400 rounded-lg font-bold hover:bg-white/20">Cancel</button>
+                                <button onClick={sendChallenge} className="flex-1 py-2 bg-neonBlue text-black rounded-lg font-bold hover:bg-white">Send</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Right Col: Open Games */}
@@ -223,21 +377,6 @@ export const LobbyDashboard = () => {
                             </div>
                         ))
                     )}
-                </div>
-
-                <div className="mt-6 pt-6 border-t border-white/10">
-                    <div className="bg-gradient-to-r from-neonPink/10 to-neonBlue/10 rounded-xl p-4 border border-white/10">
-                        <div className="flex items-start gap-3">
-                            <MessageCircle className="text-neonPink shrink-0 mt-1" size={20} />
-                            <div>
-                                <h4 className="font-bold text-white text-sm mb-1">Make New Friends!</h4>
-                                <p className="text-xs text-gray-400 leading-relaxed">
-                                    Click the <UserPlus size={12} className="inline mx-1 text-green-400" /> icon to add players to your friend list.
-                                    Filtering by "Friends" makes it easier to challenge them later!
-                                </p>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
