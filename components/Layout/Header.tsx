@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { AuthDialog } from '@/components/Auth/AuthDialog';
-import { User, LogOut, Settings, RotateCcw, Trophy, Gamepad2 } from 'lucide-react';
+import { User, LogOut, Settings, RotateCcw, Trophy, Gamepad2, Gift } from 'lucide-react';
 import { SettingsPanel } from '@/components/Game/SettingsPanel';
 import { useGameStore } from '@/store/gameStore';
 
@@ -106,6 +106,29 @@ export function Header() {
 
                         {session ? (
                             <div className="hidden md:flex glass-panel px-4 py-2 rounded-xl items-center gap-3 justify-between">
+                                {/* Invite Button */}
+                                <button
+                                    onClick={async () => {
+                                        try {
+                                            const res = await fetch('/api/invites', { method: 'POST' });
+                                            const { code } = await res.json();
+                                            const link = `${window.location.origin}/invite/${code}`;
+                                            navigator.clipboard.writeText(link);
+                                            // In a real app we'd use a toast here
+                                            const btn = document.getElementById('invite-btn');
+                                            if (btn) btn.style.color = '#00ff00';
+                                            setTimeout(() => { if (btn) btn.style.color = ''; }, 2000);
+                                        } catch (e) {
+                                            console.error(e);
+                                        }
+                                    }}
+                                    id="invite-btn"
+                                    className="p-1.5 bg-neonPink/20 text-neonPink hover:bg-neonPink hover:text-black rounded-lg transition-all animate-pulse mr-2"
+                                    title="Invite a Friend (Get Free Premium)"
+                                >
+                                    <Gift size={18} />
+                                </button>
+
                                 <div className="flex items-center gap-3">
                                     {session.user?.image ? (
                                         <img src={session.user.image} alt="User" className="w-8 h-8 rounded-full border border-neonBlue shadow-[0_0_10px_#00f3ff]" />

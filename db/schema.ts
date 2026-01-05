@@ -118,6 +118,14 @@ export const friends = pgTable("friends", {
     pk: primaryKey({ columns: [t.userId, t.friendId] }),
 }));
 
+export const invites = pgTable("invites", {
+    code: text("code").primaryKey(),
+    referrerId: text("referrer_id").references(() => users.id),
+    expiresAt: timestamp("expires_at").notNull(),
+    usedCount: integer("used_count").default(0).notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+});
+
 // User Preferences Table
 export const userPreferences = pgTable("user_preferences", {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
@@ -141,6 +149,15 @@ export const usersRelations = relations(users, ({ many }) => ({
     gamesAsBlack: many(games, { relationName: "blackPlayer" }),
     chats: many(chats),
     friends: many(friends, { relationName: "userFriends" }),
+    invites: many(invites, { relationName: "userInvites" }),
+}));
+
+export const invitesRelations = relations(invites, ({ one }) => ({
+    referrer: one(users, {
+        fields: [invites.referrerId],
+        references: [users.id],
+        relationName: "userInvites"
+    })
 }));
 
 export const friendsRelations = relations(friends, ({ one }) => ({
