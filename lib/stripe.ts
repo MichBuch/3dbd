@@ -1,10 +1,12 @@
 import Stripe from 'stripe';
 
-if (!process.env.STRIPE_SECRET_KEY) {
-    throw new Error('STRIPE_SECRET_KEY is missing. Please set it in your .env file.');
-}
+const stripeKey = process.env.STRIPE_SECRET_KEY || 'sk_test_mock_key_for_build';
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: '2025-12-15.clover', // Use latest stable suggested by types
+export const stripe = new Stripe(stripeKey, {
+    apiVersion: '2025-12-15.clover' as any, // Cast to any to avoid type conflicts if types are outdated/newer
     typescript: true,
 });
+
+if (!process.env.STRIPE_SECRET_KEY) {
+    console.warn("⚠️ STRIPE_SECRET_KEY is missing. Stripe functionality will not work.");
+}
