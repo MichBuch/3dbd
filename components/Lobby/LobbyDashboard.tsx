@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import useSWR from 'swr';
 import { User, Gamepad2, MessageCircle, X, UserPlus, Users, Swords, Bell } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useGameStore } from '@/store/gameStore';
@@ -37,19 +38,31 @@ interface Challenge {
 export const LobbyDashboard = () => {
     const { data: session } = useSession();
     const { setPreference } = useGameStore();
-    const [users, setUsers] = useState<OnlineUser[]>([]);
-    const [games, setGames] = useState<OpenGame[]>([]);
-    const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
-    const [friends, setFriends] = useState<OnlineUser[]>([]);
     const [activeTab, setActiveTab] = useState<'all' | 'friends'>('all');
+
+    // SWR Fetcher
+    const fetcher = (url: string) => fetch(url).then(r => r.json());
+
+    // 1. Fetch Lobby Data
+    const { data: lobbyData, error: lobbyError } = useSWR(
+        `/api/lobby${searchQuery ? `?q=${encodeURIComponent(searchQuery)}` : ''}`,
+        fetcher,
+        { refreshInterval: 3000, revalidateOnFocus: true }
+    );
+
+    // 2. Fetch Friends
+    const { data: friendsData, mutate: mutateFriends } = useSWR(
+        session?.user ? '/api/friends' : null,
+        fetcher,
+        { refreshInterval: 10000 }
+    );
 
     // Challenge System State
     const [guestId, setGuestId] = useState('');
-    const [challenges, setChallenges] = useState<Challenge[]>([]);
-    const [showChallengeModal, setShowChallengeModal] = useState<string | null>(null); // userId to challenge
+    const [showChallengeModal, setShowChallengeModal] = useState<string | null>(null);
     const [challengeMessage, setChallengeMessage] = useState('Let\'s play!');
-    const [sentChallengeStatus, setSentChallengeStatus] = useState<string>(''); // For guest feedback
+    const [sentChallengeStatus, setSentChallengeStatus] = useState<string>('');
 
     // Initialize Guest ID
     useEffect(() => {
@@ -61,49 +74,39 @@ export const LobbyDashboard = () => {
         setGuestId(id);
     }, []);
 
-    const fetchLobby = async () => {
-        try {
-            const queryParam = searchQuery ? `?q=${encodeURIComponent(searchQuery)}` : '';
-            const res = await fetch(`/api/lobby${queryParam}`);
-            const data = await res.json();
-            if (data.users) setUsers(data.users);
-            if (data.openGames) setGames(data.openGames);
+    // 3. Fetch Challenges
+    const challengesUrl = session?.user
+        ? `/api/challenges?toId=${session.user.id}`
+        : guestId
+            ? `/api/challenges?fromId=${guestId}`
+            : null;
 
-            if (session?.user) {
-                // Fetch Friends
-                const friendsRes = await fetch('/api/friends');
-                if (friendsRes.ok) {
-                    const friendsData = await friendsRes.json();
-                    setFriends(friendsData);
-                }
+    const { data: challengesData } = useSWR(
+        challengesUrl,
+        fetcher,
+        { refreshInterval: 3000 }
+    );
 
-                // Fetch Incoming Challenges (Polling)
-                const challRes = await fetch(`/api/challenges?toId=${session.user.id}`);
-                if (challRes.ok) {
-                    const challData = await challRes.json();
-                    setChallenges(challData);
-                }
-            } else if (guestId) {
-                // Guest: Poll for status of sent challenges
-                const myChallRes = await fetch(`/api/challenges?fromId=${guestId}`);
-                if (myChallRes.ok) {
-                    const myChalls: Challenge[] = await myChallRes.json();
-                    // Check if any accepted
-                    const accepted = myChalls.find(c => c.status === 'accepted' && c.gameId);
-                    if (accepted && accepted.gameId) {
-                        window.location.href = `/game/${accepted.gameId}`;
-                    }
-                    if (myChalls.length > 0) {
-                        setSentChallengeStatus(myChalls[0].status === 'pending' ? 'Waiting for response...' : 'Challenge ' + myChalls[0].status);
-                    }
-                }
+    // Derived State
+    const users: OnlineUser[] = lobbyData?.users || [];
+    const games: OpenGame[] = lobbyData?.openGames || [];
+    const friends: OnlineUser[] = friendsData || [];
+    const activeChallenges: Challenge[] = challengesData || [];
+    const loading = !lobbyData && !lobbyError;
+
+    // Challenge Logic Side Effects
+    useEffect(() => {
+        if (!session && activeChallenges.length > 0) {
+            const accepted = activeChallenges.find((c: Challenge) => c.status === 'accepted' && c.gameId);
+            if (accepted && accepted.gameId) {
+                window.location.href = `/game/${accepted.gameId}`;
             }
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
+            if (activeChallenges.length > 0) {
+                const latest = activeChallenges[0];
+                setSentChallengeStatus(latest.status === 'pending' ? 'Waiting for response...' : 'Challenge ' + latest.status);
+            }
         }
-    };
+    }, [activeChallenges, session]);
 
     const addFriend = async (friendId: string) => {
         try {
@@ -111,7 +114,7 @@ export const LobbyDashboard = () => {
                 method: 'POST',
                 body: JSON.stringify({ friendId })
             });
-            fetchLobby(); // Refresh to update list
+            mutateFriends();
         } catch (e) {
             console.error(e);
         }
@@ -150,18 +153,12 @@ export const LobbyDashboard = () => {
                     window.location.href = `/game/${data.gameId}`;
                 }
             } else {
-                fetchLobby();
+                // SWR will update automatically on next poll
             }
         } catch (e) {
             console.error(e);
         }
     };
-
-    useEffect(() => {
-        fetchLobby();
-        const interval = setInterval(fetchLobby, 5000); // Poll every 5s
-        return () => clearInterval(interval);
-    }, [searchQuery, session, guestId]); // Re-fetch when dependencies change
 
     // Heartbeat logic
     useEffect(() => {
@@ -190,12 +187,12 @@ export const LobbyDashboard = () => {
                 </h3>
 
                 {/* CHALLENGE NOTIFICATIONS (User Only) */}
-                {challenges.length > 0 && (
+                {activeChallenges.length > 0 && (
                     <div className="mb-4 bg-neonBlue/10 border border-neonBlue text-white p-3 rounded-xl animate-in fade-in slide-in-from-top-2">
                         <h4 className="font-bold text-sm flex items-center gap-2 mb-2">
                             <Bell size={14} className="text-neonBlue animate-bounce" /> Challenge Request!
                         </h4>
-                        {challenges.map(c => (
+                        {activeChallenges.map(c => (
                             <div key={c.id} className="flex items-center justify-between text-xs bg-black/40 p-2 rounded-lg mb-2 last:mb-0">
                                 <div>
                                     <span className="font-bold text-neonBlue">{c.fromName}</span>: "{c.message || 'Play?'}"
@@ -270,7 +267,7 @@ export const LobbyDashboard = () => {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    {/* Add Friend Button - Only show if not already friend and ensuring not self (though list excludes self) */}
+                                    {/* Add Friend Button - Only show if not already friend and ensuring not self */}
                                     {activeTab === 'all' && !friends.some(f => f.id === u.id) && (
                                         <button
                                             onClick={() => addFriend(u.id)}
@@ -285,11 +282,8 @@ export const LobbyDashboard = () => {
                                         disabled={u.status === 'playing'}
                                         onClick={() => {
                                             if (session) {
-                                                // Logged In: Same old logic (for now, or use challenge system too?)
-                                                // For robustness, let's use the challenge modal for everyone to message
                                                 setShowChallengeModal(u.id);
                                             } else {
-                                                // Guest: Use Challenge Modal
                                                 setShowChallengeModal(u.id);
                                             }
                                         }}

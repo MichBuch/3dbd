@@ -5,9 +5,11 @@ export type Player = 'white' | 'black';
 export type BoardState = (Player | null)[][][]; // [x][y][z] where z is height (0-3)
 
 interface Theme {
+    id: string; // 'dark' | 'xmas' | 'easter' ...
     base: string;
     white: string;
     black: string;
+    skin?: 'default' | 'tennis' | 'easter' | 'xmas' | 'wood' | 'rubik';
 }
 
 interface UserPreferences {
@@ -15,7 +17,7 @@ interface UserPreferences {
     showLeaderboard: boolean;
     showTurnIndicator: boolean;
     boardScale: number;
-    beadSkin: 'default' | 'tennis' | 'easter' | 'xmas';
+    // beadSkin removed in favor of Theme.skin
     opponentName?: string;
     isLobbyVisible: boolean;
 }
@@ -141,14 +143,14 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
             difficulty: 'hard',
             scores: { white: 0, black: 0 },
             winningCells: [],
-            // Xmas Default: Red (White Player) & Green (Black Player)
-            theme: { base: '#222222', white: '#ff0000', black: '#00ff00' },
+            // Default: Standard Dark Mode (White vs Black)
+            // Default: Standard Dark Mode (White vs Black)
+            theme: { id: 'dark', base: '#222222', white: '#ffffff', black: '#444444', skin: 'default' },
             preferences: {
                 showScoreboard: true,
                 showLeaderboard: true,
                 showTurnIndicator: true,
                 boardScale: 1.0,
-                beadSkin: 'default',
                 isLobbyVisible: true,
             },
 
@@ -180,7 +182,6 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
                     showLeaderboard: true,
                     showTurnIndicator: true,
                     boardScale: 1.0,
-                    beadSkin: 'default',
                     isLobbyVisible: true,
                 }
             }),

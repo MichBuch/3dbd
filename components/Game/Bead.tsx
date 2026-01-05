@@ -10,7 +10,7 @@ interface BeadProps {
     player: Player;
     isWinning?: boolean;
     scale?: number;
-    skin?: 'default' | 'tennis' | 'easter' | 'xmas';
+    skin?: 'default' | 'tennis' | 'easter' | 'xmas' | 'wood' | 'rubik';
 }
 
 // Texture Cache to prevent memory leaks and lag
@@ -95,23 +95,114 @@ const createTennisTexture = (colorHex: string, text: string) => {
 
     // Tennis Seam (White Curve)
     ctx.strokeStyle = 'white';
-    ctx.lineWidth = 20;
+    ctx.lineWidth = 15;
     ctx.beginPath();
-    // A wave pattern to look like the seam when wrapped
+    // A wave pattern to look like the seam when wrapped - simplified sine wave approximation for wrapping
     ctx.moveTo(0, 128);
     ctx.bezierCurveTo(128, 0, 384, 256, 512, 128);
     ctx.stroke();
 
+    // Noise/Fluff
+    for (let i = 0; i < 5000; i++) {
+        const x = Math.random() * 512;
+        const y = Math.random() * 256;
+        ctx.fillStyle = Math.random() > 0.5 ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)';
+        ctx.fillRect(x, y, 2, 2);
+    }
+
     if (text) {
-        ctx.fillStyle = 'rgba(0,0,0,0.5)';
-        ctx.font = 'bold 60px Arial';
+        ctx.fillStyle = '#00008b'; // Dark Blue
+        ctx.font = 'italic bold 60px "Comic Sans MS", cursive, sans-serif'; // Cursive-ish
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.save();
-        ctx.translate(256, 128);
+        // Position on the "face" of the sphere approx
+        ctx.translate(256, 64);
+        ctx.fillText(text, 0, 0);
+        ctx.translate(0, 128); // Bottom side too
         ctx.fillText(text, 0, 0);
         ctx.restore();
     }
+
+    const texture = new THREE.CanvasTexture(canvas);
+    textureCache[key] = texture;
+    return texture;
+};
+
+// Helper for Wood Texture
+const createWoodTexture = (colorHex: string) => {
+    const key = `wood-${colorHex}`;
+    if (textureCache[key]) return textureCache[key];
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    // Base Color
+    ctx.fillStyle = colorHex;
+    ctx.fillRect(0, 0, 512, 512);
+
+    // Wood Grain
+    ctx.fillStyle = 'rgba(0,0,0,0.1)';
+    for (let i = 0; i < 50; i++) {
+        const x = Math.random() * 512;
+        const width = Math.random() * 20 + 5;
+        ctx.fillRect(x, 0, width, 512);
+
+        // Knots?
+        if (Math.random() > 0.8) {
+            ctx.beginPath();
+            ctx.arc(x, Math.random() * 512, Math.random() * 10, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    // Wavy lines
+    ctx.strokeStyle = 'rgba(40, 20, 0, 0.1)';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 20; i++) {
+        ctx.beginPath();
+        const startX = Math.random() * 512;
+        ctx.moveTo(startX, 0);
+        ctx.bezierCurveTo(startX + 50, 150, startX - 50, 350, startX, 512);
+        ctx.stroke();
+    }
+
+    const texture = new THREE.CanvasTexture(canvas);
+    textureCache[key] = texture;
+    return texture;
+};
+
+
+// Rubik Texture Helper
+const createRubikTexture = (colorHex: string) => {
+    const key = `rubik-${colorHex}`;
+    if (textureCache[key]) return textureCache[key];
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    // Black plastic background
+    ctx.fillStyle = '#111';
+    ctx.fillRect(0, 0, 256, 256);
+
+    // Colored Sticker
+    ctx.fillStyle = colorHex;
+    // Leave a margin for the black plastic edge
+    ctx.fillRect(20, 20, 216, 216);
+
+    // Gloss/highlight on sticker
+    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    ctx.beginPath();
+    ctx.moveTo(20, 236);
+    ctx.lineTo(236, 20);
+    ctx.lineTo(236, 236);
+    ctx.fill();
 
     const texture = new THREE.CanvasTexture(canvas);
     textureCache[key] = texture;
@@ -145,15 +236,22 @@ export const Bead = ({ position, color, player, isWinning = false, scale = 1, sk
     let roughness = isWinning ? 0.1 : 0.3;
     let metalness = isWinning ? 0.9 : 0.4;
     let emissiveIntensity = isWinning ? 0.8 : 0;
-    let geometry = <sphereGeometry args={[beadRadius, 32, 32]} />;
+
+    // Geometry Selection
+    let geometry = skin === 'rubik'
+        ? <boxGeometry args={[beadRadius * 1.5, beadRadius * 1.5, beadRadius * 1.5]} /> // Cube
+        : <sphereGeometry args={[beadRadius, 32, 32]} />;
+
     let map: THREE.Texture | null = null;
     let bumpMap: THREE.Texture | null = null;
+    let bumpScale = 0.02;
 
     if (skin === 'tennis') {
-        const hexColor = player === 'white' ? '#ff4444' : '#ccff00'; // Red vs Yellow-Green
+        const hexColor = player === 'white' ? '#ffffff' : '#ccff00';
         finalColor = new THREE.Color(hexColor);
         map = createTennisTexture(hexColor, '3DBD') || null;
         bumpMap = map;
+        bumpScale = 0.08; // Fluffier
         roughness = 1.0;
         metalness = 0.0;
         if (isWinning) {
@@ -161,19 +259,29 @@ export const Bead = ({ position, color, player, isWinning = false, scale = 1, sk
             finalColor.multiplyScalar(1.2);
         }
     } else if (skin === 'easter') {
-        const hexColor = player === 'white' ? '#FFB7B2' : '#B5EAD7'; // Pastel Red/Green
+        const hexColor = player === 'white' ? '#FFB7B2' : '#B5EAD7';
         finalColor = new THREE.Color(hexColor);
         map = createPatternTexture('easter', hexColor) || null;
-        geometry = <sphereGeometry args={[beadRadius, 32, 32]} />;
         roughness = 0.5;
         metalness = 0.1;
     } else if (skin === 'xmas') {
-        const hexColor = player === 'white' ? '#D42426' : '#165B33'; // Deep Red / Green
+        const hexColor = player === 'white' ? '#D42426' : '#165B33';
         finalColor = new THREE.Color(hexColor);
         map = createPatternTexture('xmas', hexColor) || null;
-        metalness = 0.9; // Shiny
+        metalness = 0.9;
         roughness = 0.1;
         if (isWinning) emissiveIntensity = 1.0;
+    } else if (skin === 'wood') {
+        map = createWoodTexture(color) || null;
+        roughness = 0.8;
+        metalness = 0.0;
+        if (isWinning) emissiveIntensity = 0.3;
+    } else if (skin === 'rubik') {
+        // Rubik logic
+        map = createRubikTexture(player === 'white' ? '#ffffff' : '#ff0000') || null;
+        roughness = 0.2; // Plastic
+        metalness = 0.1;
+        if (isWinning) emissiveIntensity = 0.5;
     }
 
     if (skin === 'default') {
@@ -181,7 +289,7 @@ export const Bead = ({ position, color, player, isWinning = false, scale = 1, sk
         else finalColor.multiplyScalar(0.9);
     }
 
-    const scaleY = skin === 'easter' ? 1.3 : 1;
+    const scaleY = (skin === 'easter') ? 1.3 : 1;
 
     return (
         <mesh
@@ -193,10 +301,10 @@ export const Bead = ({ position, color, player, isWinning = false, scale = 1, sk
         >
             {geometry}
             <meshStandardMaterial
-                color={finalColor}
+                color={(skin === 'rubik' || skin === 'wood' || skin === 'tennis' || skin === 'easter' || skin === 'xmas') ? undefined : finalColor}
                 map={map}
                 bumpMap={bumpMap}
-                bumpScale={0.02}
+                bumpScale={bumpScale}
                 roughness={roughness}
                 metalness={metalness}
                 emissive={isWinning ? finalColor : undefined}

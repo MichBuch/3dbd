@@ -99,6 +99,7 @@ export const games = pgTable("game", {
     // Context
     difficulty: text("difficulty"), // 'easy', 'medium', 'hard'
     mode: text("mode").default('ai'), // 'ai', 'pvp'
+    theme: text("theme").default('dark'), // Store the theme used for this game
 });
 
 export const chats = pgTable("chat", {

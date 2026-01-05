@@ -11,16 +11,37 @@ interface SettingsPanelProps {
 }
 
 const THEMES = [
-    { id: 'dark', name: 'Dark' },
-    { id: 'xmas', name: 'Christmas' },
-    { id: 'easter', name: 'Easter' },
-    { id: 'winter', name: 'Winter' },
-    { id: 'snow', name: 'Snow' },
-    { id: 'starry', name: 'Starry Night' },
-    { id: 'space', name: 'Space' },
     { id: 'beach', name: 'Beach' },
-    { id: 'halloween', name: 'Halloween' }
+    { id: 'black_white', name: 'Black & White' },
+    { id: 'xmas', name: 'Christmas' },
+    { id: 'dark', name: 'Dark' },
+    { id: 'easter', name: 'Easter' },
+    { id: 'halloween', name: 'Halloween' },
+    { id: 'rubik', name: "Rubik's Cube" },
+    { id: 'snow', name: 'Snow' },
+    { id: 'space', name: 'Space' },
+    { id: 'starry', name: 'Starry Night' },
+    { id: 'tennis', name: 'Tennis' },
+    { id: 'winter', name: 'Winter' },
+    { id: 'wood', name: 'Wood' },
 ];
+
+// Export Theme Config for use in other components (e.g. Sync)
+export const THEME_CONFIG: Record<string, { base: string, white: string, black: string, skin?: 'default' | 'tennis' | 'easter' | 'xmas' | 'wood' | 'rubik' }> = {
+    dark: { base: '#222222', white: '#ffffff', black: '#444444', skin: 'default' },
+    black_white: { base: '#1a1a1a', white: '#ffffff', black: '#000000', skin: 'default' },
+    wood: { base: '#5D4037', white: '#D7CCC8', black: '#3E2723', skin: 'wood' },
+    tennis: { base: '#2E8B57', white: '#ccff00', black: '#ffffff', skin: 'tennis' },
+    xmas: { base: '#1a472a', white: '#ff0000', black: '#00ff00', skin: 'xmas' },
+    easter: { base: '#FFF8E7', white: '#FFB7B2', black: '#B5EAD7', skin: 'easter' },
+    winter: { base: '#F0F8FF', white: '#87CEFA', black: '#4682B4', skin: 'default' },
+    snow: { base: '#FFFFFF', white: '#E0FFFF', black: '#B0E0E6', skin: 'default' },
+    starry: { base: '#0B1026', white: '#FFFFD4', black: '#4B0082', skin: 'default' },
+    space: { base: '#000000', white: '#E6E6FAB0', black: '#800080', skin: 'default' },
+    beach: { base: '#FFE5B4', white: '#FF6F61', black: '#40E0D0', skin: 'default' },
+    halloween: { base: '#1C1C1C', white: '#FF7518', black: '#5C2C90', skin: 'default' },
+    rubik: { base: '#000000', white: '#ffffff', black: '#ff0000', skin: 'rubik' }, // Rubik's cube grid base?
+};
 
 export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
     const {
@@ -30,15 +51,18 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
         difficulty,
         setDifficulty,
         isAiEnabled,
-        setAiEnabled
+        setAiEnabled,
+        theme,     // Get current theme
+        setTheme   // Action to set theme
     } = useGameStore();
 
-    const [selectedTheme, setSelectedTheme] = useState('dark');
+    // Removed local selectedTheme state since we use store now
     // Collapsible Sections State
     const [openSection, setOpenSection] = useState<'gameplay' | 'appearance' | 'interface' | null>('gameplay');
 
     if (!isOpen) return null;
 
+    // ... (SectionHeader remains same, skipping for brevity in this replace block if possible, but easier to include context)
     const SectionHeader = ({ id, label, icon: Icon }: { id: string, label: string, icon: any }) => (
         <button
             onClick={() => setOpenSection(openSection === id ? null : id as any)}
@@ -67,7 +91,7 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                     </button>
                 </div>
 
-                {/* Content - Scrollable if needed but minimized by collapsibles */}
+                {/* Content */}
                 <div className="p-6 space-y-3 overflow-y-auto custom-scrollbar flex-1">
 
                     {/* 1. Gameplay Section */}
@@ -102,20 +126,27 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                             {/* Theme */}
                             <div className="p-4 bg-white/5 rounded-xl border border-white/5">
                                 <label className="text-white font-bold text-xs uppercase tracking-wider block mb-3">Theme</label>
-                                <select value={selectedTheme} onChange={(e) => setSelectedTheme(e.target.value)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white text-sm focus:outline-none focus:border-neonBlue">
-                                    {THEMES.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                                <select
+                                    value={theme.id || 'dark'}
+                                    onChange={(e) => {
+                                        const newId = e.target.value;
+                                        setTheme({
+                                            id: newId,
+                                            ...THEME_CONFIG[newId]
+                                        });
+                                    }}
+                                    className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white text-sm focus:outline-none focus:border-neonBlue"
+                                >
+                                    {THEMES.map(t => (
+                                        <option key={t.id} value={t.id} className="bg-[#222] text-white">
+                                            {t.name}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
-                            {/* Bead Skin */}
-                            <div className="p-4 bg-white/5 rounded-xl border border-white/5">
-                                <label className="text-white font-bold text-xs uppercase tracking-wider block mb-3">Bead Skin</label>
-                                <select value={preferences.beadSkin} onChange={(e) => setPreference('beadSkin', e.target.value as any)} className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white text-sm focus:outline-none focus:border-neonBlue">
-                                    <option value="default">Default</option>
-                                    <option value="tennis">Tennis</option>
-                                    <option value="easter">Easter</option>
-                                    <option value="xmas">Christmas</option>
-                                </select>
-                            </div>
+
+                            {/* Bead Skin Removed */}
+
                             {/* Board Scale */}
                             <div className="p-4 bg-white/5 rounded-xl border border-white/5">
                                 <label className="text-white font-bold text-xs uppercase tracking-wider block mb-3 flex justify-between">

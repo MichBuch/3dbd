@@ -12,16 +12,14 @@ export async function POST(req: Request) {
 
     try {
         const body = await req.json();
-        const { difficulty } = body;
+        const { difficulty, theme } = body;
 
         // Initial 4x4x4 Empty Board
-        // Similar to GameStore initialization
         const initialBoard = Array(4).fill(null).map(() =>
             Array(4).fill(null).map(() =>
                 Array(4).fill(null)
             )
         );
-
         const newGame = await db.insert(games).values({
             whitePlayerId: session.user.id,
             state: {
@@ -31,6 +29,7 @@ export async function POST(req: Request) {
             },
             difficulty: difficulty || 'medium',
             mode: 'pvp',
+            theme: theme || 'dark', // Save the theme
             isFinished: false,
             whiteScore: 0,
             blackScore: 0

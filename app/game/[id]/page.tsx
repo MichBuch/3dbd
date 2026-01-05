@@ -10,6 +10,8 @@ import { useGameStore } from '@/store/gameStore';
 import { ChatWindow } from '@/components/Game/ChatWindow';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { ThemeBackground } from '@/components/Game/ThemeBackground';
+import { THEME_CONFIG } from '@/components/Game/SettingsPanel'; // Import Theme Config
 
 export default function MultiplayerGame({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -18,7 +20,8 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
         setCurrentPlayer,
         currentPlayer, // Corrected from currentTurn
         setWinner,
-        preferences
+        preferences,
+        setTheme, // Add setTheme
     } = useGameStore();
 
     const router = useRouter();
@@ -39,6 +42,14 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
                     return;
                 }
                 setGameData(data);
+
+                // Sync Theme (Override local preference with Game's theme)
+                if (data.theme && THEME_CONFIG[data.theme]) {
+                    setTheme({
+                        id: data.theme,
+                        ...THEME_CONFIG[data.theme]
+                    });
+                }
 
                 // If I am not White, and Black is empty, Try to Join
                 if (data.whitePlayerId !== session.user?.id && !data.blackPlayerId) {
@@ -131,6 +142,7 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
                     <OrbitControls enablePan={false} maxPolarAngle={Math.PI / 2.2} />
                     <ambientLight intensity={1.5} />
                     <directionalLight position={[5, 10, 5]} intensity={2} castShadow />
+                    <ThemeBackground />
 
                     <SyncListener gameId={id} isMyTurn={isMyTurn} />
                     <Board />
