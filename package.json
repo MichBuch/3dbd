@@ -11,6 +11,9 @@
     "electron:build": "next build && electron-builder",
     "db:push": "drizzle-kit push"
   },
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.1",
     "@neondatabase/neon-js": "^0.1.0-beta.21",
