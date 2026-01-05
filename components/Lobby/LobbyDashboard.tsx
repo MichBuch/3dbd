@@ -29,10 +29,12 @@ export const LobbyDashboard = () => {
     const [users, setUsers] = useState<OnlineUser[]>([]);
     const [games, setGames] = useState<OpenGame[]>([]);
     const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState('');
 
     const fetchLobby = async () => {
         try {
-            const res = await fetch('/api/lobby');
+            const queryParam = searchQuery ? `?q=${encodeURIComponent(searchQuery)}` : '';
+            const res = await fetch(`/api/lobby${queryParam}`);
             const data = await res.json();
             if (data.users) setUsers(data.users);
             if (data.openGames) setGames(data.openGames);
@@ -47,7 +49,7 @@ export const LobbyDashboard = () => {
         fetchLobby();
         const interval = setInterval(fetchLobby, 5000); // Poll every 5s
         return () => clearInterval(interval);
-    }, []);
+    }, [searchQuery]); // Re-fetch when search changes
 
     // Heartbeat logic
     useEffect(() => {
@@ -74,6 +76,18 @@ export const LobbyDashboard = () => {
                     <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                     Online Players ({users.length})
                 </h3>
+
+                {/* Search Bar */}
+                <div className="mb-4">
+                    <input
+                        type="text"
+                        placeholder="Search players..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-neonBlue transition-colors placeholder:text-gray-600"
+                    />
+                </div>
+
                 <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                     {loading && users.length === 0 ? (
                         <div className="text-gray-500 text-center py-10">Scanning...</div>

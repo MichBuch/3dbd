@@ -109,6 +109,15 @@ export const chats = pgTable("chat", {
     createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const friends = pgTable("friends", {
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+    friendId: text("friend_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+    status: text("status").$type<'pending' | 'accepted' | 'blocked'>().default('pending').notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+}, (t) => ({
+    pk: primaryKey({ columns: [t.userId, t.friendId] }),
+}));
+
 // User Preferences Table
 export const userPreferences = pgTable("user_preferences", {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
@@ -131,6 +140,20 @@ export const usersRelations = relations(users, ({ many }) => ({
     gamesAsWhite: many(games, { relationName: "whitePlayer" }),
     gamesAsBlack: many(games, { relationName: "blackPlayer" }),
     chats: many(chats),
+    friends: many(friends, { relationName: "userFriends" }),
+}));
+
+export const friendsRelations = relations(friends, ({ one }) => ({
+    user: one(users, {
+        fields: [friends.userId],
+        references: [users.id],
+        relationName: "userFriends"
+    }),
+    friend: one(users, {
+        fields: [friends.friendId],
+        references: [users.id],
+        relationName: "friendUser"
+    })
 }));
 
 export const gamesRelations = relations(games, ({ one, many }) => ({
