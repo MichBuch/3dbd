@@ -6,6 +6,8 @@ import { AuthDialog } from '@/components/Auth/AuthDialog';
 import { User, LogOut, Settings, RotateCcw, Trophy, Gamepad2, Gift } from 'lucide-react';
 import { SettingsPanel } from '@/components/Game/SettingsPanel';
 import { useGameStore } from '@/store/gameStore';
+import { LanguageSelector } from './LanguageSelector';
+import { useTranslation } from '@/lib/translations';
 
 export function Header() {
     const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
@@ -15,11 +17,13 @@ export function Header() {
     // @ts-ignore
     const isPremium = session?.user?.plan === 'premium';
 
+    const { t } = useTranslation();
+
     // Reuse the leaderboard content logic
     const LeaderboardContent = () => (
         <div className="flex flex-col h-full">
             <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <Trophy className="text-neonPink" /> Leaderboard
+                <Trophy className="text-neonPink" /> {t.leaderboard}
             </h3>
             <div className="flex-1 overflow-y-auto">
                 <div className="space-y-4">
@@ -42,7 +46,7 @@ export function Header() {
                 <div className="mt-6 pt-6 border-t border-white/10">
                     <p className="text-gray-400 text-sm mb-4 text-center">Unlock Premium to see live global rankings!</p>
                     <button className="w-full bg-gradient-to-r from-neonBlue to-neonPink text-black font-bold py-3 rounded-lg hover:opacity-90 transition-opacity">
-                        UNLOCK PREMIUM
+                        {t.unlockPremium}
                     </button>
                 </div>
             )}
@@ -70,7 +74,7 @@ export function Header() {
                         <button
                             onClick={() => setShowMobileLeaderboard(true)}
                             className="md:hidden p-2 text-white/50 hover:text-white transition-colors"
-                            title="Leaderboard"
+                            title={t.leaderboard}
                         >
                             <Trophy size={20} />
                         </button>
@@ -79,7 +83,7 @@ export function Header() {
                         <button
                             onClick={() => useGameStore.getState().resetGame()}
                             className="p-2 text-white/50 hover:text-white transition-colors"
-                            title="Replay / Reset Game"
+                            title={t.replay}
                         >
                             <RotateCcw size={20} />
                         </button>
@@ -99,10 +103,12 @@ export function Header() {
                         <button
                             onClick={() => setShowSettings(true)}
                             className="p-2 text-white/50 hover:text-white transition-colors"
-                            title="Settings"
+                            title={t.settings}
                         >
                             <Settings size={20} />
                         </button>
+
+                        <LanguageSelector />
 
                         {session ? (
                             <div className="hidden md:flex glass-panel px-4 py-2 rounded-xl items-center gap-3 justify-between">
@@ -142,7 +148,7 @@ export function Header() {
                                         <span className="text-[10px] text-neonPink font-bold uppercase tracking-wider">{isPremium ? 'PREMIUM' : 'FREE'}</span>
                                     </div>
                                 </div>
-                                <button onClick={() => signOut()} className="hover:bg-white/10 p-2 rounded-lg transition-colors border-0" title="Sign Out">
+                                <button onClick={() => signOut()} className="hover:bg-white/10 p-2 rounded-lg transition-colors border-0" title={t.logout}>
                                     <LogOut size={16} className="text-white/50" />
                                 </button>
                             </div>
@@ -152,13 +158,13 @@ export function Header() {
                                     onClick={() => setIsAuthDialogOpen(true)}
                                     className="hidden md:block text-white/80 hover:text-white font-medium text-sm"
                                 >
-                                    Login
+                                    {t.login}
                                 </button>
                                 <button
                                     onClick={() => setIsAuthDialogOpen(true)}
                                     className="bg-neonBlue hover:bg-neonBlue/90 text-black font-bold px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-xs md:text-sm transition-colors whitespace-nowrap"
                                 >
-                                    Sign Up
+                                    {t.signup}
                                 </button>
                             </div>
                         )}

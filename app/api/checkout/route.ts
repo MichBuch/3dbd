@@ -28,7 +28,10 @@ export async function POST(req: Request) {
 
         // Regular Stripe checkout flow
         const checkoutSession = await stripe.checkout.sessions.create({
-            payment_method_types: ["card"],
+            // @ts-ignore
+            automatic_payment_methods: {
+                enabled: true,
+            },
             line_items: [
                 {
                     price: 'price_1SiCGICcL18osdGS6bsleSC1', // 3DBD one year game access ($19.99)

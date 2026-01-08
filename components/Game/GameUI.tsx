@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useGameStore } from '@/store/gameStore';
+import { useRef } from 'react';
+import { useTranslation } from '@/lib/translations';
 import { useSession } from "next-auth/react";
 import { Trophy, Settings, X } from 'lucide-react';
 import { AdContainer } from '@/components/Ads/AdContainer';
@@ -18,6 +20,8 @@ export const GameUI = () => {
         preferences,
         difficulty
     } = useGameStore();
+
+    const { t } = useTranslation();
 
     const [showWinnerDialog, setShowWinnerDialog] = useState(false);
 
@@ -70,7 +74,7 @@ export const GameUI = () => {
                         {/* Player 1 / White */}
                         <div className="flex items-center gap-2">
                             <span className="hidden md:inline text-base font-bold text-white">
-                                {session?.user?.name || 'Player 1'}
+                                {session?.user?.name || t.player1}
                             </span>
                             <span className="text-xl md:text-2xl font-mono font-black text-red-500 drop-shadow-[0_0_12px_rgba(255,0,0,0.5)] min-w-[24px] md:min-w-[32px] text-center">
                                 {scores.white}
@@ -86,7 +90,7 @@ export const GameUI = () => {
                                 {scores.black}
                             </span>
                             <span className="hidden md:inline text-base font-bold text-white">
-                                {isAiEnabled ? 'Computer' : (preferences.opponentName || 'Player 2')}
+                                {isAiEnabled ? t.computer : (preferences.opponentName || t.player2)}
                             </span>
                         </div>
 
@@ -97,7 +101,7 @@ export const GameUI = () => {
                                 <div className="flex items-center gap-1.5">
                                     <div className={`w-2.5 h-2.5 rounded-full shadow-[0_0_8px_currentColor] transition-colors duration-500 ${currentPlayer === 'white' ? 'bg-[red] shadow-[0_0_8px_red]' : 'bg-[green] shadow-[0_0_8px_green]'}`} />
                                     <span className="text-xs font-bold text-white/90">
-                                        {currentPlayer === 'white' ? `${session?.user?.name || "Player 1"}'s Turn` : "Player 2's Turn"}
+                                        {currentPlayer === 'white' ? `${session?.user?.name || t.player1}${t.turn}` : `${t.player2}${t.turn}`}
                                     </span>
                                 </div>
                             </>
@@ -118,7 +122,7 @@ export const GameUI = () => {
                             }}
                             className="bg-neonBlue/20 hover:bg-neonBlue/40 text-neonBlue border border-neonBlue px-4 py-2 rounded-lg font-bold transition-all shadow-[0_0_10px_rgba(0,243,255,0.2)] hover:shadow-[0_0_20px_rgba(0,243,255,0.4)] text-xs uppercase tracking-widest"
                         >
-                            ⚔️ Play Online
+                            ⚔️ {t.playAlgo}
                         </button>
                     </div>
                     {isPremium && !isAiEnabled ? (
@@ -126,7 +130,7 @@ export const GameUI = () => {
                     ) : (
                         <div className="glass-panel p-4 rounded-xl w-60 opacity-90 transition-opacity border border-white/10 bg-black/80">
                             <div className="flex items-center gap-2 mb-3 text-neonPink text-[10px] font-bold uppercase tracking-widest border-b border-white/10 pb-2">
-                                <Trophy size={14} /> Top Players
+                                <Trophy size={14} /> {t.topPlayers}
                             </div>
                             <ul className="space-y-3">
                                 {[
@@ -149,7 +153,7 @@ export const GameUI = () => {
                                         onClick={handleUpgrade}
                                         className="w-full bg-gradient-to-r from-neonBlue to-neonPink text-black font-bold py-2 rounded-lg text-xs hover:scale-105 transition-transform"
                                     >
-                                        UNLOCK PREMIUM
+                                        {t.unlockPremium}
                                     </button>
                                 </div>
                             )}
@@ -172,10 +176,10 @@ export const GameUI = () => {
 
                         <h2 className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white to-gray-500 mb-4 tracking-tighter">
                             {winner === 'draw'
-                                ? 'DRAW'
+                                ? t.draw
                                 : winner === 'white'
-                                    ? `${(session?.user?.name || 'PLAYER 1').toUpperCase()} WINS`
-                                    : isAiEnabled ? 'COMPUTER WINS' : 'PLAYER 2 WINS'
+                                    ? `${(session?.user?.name || t.player1).toUpperCase()} ${t.wins}`
+                                    : isAiEnabled ? t.computer : `${t.player2} ${t.wins}`
                             }
                         </h2>
                         <div className="text-gray-400 mb-10 font-mono text-xl">
@@ -185,7 +189,7 @@ export const GameUI = () => {
                             onClick={resetGame}
                             className="bg-white text-black px-10 py-4 rounded-full font-bold text-xl hover:scale-105 hover:shadow-[0_0_20px_rgba(255,255,255,0.5)] transition-all"
                         >
-                            Play Again
+                            {t.playAgain}
                         </button>
                     </div>
                 </div>

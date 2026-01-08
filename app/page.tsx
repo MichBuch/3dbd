@@ -9,9 +9,11 @@ import { LobbyDashboard } from '@/components/Lobby/LobbyDashboard';
 import { CookieConsent } from '@/components/Layout/CookieConsent';
 import { useGameStore } from '@/store/gameStore';
 import Link from 'next/link';
+import { useTranslation } from '@/lib/translations';
 
 export default function Home() {
     const { preferences } = useGameStore();
+    const { t } = useTranslation();
 
     // Adjust camera distance based on board scale
     const baseCameraDistance = 12;
@@ -32,9 +34,9 @@ export default function Home() {
 
                 {/* Legal Footer */}
                 <div className="absolute bottom-4 left-4 z-40 flex gap-4 text-[10px] md:text-xs text-white/30 hover:text-white/80 transition-colors pointer-events-auto">
-                    <Link href="/terms" target="_blank" className="hover:text-white transition-colors">Terms of Service</Link>
+                    <Link href="/terms" target="_blank" className="hover:text-white transition-colors">{t.terms}</Link>
                     <span>•</span>
-                    <Link href="/privacy" target="_blank" className="hover:text-white transition-colors">Privacy Policy</Link>
+                    <Link href="/privacy" target="_blank" className="hover:text-white transition-colors">{t.privacy}</Link>
                 </div>
 
                 <Canvas shadows>

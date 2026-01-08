@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useGameStore } from '@/store/gameStore';
+import { useTranslation } from '@/lib/translations';
 import { X, Eye, Palette, ChevronDown, ChevronUp, Monitor, Gamepad2, Settings as SettingsIcon } from 'lucide-react';
 
 interface SettingsPanelProps {
@@ -56,6 +57,8 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
         setTheme   // Action to set theme
     } = useGameStore();
 
+    const { t } = useTranslation();
+
     // Removed local selectedTheme state since we use store now
     // Collapsible Sections State
     const [openSection, setOpenSection] = useState<'gameplay' | 'appearance' | 'interface' | null>('gameplay');
@@ -84,7 +87,7 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                 {/* Header */}
                 <div className="p-6 border-b border-white/10 flex justify-between items-center">
                     <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                        <SettingsIcon className="text-neonBlue" /> Settings
+                        <SettingsIcon className="text-neonBlue" /> {t.settings}
                     </h2>
                     <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors">
                         <X size={20} />
@@ -95,21 +98,21 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                 <div className="p-6 space-y-3 overflow-y-auto custom-scrollbar flex-1">
 
                     {/* 1. Gameplay Section */}
-                    <SectionHeader id="gameplay" label="Gameplay" icon={Gamepad2} />
+                    <SectionHeader id="gameplay" label={t.gameplay} icon={Gamepad2} />
                     {openSection === 'gameplay' && (
                         <div className="space-y-4 p-2 animate-in slide-in-from-top-2 duration-200">
                             {/* AI vs PVP */}
                             <div className="p-4 bg-white/5 rounded-xl border border-white/5">
-                                <label className="text-white font-bold text-xs uppercase tracking-wider block mb-3">Game Mode</label>
+                                <label className="text-white font-bold text-xs uppercase tracking-wider block mb-3">{t.gameMode}</label>
                                 <div className="flex gap-2">
-                                    <button onClick={() => setAiEnabled(true)} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${isAiEnabled ? 'bg-neonBlue text-black' : 'bg-black/40 text-gray-500'}`}>VS AI</button>
-                                    <button onClick={() => setAiEnabled(false)} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${!isAiEnabled ? 'bg-neonPink text-black' : 'bg-black/40 text-gray-500'}`}>PVP</button>
+                                    <button onClick={() => setAiEnabled(true)} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${isAiEnabled ? 'bg-neonBlue text-black' : 'bg-black/40 text-gray-500'}`}>{t.vsAi}</button>
+                                    <button onClick={() => setAiEnabled(false)} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${!isAiEnabled ? 'bg-neonPink text-black' : 'bg-black/40 text-gray-500'}`}>{t.pvp}</button>
                                 </div>
                             </div>
 
                             {/* Difficulty */}
                             <div className="p-4 bg-white/5 rounded-xl border border-white/5">
-                                <label className="text-white font-bold text-xs uppercase tracking-wider block mb-3">Difficulty</label>
+                                <label className="text-white font-bold text-xs uppercase tracking-wider block mb-3">{t.difficulty}</label>
                                 <div className="flex gap-2">
                                     {(['easy', 'medium', 'hard'] as const).map(d => (
                                         <button key={d} onClick={() => setDifficulty(d)} className={`flex-1 py-2 rounded-lg text-sm font-bold uppercase transition-all ${difficulty === d ? 'bg-white text-black' : 'bg-black/40 text-gray-500'}`}>{d}</button>
@@ -120,12 +123,12 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                     )}
 
                     {/* 2. Appearance Section */}
-                    <SectionHeader id="appearance" label="Appearance" icon={Palette} />
+                    <SectionHeader id="appearance" label={t.appearance} icon={Palette} />
                     {openSection === 'appearance' && (
                         <div className="space-y-4 p-2 animate-in slide-in-from-top-2 duration-200">
                             {/* Theme */}
                             <div className="p-4 bg-white/5 rounded-xl border border-white/5">
-                                <label className="text-white font-bold text-xs uppercase tracking-wider block mb-3">Theme</label>
+                                <label className="text-white font-bold text-xs uppercase tracking-wider block mb-3">{t.theme}</label>
                                 <select
                                     value={theme.id || 'dark'}
                                     onChange={(e) => {
@@ -150,7 +153,7 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                             {/* Board Scale */}
                             <div className="p-4 bg-white/5 rounded-xl border border-white/5">
                                 <label className="text-white font-bold text-xs uppercase tracking-wider block mb-3 flex justify-between">
-                                    <span>Board Scale</span>
+                                    <span>{t.boardScale}</span>
                                     <span>{preferences.boardScale.toFixed(1)}x</span>
                                 </label>
                                 <input
@@ -164,11 +167,11 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                     )}
 
                     {/* 3. Interface Section */}
-                    <SectionHeader id="interface" label="Interface" icon={Monitor} />
+                    <SectionHeader id="interface" label={t.interface} icon={Monitor} />
                     {openSection === 'interface' && (
                         <div className="space-y-2 p-2 animate-in slide-in-from-top-2 duration-200">
                             {(['showScoreboard', 'showLeaderboard', 'showTurnIndicator'] as const).map((key) => {
-                                const label = key === 'showScoreboard' ? 'Scoreboard' : key === 'showLeaderboard' ? 'Leaderboard' : 'Turn Indicator';
+                                const label = key === 'showScoreboard' ? t.scoreboard : key === 'showLeaderboard' ? t.leaderboard : t.turnIndicator;
                                 return (
                                     <div key={key} onClick={() => setPreference(key, !preferences[key])} className="flex items-center justify-between p-3 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10 transition-colors">
                                         <span className="text-sm font-medium text-gray-300">{label}</span>
@@ -186,10 +189,10 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                 {/* Footer */}
                 <div className="p-6 border-t border-white/10 flex gap-3 bg-black/40 rounded-b-2xl">
                     <button onClick={resetPreferences} className="flex-1 py-3 rounded-xl border border-white/10 text-gray-400 font-bold text-sm hover:text-white hover:bg-white/5 transition-colors">
-                        Reset
+                        {t.reset}
                     </button>
                     <button onClick={onClose} className="flex-1 py-3 rounded-xl bg-white text-black font-bold text-sm hover:scale-[1.02] transition-transform">
-                        Done
+                        {t.done}
                     </button>
                 </div>
 

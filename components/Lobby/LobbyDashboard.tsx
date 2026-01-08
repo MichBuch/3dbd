@@ -5,6 +5,7 @@ import useSWR from 'swr';
 import { User, Gamepad2, MessageCircle, X, UserPlus, Users, Swords, Bell } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useGameStore } from '@/store/gameStore';
+import { useTranslation } from '@/lib/translations';
 
 interface OnlineUser {
     id: string;
@@ -40,6 +41,7 @@ export const LobbyDashboard = () => {
     const { setPreference } = useGameStore();
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState<'all' | 'friends'>('all');
+    const { t } = useTranslation();
 
     // SWR Fetcher
     const fetcher = (url: string) => fetch(url).then(r => r.json());
@@ -103,7 +105,7 @@ export const LobbyDashboard = () => {
             }
             if (activeChallenges.length > 0) {
                 const latest = activeChallenges[0];
-                setSentChallengeStatus(latest.status === 'pending' ? 'Waiting for response...' : 'Challenge ' + latest.status);
+                setSentChallengeStatus(latest.status === 'pending' ? t.waitingResponse : t.challenge + ' ' + latest.status);
             }
         }
     }, [activeChallenges, session]);
@@ -133,7 +135,8 @@ export const LobbyDashboard = () => {
                     message: challengeMessage
                 })
             });
-            setSentChallengeStatus('Challenge Sent!');
+
+            setSentChallengeStatus(t.challengeSent);
             setShowChallengeModal(null);
             setChallengeMessage('Let\'s play!');
         } catch (e) {
@@ -183,14 +186,14 @@ export const LobbyDashboard = () => {
             <div className="glass-panel p-6 rounded-2xl border border-white/10 bg-black/60 relative">
                 <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                    Online Players ({activeTab === 'all' ? users.length : friends.length})
+                    {t.onlinePlayers} ({activeTab === 'all' ? users.length : friends.length})
                 </h3>
 
                 {/* CHALLENGE NOTIFICATIONS (User Only) */}
                 {activeChallenges.length > 0 && (
                     <div className="mb-4 bg-neonBlue/10 border border-neonBlue text-white p-3 rounded-xl animate-in fade-in slide-in-from-top-2">
                         <h4 className="font-bold text-sm flex items-center gap-2 mb-2">
-                            <Bell size={14} className="text-neonBlue animate-bounce" /> Challenge Request!
+                            <Bell size={14} className="text-neonBlue animate-bounce" /> {t.challengeRequest}
                         </h4>
                         {activeChallenges.map(c => (
                             <div key={c.id} className="flex items-center justify-between text-xs bg-black/40 p-2 rounded-lg mb-2 last:mb-0">
@@ -219,13 +222,13 @@ export const LobbyDashboard = () => {
                         onClick={() => setActiveTab('all')}
                         className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${activeTab === 'all' ? 'bg-neonBlue text-black' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
                     >
-                        All Players
+                        {t.allPlayers}
                     </button>
                     <button
                         onClick={() => setActiveTab('friends')}
                         className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors flex items-center gap-2 ${activeTab === 'friends' ? 'bg-neonBlue text-black' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
                     >
-                        <Users size={12} /> Friends
+                        <Users size={12} /> {t.friends}
                     </button>
                 </div>
 
@@ -233,7 +236,7 @@ export const LobbyDashboard = () => {
                 <div className="mb-4">
                     <input
                         type="text"
-                        placeholder="Search players..."
+                        placeholder={t.searchPlayers}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-neonBlue transition-colors placeholder:text-gray-600"
@@ -242,10 +245,10 @@ export const LobbyDashboard = () => {
 
                 <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                     {loading ? (
-                        <div className="text-gray-500 text-center py-10">Scanning...</div>
+                        <div className="text-gray-500 text-center py-10">{t.scanning}</div>
                     ) : (activeTab === 'all' ? users : friends).length === 0 ? (
                         <div className="text-gray-500 text-center py-10">
-                            {activeTab === 'friends' ? 'No friends online' : 'No others online'}
+                            {activeTab === 'friends' ? t.noFriends : t.noOnline}
                         </div>
                     ) : (
                         (activeTab === 'all' ? users : friends).map(u => (
@@ -289,7 +292,7 @@ export const LobbyDashboard = () => {
                                         }}
                                         className="opacity-0 group-hover:opacity-100 transition-opacity bg-neonBlue/20 text-neonBlue px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-neonBlue hover:text-black disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                                     >
-                                        <Swords size={12} /> Challenge
+                                        <Swords size={12} /> {t.challenge}
                                     </button>
                                 </div>
                             </div>
@@ -303,10 +306,9 @@ export const LobbyDashboard = () => {
                             <div className="flex items-start gap-3">
                                 <MessageCircle className="text-neonPink shrink-0 mt-1" size={20} />
                                 <div>
-                                    <h4 className="font-bold text-white text-sm mb-1">Make New Friends!</h4>
+                                    <h4 className="font-bold text-white text-sm mb-1">{t.makeFriends}</h4>
                                     <p className="text-xs text-gray-400 leading-relaxed">
-                                        Click the <UserPlus size={12} className="inline mx-1 text-green-400" /> icon to add players to your friend list.
-                                        Filtering by "Friends" makes it easier to challenge them later!
+                                        {t.friendTip}
                                     </p>
                                 </div>
                             </div>
@@ -319,10 +321,10 @@ export const LobbyDashboard = () => {
                     <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md rounded-2xl flex items-center justify-center p-6 animate-in fade-in zoom-in duration-200">
                         <div className="w-full bg-[#111] border border-white/20 p-6 rounded-xl shadow-2xl">
                             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                                <Swords className="text-neonBlue" /> Send Challenge
+                                <Swords className="text-neonBlue" /> {t.sendChallenge}
                             </h3>
                             <p className="text-gray-400 text-sm mb-4">
-                                Message to opponent:
+                                {t.messageOpponent}
                             </p>
                             <input
                                 type="text"
@@ -331,8 +333,8 @@ export const LobbyDashboard = () => {
                                 className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white mb-4 focus:outline-none focus:border-neonBlue"
                             />
                             <div className="flex gap-3">
-                                <button onClick={() => setShowChallengeModal(null)} className="flex-1 py-2 bg-white/10 text-gray-400 rounded-lg font-bold hover:bg-white/20">Cancel</button>
-                                <button onClick={sendChallenge} className="flex-1 py-2 bg-neonBlue text-black rounded-lg font-bold hover:bg-white">Send</button>
+                                <button onClick={() => setShowChallengeModal(null)} className="flex-1 py-2 bg-white/10 text-gray-400 rounded-lg font-bold hover:bg-white/20">{t.cancel}</button>
+                                <button onClick={sendChallenge} className="flex-1 py-2 bg-neonBlue text-black rounded-lg font-bold hover:bg-white">{t.send}</button>
                             </div>
                         </div>
                     </div>
@@ -343,13 +345,13 @@ export const LobbyDashboard = () => {
             <div className="glass-panel p-6 rounded-2xl border border-white/10 bg-black/60">
                 <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                     <Gamepad2 className="text-neonBlue" />
-                    Available Games ({games.length})
+                    {t.availableGames} ({games.length})
                 </h3>
                 <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                     {loading && games.length === 0 ? (
-                        <div className="text-gray-500 text-center py-10">Scanning...</div>
+                        <div className="text-gray-500 text-center py-10">{t.scanning}</div>
                     ) : games.length === 0 ? (
-                        <div className="text-gray-500 text-center py-10">No open games found</div>
+                        <div className="text-gray-500 text-center py-10">{t.noGames}</div>
                     ) : (
                         games.map(g => (
                             <div key={g.id} className="flex items-center justify-between bg-white/5 p-4 rounded-xl border border-white/5 hover:border-neonBlue/50 transition-colors group">
@@ -366,7 +368,7 @@ export const LobbyDashboard = () => {
                                     href={`/game/${g.id}`}
                                     className="bg-neonBlue text-black px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-white hover:scale-105 transition-all shadow-[0_0_10px_rgba(0,255,255,0.3)] hover:shadow-[0_0_20px_rgba(0,255,255,0.6)]"
                                 >
-                                    Join Game
+                                    {t.joinGame}
                                 </a>
                             </div>
                         ))

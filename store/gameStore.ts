@@ -20,6 +20,7 @@ interface UserPreferences {
     // beadSkin removed in favor of Theme.skin
     opponentName?: string;
     isLobbyVisible: boolean;
+    language: 'en' | 'zh' | 'es' | 'ja' | 'hi';
 }
 
 interface GameState {
@@ -152,6 +153,7 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
                 showTurnIndicator: true,
                 boardScale: 1.0,
                 isLobbyVisible: true,
+                language: 'en',
             },
 
             resetGame: () => set({
@@ -183,6 +185,7 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
                     showTurnIndicator: true,
                     boardScale: 1.0,
                     isLobbyVisible: true,
+                    language: 'en',
                 }
             }),
 

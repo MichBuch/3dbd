@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { Eye, EyeOff, X } from 'lucide-react';
+import { useTranslation } from '@/lib/translations';
 
 type AuthView = 'initial' | 'signup' | 'login' | 'pricing';
 type PlanType = 'free' | 'pro';
@@ -13,6 +14,7 @@ interface AuthDialogProps {
 }
 
 export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
+    const { t } = useTranslation();
     const [view, setView] = useState<AuthView>('initial');
     const [selectedPlan, setSelectedPlan] = useState<PlanType>('free');
     const [email, setEmail] = useState('');
@@ -195,13 +197,13 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                             >
                                 <X size={20} />
                             </button>
-                            <h3 className="text-xl font-bold text-white mb-4">Notice</h3>
+                            <h3 className="text-xl font-bold text-white mb-4">{t.notice}</h3>
                             <p className="text-gray-300 mb-8 text-lg">{alertMessage}</p>
                             <button
                                 onClick={() => setAlertMessage(null)}
                                 className="bg-white text-black font-bold py-3 px-8 rounded-lg hover:bg-gray-200 transition-colors"
                             >
-                                OK
+                                {t.ok}
                             </button>
                         </div>
                     </div>
@@ -218,21 +220,21 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                 {/* Initial View - Login or Signup Choice */}
                 {view === 'initial' && (
                     <div className="p-12 text-center">
-                        <h1 className="text-4xl font-bold logo-neon mb-4">Welcome to 3DBD</h1>
-                        <p className="text-gray-400 mb-8">Sign up to play against other users (no AI bots)</p>
+                        <h1 className="text-4xl font-bold logo-neon mb-4">{t.welcome}</h1>
+                        <p className="text-gray-400 mb-8">{t.subtitle}</p>
 
                         <div className="flex gap-4 max-w-md mx-auto mb-6">
                             <button
                                 onClick={() => setView('pricing')}
                                 className="flex-1 bg-gradient-to-r from-neonBlue to-neonPink text-white font-bold py-4 px-8 rounded-lg text-lg hover:opacity-90 transition-opacity shadow-lg"
                             >
-                                Sign Up
+                                {t.signup}
                             </button>
                             <button
                                 onClick={() => setView('login')}
                                 className="flex-1 bg-white/10 border-2 border-white/20 text-white font-bold py-4 px-8 rounded-lg text-lg hover:bg-white/20 transition-colors"
                             >
-                                Log In
+                                {t.login}
                             </button>
                         </div>
                     </div>
@@ -241,14 +243,14 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                 {/* Pricing View */}
                 {view === 'pricing' && (
                     <div className="p-12">
-                        <h2 className="text-3xl font-bold text-white mb-8 text-center">Choose Your Plan</h2>
+                        <h2 className="text-3xl font-bold text-white mb-8 text-center">{t.choosePlan}</h2>
 
                         <div className="grid md:grid-cols-2 gap-6 mb-8">
                             {/* Free Plan */}
                             <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-white/10 rounded-2xl p-8">
-                                <h3 className="text-2xl font-bold text-white mb-2">Free</h3>
+                                <h3 className="text-2xl font-bold text-white mb-2">{t.planFree}</h3>
                                 <div className="text-5xl font-bold text-white mb-4">$0</div>
-                                <p className="text-gray-400 mb-6">Play the algorithm</p>
+                                <p className="text-gray-400 mb-6">{t.playAlgo}</p>
 
                                 <div className="space-y-3 mb-8">
                                     <div className="flex items-center gap-2 text-gray-300">
@@ -264,22 +266,22 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                                     }}
                                     className="w-full bg-white/10 border border-white/20 text-white font-bold py-3 rounded-lg hover:bg-white/20 transition-colors flex items-center justify-center text-center"
                                 >
-                                    Create Free Account
+                                    {t.createFree}
                                 </button>
                             </div>
 
                             {/* Pro Plan */}
                             <div className="relative bg-gradient-to-br from-gray-800 to-gray-900 border-2 border-neonBlue rounded-2xl p-8">
                                 <div className="absolute -top-3 right-6 bg-gradient-to-r from-neonBlue to-neonPink text-black text-xs font-bold px-4 py-1 rounded-full">
-                                    RECOMMENDED
+                                    {t.recommended}
                                 </div>
 
-                                <h3 className="text-2xl font-bold text-white mb-2">Pro</h3>
+                                <h3 className="text-2xl font-bold text-white mb-2">{t.pro}</h3>
                                 <div className="text-5xl font-bold text-white mb-1">
                                     $9.99
                                     <span className="text-lg text-gray-400">/year</span>
                                 </div>
-                                <p className="text-gray-400 mb-6">Play other people globally</p>
+                                <p className="text-gray-400 mb-6">{t.playGlobally}</p>
 
                                 <div className="space-y-3 mb-8">
                                     <div className="flex items-center gap-2 text-gray-300">
@@ -295,15 +297,15 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                                     }}
                                     className="w-full bg-gradient-to-r from-neonBlue to-neonPink text-white font-bold py-3 rounded-lg hover:opacity-90 transition-opacity text-lg shadow-lg"
                                 >
-                                    Play with other humans
+                                    {t.playHumans}
                                 </button>
                             </div>
                         </div>
 
                         <p className="text-center text-gray-500 text-sm">
-                            Already have an account?{' '}
+                            {t.alreadyAccount}{' '}
                             <button onClick={() => setView('login')} className="text-neonBlue hover:underline">
-                                Log in
+                                {t.login}
                             </button>
                         </p>
                     </div>
@@ -316,14 +318,14 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                             ← Back
                         </button>
 
-                        <h2 className="text-2xl font-bold text-white mb-2">Create your account</h2>
+                        <h2 className="text-2xl font-bold text-white mb-2">{t.createAccount}</h2>
                         <p className="text-gray-400 mb-6">
-                            Sign up for the {selectedPlan === 'pro' ? 'Pro Competitor' : 'Casual Player'} plan
+                            {selectedPlan === 'pro' ? 'Pro Competitor' : 'Casual Player'}
                         </p>
 
                         {/* OAuth Providers */}
                         <div className="mb-6">
-                            <p className="text-gray-400 text-sm mb-4 text-center">Sign in with</p>
+                            <p className="text-gray-400 text-sm mb-4 text-center">{t.connectWith}</p>
                             <div className="grid grid-cols-5 gap-3">
                                 {PROVIDERS.map((provider) => (
                                     <button
@@ -362,7 +364,7 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                                 />
                             </div>
                             <div className="w-full flex flex-col items-center">
-                                <label className="block text-sm text-gray-300 mb-2 w-1/2 text-left">Password (Optional)</label>
+                                <label className="block text-sm text-gray-300 mb-2 w-1/2 text-left">{t.passwordOptional}</label>
                                 <input
                                     type="password"
                                     value={password}
@@ -378,16 +380,16 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                                 disabled={loading}
                                 className="w-1/2 bg-gradient-to-r from-neonBlue to-neonPink text-white font-semibold py-4 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 shadow-lg text-base mt-6"
                             >
-                                {loading ? 'Processing...' : (password ? 'Create Account' : 'Continue with Email')}
+                                {loading ? t.processing : (password ? t.createAccount : t.continueEmail)}
                             </button>
 
                             <p className="text-xs text-gray-500 text-center">
-                                Email verification will be sent after signup if no password set.
+                                {t.emailVerification}
                             </p>
                         </form>
 
                         <p className="text-xs text-gray-500 mt-6 text-center border-t border-gray-700 pt-4">
-                            By creating an account you agree to the Terms of Service and Privacy Policy
+                            {t.agreeTerms}
                         </p>
                     </div>
                 )}
@@ -399,11 +401,11 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                             ← Back
                         </button>
 
-                        <h2 className="text-3xl font-bold text-white mb-2">Welcome back</h2>
-                        <p className="text-gray-400 mb-6">Log in to continue playing</p>
+                        <h2 className="text-3xl font-bold text-white mb-2">{t.welcomeBack}</h2>
+                        <p className="text-gray-400 mb-6">{t.loginSubtitle}</p>
 
                         <div className="mb-6">
-                            <p className="text-gray-400 text-sm mb-4 text-center">Sign in with</p>
+                            <p className="text-gray-400 text-sm mb-4 text-center">{t.connectWith}</p>
                             <div className="grid grid-cols-5 gap-3">
                                 {PROVIDERS.map((provider) => (
                                     <button
@@ -458,14 +460,14 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                                 disabled={loading}
                                 className="w-1/2 bg-gradient-to-r from-neonBlue to-neonPink text-white font-bold py-4 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 shadow-lg text-lg mt-6"
                             >
-                                {loading ? 'Processing...' : (password ? 'Log In' : 'Send Magic Link')}
+                                {loading ? t.processing : (password ? t.login : t.magicLink)}
                             </button>
                         </form>
 
                         <p className="text-sm text-gray-400 mt-6 text-center">
-                            Don't have an account?{' '}
+                            {t.noAccount}{' '}
                             <button onClick={() => setView('pricing')} className="text-neonBlue hover:underline">
-                                Sign up
+                                {t.signup}
                             </button>
                         </p>
                     </div>
