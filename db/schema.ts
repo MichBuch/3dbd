@@ -226,3 +226,16 @@ export const chatsRelations = relations(chats, ({ one }) => ({
         references: [users.id],
     }),
 }));
+
+// Webhook Logging
+export const webhookLogs = pgTable("webhook_logs", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    eventType: text("event_type").notNull(), // e.g., "checkout.session.completed"
+    eventId: text("event_id").notNull(), // Stripe event ID for deduplication
+    payload: json("payload").notNull(), // Full event data
+    status: text("status").$type<"success" | "failed">().default("success").notNull(),
+    errorMessage: text("error_message"),
+    userId: text("user_id").references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow(),
+});
+
