@@ -11,7 +11,7 @@ function createWindow() {
             contextIsolation: false, // For simple MVP; tighten for Prod
         },
         backgroundColor: '#000000',
-        title: "3D4BD"
+        title: "3DBD"
     });
 
     if (isDev) {

@@ -287,7 +287,7 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
             checkWin: () => null
         }),
         {
-            name: '3d4bd-storage-v1', // Updated branding to 3D4BD
+            name: '3dbd-storage-v1', // Updated branding to 3DBD
             partialize: (state) => ({
                 theme: state.theme,
                 isAiEnabled: state.isAiEnabled,
