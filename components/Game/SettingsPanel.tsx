@@ -12,19 +12,21 @@ interface SettingsPanelProps {
 }
 
 const THEMES = [
-    { id: 'beach', name: 'Beach' },
-    { id: 'black_white', name: 'Black & White' },
-    { id: 'xmas', name: 'Christmas' },
-    { id: 'dark', name: 'Dark' },
-    { id: 'easter', name: 'Easter' },
-    { id: 'halloween', name: 'Halloween' },
-    { id: 'rubik', name: "Rubik's Cube" },
-    { id: 'snow', name: 'Snow' },
-    { id: 'space', name: 'Space' },
-    { id: 'starry', name: 'Starry Night' },
-    { id: 'tennis', name: 'Tennis' },
-    { id: 'winter', name: 'Winter' },
-    { id: 'wood', name: 'Wood' },
+    { id: 'beach', translationKey: 'themeBeach' },
+    { id: 'black_white', translationKey: 'themeBlackWhite' },
+    { id: 'chinese_new_year', translationKey: 'themeChineseNewYear' },
+    { id: 'diwali', translationKey: 'themeDiwali' },
+    { id: 'xmas', translationKey: 'themeXmas' },
+    { id: 'dark', translationKey: 'themeDark' },
+    { id: 'easter', translationKey: 'themeEaster' },
+    { id: 'halloween', translationKey: 'themeHalloween' },
+    { id: 'rubik', translationKey: 'themeRubik' },
+    { id: 'snow', translationKey: 'themeSnow' },
+    { id: 'space', translationKey: 'themeSpace' },
+    { id: 'starry', translationKey: 'themeStarry' },
+    { id: 'tennis', translationKey: 'themeTennis' },
+    { id: 'winter', translationKey: 'themeWinter' },
+    { id: 'wood', translationKey: 'themeWood' },
 ];
 
 // Export Theme Config for use in other components (e.g. Sync)
@@ -41,7 +43,9 @@ export const THEME_CONFIG: Record<string, { base: string, white: string, black: 
     space: { base: '#000000', white: '#E6E6FAB0', black: '#800080', skin: 'default' },
     beach: { base: '#FFE5B4', white: '#FF6F61', black: '#40E0D0', skin: 'default' },
     halloween: { base: '#1C1C1C', white: '#FF7518', black: '#5C2C90', skin: 'default' },
-    rubik: { base: '#000000', white: '#ffffff', black: '#ff0000', skin: 'rubik' }, // Rubik's cube grid base?
+    rubik: { base: '#000000', white: '#ffffff', black: '#ff0000', skin: 'rubik' },
+    chinese_new_year: { base: '#8B0000', white: '#FFD700', black: '#FF0000', skin: 'default' }, // Red & Gold
+    diwali: { base: '#FF6F00', white: '#FFD54F', black: '#FF6F00', skin: 'default' }, // Orange & Yellow
 };
 
 export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
@@ -115,7 +119,7 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                                 <label className="text-white font-bold text-xs uppercase tracking-wider block mb-3">{t.difficulty}</label>
                                 <div className="flex gap-2">
                                     {(['easy', 'medium', 'hard'] as const).map(d => (
-                                        <button key={d} onClick={() => setDifficulty(d)} className={`flex-1 py-2 rounded-lg text-sm font-bold uppercase transition-all ${difficulty === d ? 'bg-white text-black' : 'bg-black/40 text-gray-500'}`}>{d}</button>
+                                        <button key={d} onClick={() => setDifficulty(d)} className={`flex-1 py-2 rounded-lg text-sm font-bold uppercase transition-all ${difficulty === d ? 'bg-white text-black' : 'bg-black/40 text-gray-500'}`}>{t[d]}</button>
                                     ))}
                                 </div>
                             </div>
@@ -140,9 +144,9 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                                     }}
                                     className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white text-sm focus:outline-none focus:border-neonBlue"
                                 >
-                                    {THEMES.map(t => (
-                                        <option key={t.id} value={t.id} className="bg-[#222] text-white">
-                                            {t.name}
+                                    {THEMES.map(theme => (
+                                        <option key={theme.id} value={theme.id} className="bg-[#222] text-white">
+                                            {t[theme.translationKey as keyof typeof t]}
                                         </option>
                                     ))}
                                 </select>
