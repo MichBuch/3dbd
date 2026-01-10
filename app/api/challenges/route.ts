@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { challenges, games } from "@/db/schema";
+import { challenges, games, users } from "@/db/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
@@ -58,6 +58,55 @@ export const POST = async (req: Request) => {
             const { fromId, fromName, toId, message } = body;
             if (!toId || !fromId) return new NextResponse("Missing fields", { status: 400 });
 
+            // Check if the challenged user is a bot
+            const targetUser = await db.query.users.findFirst({
+                // @ts-ignore
+                where: (users, { eq }) => eq(users.id, toId)
+            });
+
+            // If challenging a bot, auto-accept and create game immediately
+            if (targetUser?.isBot) {
+                console.log(`🤖 Bot challenge detected for ${targetUser.name}, auto-accepting...`);
+
+                // Initial 4x4x4 Empty Board
+                const initialBoard = Array(4).fill(null).map(() => Array(4).fill(null).map(() => Array(4).fill(null)));
+
+                // Map bot rating to difficulty
+                const botRating = targetUser.rating || 1200;
+                let difficulty: 'easy' | 'medium' | 'hard' = 'medium';
+                if (botRating < 1000) difficulty = 'easy';
+                else if (botRating > 1300) difficulty = 'hard';
+
+                // Create game - challenger is white, bot is black
+                const newGame = await db.insert(games).values({
+                    whitePlayerId: fromId, // Challenger plays white
+                    blackPlayerId: toId, // Bot plays black
+                    state: {
+                        board: initialBoard,
+                        currentPlayer: 'white',
+                        lastMove: null
+                    },
+                    difficulty,
+                    mode: 'ai', // Bot games are 'ai' mode
+                    isFinished: false,
+                    whiteScore: 0,
+                    blackScore: 0
+                }).returning();
+
+                // Create the challenge record as accepted
+                await db.insert(challenges).values({
+                    fromId,
+                    fromName: fromName || 'Guest',
+                    toId,
+                    message,
+                    status: 'accepted',
+                    gameId: newGame[0].id
+                });
+
+                return NextResponse.json({ success: true, gameId: newGame[0].id, botAccepted: true });
+            }
+
+            // Regular user challenge - create pending challenge
             await db.insert(challenges).values({
                 fromId,
                 fromName: fromName || 'Guest',

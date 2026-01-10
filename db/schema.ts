@@ -35,6 +35,8 @@ export const users = pgTable("user", {
     rating: integer("rating").default(1200),
     // Status
     status: text("status").$type<"online" | "offline" | "playing">().default("offline"),
+    // Bot Flag
+    isBot: boolean("is_bot").default(false).notNull(),
 });
 
 export const accounts = pgTable(
