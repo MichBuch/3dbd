@@ -192,10 +192,10 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
 
                 {/* Footer */}
                 <div className="p-6 border-t border-white/10 flex gap-3 bg-black/40 rounded-b-2xl">
-                    <button onClick={resetPreferences} className="flex-1 py-3 rounded-xl border border-white/10 text-gray-400 font-bold text-sm hover:text-white hover:bg-white/5 transition-colors">
+                    <button onClick={resetPreferences} className="flex-1 py-3 rounded-xl border border-white/10 text-gray-400 font-bold text-sm hover:text-white hover:bg-white/5 transition-colors flex justify-center items-center">
                         {t.reset}
                     </button>
-                    <button onClick={onClose} className="flex-1 py-3 rounded-xl bg-white text-black font-bold text-sm hover:scale-[1.02] transition-transform">
+                    <button onClick={onClose} className="flex-1 py-3 rounded-xl bg-white text-black font-bold text-sm hover:scale-[1.02] transition-transform flex justify-center items-center">
                         {t.done}
                     </button>
                 </div>
