@@ -37,6 +37,17 @@ export const users = pgTable("user", {
     status: text("status").$type<"online" | "offline" | "playing">().default("offline"),
     // Bot Flag
     isBot: boolean("is_bot").default(false).notNull(),
+    // Admin Role
+    role: text("role").$type<"user" | "admin">().default("user").notNull(),
+});
+
+export const themeAssets = pgTable("theme_assets", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    themeId: text("theme_id").notNull(),
+    url: text("url").notNull(),
+    type: text("type").$type<"image" | "video">().default("image").notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const accounts = pgTable(

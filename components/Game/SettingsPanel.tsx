@@ -109,8 +109,8 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                             <div className="p-4 bg-white/5 rounded-xl border border-white/5">
                                 <label className="text-white font-bold text-xs uppercase tracking-wider block mb-3">{t.gameMode}</label>
                                 <div className="flex gap-2">
-                                    <button onClick={() => setAiEnabled(true)} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${isAiEnabled ? 'bg-neonBlue text-black' : 'bg-black/40 text-gray-500'}`}>{t.vsAi}</button>
-                                    <button onClick={() => setAiEnabled(false)} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${!isAiEnabled ? 'bg-neonPink text-black' : 'bg-black/40 text-gray-500'}`}>{t.pvp}</button>
+                                    <button onClick={() => setAiEnabled(true)} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${isAiEnabled ? 'bg-black text-neonBlue border-2 border-[#39ff14] shadow-[0_0_10px_rgba(57,255,20,0.5)]' : 'bg-white/10 text-gray-300 hover:bg-white/20'}`}>{t.vsAi}</button>
+                                    <button onClick={() => setAiEnabled(false)} className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${!isAiEnabled ? 'bg-black text-neonPink border-2 border-[#39ff14] shadow-[0_0_10px_rgba(57,255,20,0.5)]' : 'bg-white/10 text-gray-300 hover:bg-white/20'}`}>{t.pvp}</button>
                                 </div>
                             </div>
 
@@ -119,7 +119,7 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                                 <label className="text-white font-bold text-xs uppercase tracking-wider block mb-3">{t.difficulty}</label>
                                 <div className="flex gap-2">
                                     {(['easy', 'medium', 'hard'] as const).map(d => (
-                                        <button key={d} onClick={() => setDifficulty(d)} className={`flex-1 py-2 rounded-lg text-sm font-bold uppercase transition-all ${difficulty === d ? 'bg-white text-black' : 'bg-black/40 text-gray-500'}`}>{t[d]}</button>
+                                        <button key={d} onClick={() => setDifficulty(d)} className={`flex-1 py-2 rounded-lg text-sm font-bold uppercase transition-all ${difficulty === d ? 'bg-black text-white border-2 border-[#39ff14] shadow-[0_0_10px_rgba(57,255,20,0.5)]' : 'bg-white/10 text-gray-300 hover:bg-white/20'}`}>{t[d]}</button>
                                     ))}
                                 </div>
                             </div>
@@ -131,25 +131,98 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                     {openSection === 'appearance' && (
                         <div className="space-y-4 p-2 animate-in slide-in-from-top-2 duration-200">
                             {/* Theme */}
-                            <div className="p-4 bg-white/5 rounded-xl border border-white/5">
-                                <label className="text-white font-bold text-xs uppercase tracking-wider block mb-3">{t.theme}</label>
-                                <select
-                                    value={theme.id || 'dark'}
-                                    onChange={(e) => {
-                                        const newId = e.target.value;
-                                        setTheme({
-                                            id: newId,
-                                            ...THEME_CONFIG[newId]
-                                        });
-                                    }}
-                                    className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white text-sm focus:outline-none focus:border-neonBlue"
-                                >
-                                    {THEMES.map(theme => (
-                                        <option key={theme.id} value={theme.id} className="bg-[#222] text-white">
-                                            {t[theme.translationKey as keyof typeof t]}
-                                        </option>
-                                    ))}
-                                </select>
+                            <div className="p-4 bg-white/5 rounded-xl border border-white/5 space-y-4">
+                                <div>
+                                    <label className="text-white font-bold text-xs uppercase tracking-wider block mb-3">{t.backgroundMode || 'Background Mode'}</label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {(['theme', 'custom', 'color'] as const).map(mode => (
+                                            <button
+                                                key={mode}
+                                                onClick={() => setPreference('backgroundMode', mode)}
+                                                className={`py-2 rounded-lg text-xs font-bold uppercase transition-all ${preferences.backgroundMode === mode ? 'bg-black text-neonBlue border-2 border-[#39ff14] shadow-[0_0_10px_rgba(57,255,20,0.5)]' : 'bg-white/10 text-gray-300 hover:bg-white/20'}`}
+                                            >
+                                                {mode}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {preferences.backgroundMode === 'theme' && (
+                                    <div>
+                                        <label className="text-white font-bold text-xs uppercase tracking-wider block mb-2">{t.theme}</label>
+                                        <select
+                                            value={theme.id || 'dark'}
+                                            onChange={(e) => {
+                                                const newId = e.target.value;
+                                                setTheme({
+                                                    id: newId,
+                                                    ...THEME_CONFIG[newId]
+                                                });
+                                            }}
+                                            className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white text-sm focus:outline-none focus:border-neonBlue"
+                                        >
+                                            {THEMES.map(theme => (
+                                                <option key={theme.id} value={theme.id} className="bg-[#222] text-white">
+                                                    {t[theme.translationKey as keyof typeof t]}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+
+                                {preferences.backgroundMode === 'color' && (
+                                    <div>
+                                        <label className="text-white font-bold text-xs uppercase tracking-wider block mb-2">Color</label>
+                                        <input
+                                            type="color"
+                                            value={preferences.backgroundColor}
+                                            onChange={(e) => setPreference('backgroundColor', e.target.value)}
+                                            className="w-full h-10 rounded cursor-pointer"
+                                        />
+                                    </div>
+                                )}
+
+                                {preferences.backgroundMode === 'custom' && (
+                                    <div className="space-y-3">
+                                        <div>
+                                            <label className="text-white font-bold text-xs uppercase tracking-wider block mb-2">Upload Image</label>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={(e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (file) {
+                                                        const reader = new FileReader();
+                                                        reader.onloadend = () => {
+                                                            setPreference('customBackgroundUrl', reader.result as string);
+                                                        };
+                                                        reader.readAsDataURL(file);
+                                                    }
+                                                }}
+                                                className="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-white/10 file:text-white hover:file:bg-white/20"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-white font-bold text-xs uppercase tracking-wider block mb-2">Or Image URL</label>
+                                            <input
+                                                type="text"
+                                                placeholder="https://..."
+                                                value={preferences.customBackgroundUrl || ''}
+                                                onChange={(e) => setPreference('customBackgroundUrl', e.target.value)}
+                                                className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-white text-xs"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="pt-2 border-t border-white/5">
+                                    <div onClick={() => setPreference('reduceMotion', !preferences.reduceMotion)} className="flex items-center justify-between cursor-pointer">
+                                        <span className="text-white font-bold text-xs uppercase tracking-wider">Reduce Motion (Static)</span>
+                                        <div className={`w-10 h-5 rounded-full relative transition-colors ${preferences.reduceMotion ? 'bg-neonBlue' : 'bg-white/10'}`}>
+                                            <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${preferences.reduceMotion ? 'left-6' : 'left-1'}`} />
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Bead Skin Removed */}
@@ -191,11 +264,11 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                 </div>
 
                 {/* Footer */}
-                <div className="p-6 border-t border-white/10 flex gap-3 bg-black/40 rounded-b-2xl">
-                    <button onClick={resetPreferences} className="flex-1 py-3 rounded-xl border border-white/10 text-gray-400 font-bold text-sm hover:text-white hover:bg-white/5 transition-colors flex justify-center items-center">
+                <div className="p-6 border-t border-white/10 grid grid-cols-2 gap-4 bg-black/40 rounded-b-2xl">
+                    <button onClick={resetPreferences} className="w-full py-3 rounded-xl border border-white/10 text-gray-400 font-extrabold text-sm uppercase tracking-wider hover:text-white hover:bg-white/5 transition-colors flex justify-center items-center">
                         {t.reset}
                     </button>
-                    <button onClick={onClose} className="flex-1 py-3 rounded-xl bg-white text-black font-bold text-sm hover:scale-[1.02] transition-transform flex justify-center items-center">
+                    <button onClick={onClose} className="w-full py-3 rounded-xl bg-neonBlue text-black font-extrabold text-sm uppercase tracking-wider hover:bg-white transition-colors flex justify-center items-center">
                         {t.done}
                     </button>
                 </div>

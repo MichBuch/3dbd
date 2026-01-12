@@ -58,12 +58,20 @@ export function Header() {
             <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10">
                 <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
                     {/* Logo - Top Left */}
-                    <Link href="/" className="flex items-center gap-1.5 z-50">
-                        <div className="w-8 h-8 md:w-6 md:h-6 bg-gradient-to-br from-neonBlue to-neonPink rounded-md flex items-center justify-center">
-                            <span className="text-black font-black text-xs">3D</span>
-                        </div>
-                        <span className="logo-neon font-bold text-lg md:text-base block">3DBD</span>
-                    </Link>
+                    {/* Logo - Top Center (Absolute) */}
+                    <div className="absolute left-[45%] top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none">
+                        <Link href="/" className="flex items-center gap-4 pointer-events-auto">
+                            <div className="w-24 h-24 md:w-20 md:h-20 bg-gradient-to-br from-neonBlue to-neonPink rounded-2xl flex items-center justify-center shadow-lg shadow-neonBlue/20">
+                                <span className="text-black font-black text-4xl md:text-3xl">3D</span>
+                            </div>
+                            <span className="logo-neon font-bold text-6xl md:text-5xl block tracking-tighter">3DBD</span>
+                        </Link>
+                    </div>
+
+                    {/* Left Spacer (Empty now that Logo is centered) */}
+                    <div className="flex items-center gap-1.5 z-50 opacity-0 pointer-events-none">
+                        <div className="w-8 h-8" />
+                    </div>
 
                     {/* Mobile: Space for Scoreboard in Center */}
                     <div className="flex-1" />

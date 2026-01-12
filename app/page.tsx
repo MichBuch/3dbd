@@ -11,6 +11,8 @@ import { useGameStore } from '@/store/gameStore';
 import Link from 'next/link';
 import { useTranslation } from '@/lib/translations';
 
+import { BackgroundSystem } from '@/components/Game/Backgrounds/BackgroundSystem';
+
 export default function Home() {
     const { preferences } = useGameStore();
     const { t } = useTranslation();
@@ -49,12 +51,13 @@ export default function Home() {
                         target={[0, 0, 0]}
                     />
 
-                    {/* <Environment preset="studio" /> - Removing to prevent fetch errors */}
                     <ambientLight intensity={1.5} />
                     <directionalLight position={[5, 10, 5]} intensity={2} castShadow />
                     <pointLight position={[-10, 5, -10]} intensity={1} color="#4444ff" />
                     <spotLight position={[10, 20, 10]} angle={0.3} penumbra={1} castShadow intensity={200} />
 
+                    <Environment preset="city" />
+                    <BackgroundSystem />
                     <Board />
                 </Canvas>
             </main>

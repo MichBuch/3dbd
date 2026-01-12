@@ -21,6 +21,11 @@ interface UserPreferences {
     opponentName?: string;
     isLobbyVisible: boolean;
     language: 'en' | 'zh' | 'es' | 'ja' | 'hi';
+    // Background Prefs
+    backgroundMode: 'theme' | 'custom' | 'color';
+    customBackgroundUrl: string | null;
+    backgroundColor: string;
+    reduceMotion: boolean;
 }
 
 interface GameState {
@@ -154,6 +159,10 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
                 boardScale: 1.0,
                 isLobbyVisible: true,
                 language: 'en',
+                backgroundMode: 'theme',
+                customBackgroundUrl: null,
+                backgroundColor: '#000000',
+                reduceMotion: false,
             },
 
             resetGame: () => set({
@@ -186,6 +195,10 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
                     boardScale: 1.0,
                     isLobbyVisible: true,
                     language: 'en',
+                    backgroundMode: 'theme',
+                    customBackgroundUrl: null,
+                    backgroundColor: '#000000',
+                    reduceMotion: false,
                 }
             }),
 
@@ -297,8 +310,19 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
             // Migrate from old storage key if exists
             migrate: (persistedState: any, version: number) => {
                 // Default new fields
-                if (persistedState && persistedState.preferences && persistedState.preferences.isLobbyVisible === undefined) {
-                    persistedState.preferences.isLobbyVisible = true;
+                if (persistedState && persistedState.preferences) {
+                    if (persistedState.preferences.isLobbyVisible === undefined) {
+                        persistedState.preferences.isLobbyVisible = true;
+                    }
+                    if (!persistedState.preferences.backgroundMode) {
+                        persistedState.preferences.backgroundMode = 'theme';
+                    }
+                    if (persistedState.preferences.reduceMotion === undefined) {
+                        persistedState.preferences.reduceMotion = false;
+                    }
+                    if (!persistedState.preferences.backgroundColor) {
+                        persistedState.preferences.backgroundColor = '#000000';
+                    }
                 }
 
                 // Try to load from old key

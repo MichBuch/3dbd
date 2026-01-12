@@ -63,13 +63,15 @@ export const GameUI = () => {
     // @ts-ignore
     const isPremium = session?.user?.plan === 'premium';
 
+
+
     return (
         <>
             {/* Settings Button Removed - Moved to Header */}
 
             {/* Compact Scoreboard - Top Center - 20% Smaller */}
             {preferences.showScoreboard && (
-                <div style={{ position: 'fixed', top: '0', left: '50%', transform: 'translateX(-50%)', zIndex: 60 }} className="h-16 flex items-center pointer-events-none">
+                <div style={{ position: 'fixed', top: '0', left: '24px', zIndex: 60 }} className="h-16 flex items-center pointer-events-none">
                     <div className="glass-panel px-3 md:px-5 py-1 md:py-2 rounded-2xl flex items-center gap-3 md:gap-5 border border-white/10 pointer-events-auto">
                         {/* Player 1 / White */}
                         <div className="flex items-center gap-2">
@@ -205,6 +207,18 @@ export const GameUI = () => {
             )}
 
             {/* Settings Panel Removed */}
+            {/* Ads - Bottom Centered (Hidden for Premium) */}
+            {!isPremium && (
+                <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none">
+                    <div className="bg-black/80 backdrop-blur-md border-t border-white/10 px-6 py-2 rounded-t-xl pointer-events-auto">
+                        <div className="w-[728px] h-[90px] bg-white/5 flex items-center justify-center text-white/20 text-xs uppercase tracking-widest border border-dashed border-white/10">
+                            ADVERTISEMENT
+                            <br />
+                            <span className="text-[10px] opacity-50">Free Tier Support</span>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 };
