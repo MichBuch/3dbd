@@ -4,6 +4,7 @@ import { useGameStore } from '@/store/gameStore';
 import { SpaceObjects } from './SpaceObjects';
 import { StarField } from './StarField';
 import { RubiksCubeBackground } from './RubiksCubeBackground';
+import { ToyObjects } from './ToyObjects';
 import { useEffect } from 'react';
 
 export const BackgroundSystem = () => {
@@ -29,6 +30,9 @@ export const BackgroundSystem = () => {
                 } else if (theme.id === 'rubik') {
                     main.style.background = '#1a1a1a'; // Dark grey for cube contrast
                     main.style.backgroundImage = 'none';
+                } else if (theme.id === 'toys') {
+                    main.style.background = '#87CEEB'; // Sky Blue
+                    main.style.backgroundImage = 'none';
                 } else {
                     // Default gradients or theme base
                     main.style.background = theme.base;
@@ -49,6 +53,8 @@ export const BackgroundSystem = () => {
                     <SpaceObjects />
                 </>
             );
+        case 'toys':
+            return <ToyObjects />;
         case 'rubik':
             return <RubiksCubeBackground />;
         default:

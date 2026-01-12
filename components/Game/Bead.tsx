@@ -2,7 +2,8 @@ import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh } from 'three';
 import * as THREE from 'three';
-import { Player } from '@/store/gameStore';
+
+import { Player, useGameStore } from '@/store/gameStore';
 
 interface BeadProps {
     position: [number, number, number];
@@ -17,7 +18,7 @@ interface BeadProps {
 const textureCache: Record<string, THREE.CanvasTexture> = {};
 
 // Helper to create patterned textures
-const createPatternTexture = (type: 'easter' | 'xmas', colorHex: string) => {
+const createPatternTexture = (type: 'easter' | 'xmas' | 'space', colorHex: string) => {
     const key = `${type}-${colorHex}`;
     if (textureCache[key]) return textureCache[key];
 
@@ -70,6 +71,52 @@ const createPatternTexture = (type: 'easter' | 'xmas', colorHex: string) => {
             ctx.fillRect(x, y, 4, 4);
             ctx.fillRect(x + 1, y - 3, 2, 10); // Cross
             ctx.fillRect(x - 3, y + 1, 10, 2);
+        }
+    } else if (type === 'space') {
+        const isMoon = colorHex.toLowerCase().includes('fff') || colorHex === '#ffffff';
+        // Base
+        ctx.fillStyle = isMoon ? '#dddddd' : '#552222'; // Moon Grey or Dark Red
+        ctx.fillRect(0, 0, 512, 256);
+
+        // Craters
+        ctx.fillStyle = 'rgba(0,0,0,0.4)';
+        for (let i = 0; i < 30; i++) {
+            const size = Math.random() * 40 + 5;
+            const x = Math.random() * 512;
+            const y = Math.random() * 256;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        // Surface Noise
+        ctx.fillStyle = isMoon ? 'rgba(255,255,255,0.1)' : 'rgba(255,100,0,0.1)';
+        for (let i = 0; i < 400; i++) {
+            const x = Math.random() * 512;
+            const y = Math.random() * 256;
+            ctx.fillRect(x, y, 2, 2);
+        }
+    } else if (type === 'space') {
+        const isMoon = colorHex.toLowerCase().includes('fff') || colorHex === '#ffffff';
+        // Base
+        ctx.fillStyle = isMoon ? '#dddddd' : '#552222'; // Moon Grey or Dark Red
+        ctx.fillRect(0, 0, 512, 256);
+
+        // Craters
+        ctx.fillStyle = 'rgba(0,0,0,0.4)';
+        for (let i = 0; i < 30; i++) {
+            const size = Math.random() * 40 + 5;
+            const x = Math.random() * 512;
+            const y = Math.random() * 256;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        // Surface Noise
+        ctx.fillStyle = isMoon ? 'rgba(255,255,255,0.1)' : 'rgba(255,100,0,0.1)';
+        for (let i = 0; i < 400; i++) {
+            const x = Math.random() * 512;
+            const y = Math.random() * 256;
+            ctx.fillRect(x, y, 2, 2);
         }
     }
 
@@ -210,6 +257,9 @@ const createRubikTexture = (colorHex: string) => {
 };
 
 export const Bead = ({ position, color, player, isWinning = false, scale = 1, skin = 'default' }: BeadProps) => {
+    const { theme } = useGameStore();
+    const effectiveSkin = (theme.id === 'space' || theme.id === 'toys') ? theme.id : skin;
+
     const meshRef = useRef<Mesh>(null);
     const targetY = position[1];
     const startY = targetY + 10;
@@ -238,7 +288,7 @@ export const Bead = ({ position, color, player, isWinning = false, scale = 1, sk
     let emissiveIntensity = isWinning ? 0.8 : 0;
 
     // Geometry Selection
-    let geometry = skin === 'rubik'
+    let geometry = effectiveSkin === 'rubik'
         ? <boxGeometry args={[beadRadius * 1.5, beadRadius * 1.5, beadRadius * 1.5]} /> // Cube
         : <sphereGeometry args={[beadRadius, 32, 32]} />;
 
@@ -246,7 +296,16 @@ export const Bead = ({ position, color, player, isWinning = false, scale = 1, sk
     let bumpMap: THREE.Texture | null = null;
     let bumpScale = 0.02;
 
-    if (skin === 'tennis') {
+    if (effectiveSkin === 'space') {
+        // Space Pattern
+        const hexColor = player === 'white' ? '#ffffff' : '#440000';
+        finalColor = new THREE.Color(hexColor);
+        map = createPatternTexture('space', hexColor) || null;
+        bumpMap = map;
+        bumpScale = 0.05;
+        roughness = 0.9; // Rocky
+        metalness = 0.1;
+    } else if (effectiveSkin === 'tennis') {
         const hexColor = player === 'white' ? '#ffffff' : '#ccff00';
         finalColor = new THREE.Color(hexColor);
         map = createTennisTexture(hexColor, '3DBD') || null;
@@ -282,6 +341,15 @@ export const Bead = ({ position, color, player, isWinning = false, scale = 1, sk
         roughness = 0.2; // Plastic
         metalness = 0.1;
         if (isWinning) emissiveIntensity = 0.5;
+    } else if (effectiveSkin === 'toys') {
+        // High Gloss Plastic
+        roughness = 0.05;
+        metalness = 0.1;
+        // Keep base color from config
+        if (isWinning) {
+            emissiveIntensity = 0.5;
+            finalColor.multiplyScalar(1.5);
+        }
     }
 
     if (skin === 'default') {
@@ -290,6 +358,8 @@ export const Bead = ({ position, color, player, isWinning = false, scale = 1, sk
     }
 
     const scaleY = (skin === 'easter') ? 1.3 : 1;
+
+
 
     return (
         <mesh

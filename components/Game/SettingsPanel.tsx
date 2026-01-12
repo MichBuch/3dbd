@@ -27,6 +27,7 @@ const THEMES = [
     { id: 'tennis', translationKey: 'themeTennis' },
     { id: 'winter', translationKey: 'themeWinter' },
     { id: 'wood', translationKey: 'themeWood' },
+    { id: 'toys', translationKey: 'themeToys' },
 ];
 
 // Export Theme Config for use in other components (e.g. Sync)
@@ -46,6 +47,7 @@ export const THEME_CONFIG: Record<string, { base: string, white: string, black: 
     rubik: { base: '#000000', white: '#ffffff', black: '#ff0000', skin: 'rubik' },
     chinese_new_year: { base: '#8B0000', white: '#FFD700', black: '#FF0000', skin: 'default' }, // Red & Gold
     diwali: { base: '#FF6F00', white: '#FFD54F', black: '#FF6F00', skin: 'default' }, // Orange & Yellow
+    toys: { base: '#87CEEB', white: '#FFFF00', black: '#FF0000', skin: 'default' }, // Sky Blue, Yellow/Red beads
 };
 
 export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
@@ -170,6 +172,60 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                                     </div>
                                 )}
 
+                                {preferences.backgroundMode === 'theme' && (theme.id === 'space' || theme.id === 'toys') && (
+                                    <div className="p-3 bg-blue-900/20 border border-blue-500/30 rounded-xl space-y-3">
+                                        <div className="flex items-center gap-2 text-neonBlue font-bold text-xs uppercase tracking-wider">
+                                            <span>{theme.id === 'space' ? '🚀 Space Settings' : '🧸 Theme Settings'}</span>
+                                        </div>
+
+                                        {/* Speed */}
+                                        <div>
+                                            <label className="text-gray-300 text-xs block mb-1 flex justify-between">
+                                                <span>{theme.id === 'space' ? 'Warp Speed' : 'Animation Speed'}</span>
+                                                <span>{preferences.themeSpeed}x</span>
+                                            </label>
+                                            <input
+                                                type="range" min="0.1" max="10" step="0.1"
+                                                value={preferences.themeSpeed ?? 1}
+                                                onChange={(e) => setPreference('themeSpeed', parseFloat(e.target.value))}
+                                                className="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-neonBlue"
+                                            />
+                                        </div>
+
+                                        {/* Density */}
+                                        <div>
+                                            <label className="text-gray-300 text-xs block mb-2">{theme.id === 'space' ? 'Star Density' : 'Object Density'}</label>
+                                            <div className="flex gap-2">
+                                                {(['low', 'medium', 'high'] as const).map(d => (
+                                                    <button
+                                                        key={d}
+                                                        onClick={() => setPreference('themeDensity', d)}
+                                                        className={`flex-1 py-1 rounded text-xs font-bold uppercase transition-all ${preferences.themeDensity === d ? 'bg-black text-neonBlue border-2 border-[#39ff14] shadow-[0_0_10px_rgba(57,255,20,0.5)]' : 'bg-black/40 text-gray-500 hover:bg-white/20'}`}
+                                                    >
+                                                        {d}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Events */}
+                                        <div onClick={() => setPreference('themeEvents', !preferences.themeEvents)} className="flex items-center justify-between cursor-pointer">
+                                            <span className="text-gray-300 text-xs">{theme.id === 'space' ? 'Enable Asteroid Hazards' : 'Enable Special Events'}</span>
+                                            <div className={`w-8 h-4 rounded-full relative transition-colors ${preferences.themeEvents ? 'bg-red-500' : 'bg-gray-700'}`}>
+                                                <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${preferences.themeEvents ? 'left-4.5' : 'left-0.5'}`} />
+                                            </div>
+                                        </div>
+
+                                        {/* Drift */}
+                                        <div onClick={() => setPreference('boardDrift', !preferences.boardDrift)} className="flex items-center justify-between cursor-pointer">
+                                            <span className="text-gray-300 text-xs">Enable Board Drift</span>
+                                            <div className={`w-8 h-4 rounded-full relative transition-colors ${preferences.boardDrift ? 'bg-neonBlue' : 'bg-gray-700'}`}>
+                                                <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${preferences.boardDrift ? 'left-4.5' : 'left-0.5'}`} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
                                 {preferences.backgroundMode === 'color' && (
                                     <div>
                                         <label className="text-white font-bold text-xs uppercase tracking-wider block mb-2">Color</label>
@@ -264,11 +320,11 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                 </div>
 
                 {/* Footer */}
-                <div className="p-6 border-t border-white/10 grid grid-cols-2 gap-4 bg-black/40 rounded-b-2xl">
-                    <button onClick={resetPreferences} className="w-full py-3 rounded-xl border border-white/10 text-gray-400 font-extrabold text-sm uppercase tracking-wider hover:text-white hover:bg-white/5 transition-colors flex justify-center items-center">
+                <div className="p-6 border-t border-white/10 flex justify-center gap-4 bg-black/40 rounded-b-2xl">
+                    <button onClick={resetPreferences} className="px-8 py-3 rounded-xl border border-white/10 text-gray-400 font-extrabold text-sm uppercase tracking-wider hover:text-white hover:bg-white/5 transition-colors">
                         {t.reset}
                     </button>
-                    <button onClick={onClose} className="w-full py-3 rounded-xl bg-neonBlue text-black font-extrabold text-sm uppercase tracking-wider hover:bg-white transition-colors flex justify-center items-center">
+                    <button onClick={onClose} className="px-8 py-3 rounded-xl bg-neonBlue text-black font-extrabold text-sm uppercase tracking-wider hover:bg-white transition-colors">
                         {t.done}
                     </button>
                 </div>

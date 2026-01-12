@@ -26,6 +26,11 @@ interface UserPreferences {
     customBackgroundUrl: string | null;
     backgroundColor: string;
     reduceMotion: boolean;
+    // Generic Advanced Theme Settings
+    themeSpeed?: number; // 0.1 to 10
+    themeDensity?: 'low' | 'medium' | 'high';
+    themeEvents?: boolean; // "Hazards" or "Special Events"
+    boardDrift?: boolean;  // New toggle for floating board effect
 }
 
 interface GameState {
@@ -163,6 +168,10 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
                 customBackgroundUrl: null,
                 backgroundColor: '#000000',
                 reduceMotion: false,
+                themeSpeed: 1,
+                themeDensity: 'medium',
+                themeEvents: true,
+                boardDrift: true,
             },
 
             resetGame: () => set({
@@ -199,6 +208,9 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
                     customBackgroundUrl: null,
                     backgroundColor: '#000000',
                     reduceMotion: false,
+                    themeSpeed: 1,
+                    themeDensity: 'medium',
+                    themeEvents: true,
                 }
             }),
 
@@ -314,6 +326,26 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
                     if (persistedState.preferences.isLobbyVisible === undefined) {
                         persistedState.preferences.isLobbyVisible = true;
                     }
+
+                    // Migrate Space Settings to Generic Theme Settings
+                    if (persistedState.preferences.themeSpeed === undefined) {
+                        persistedState.preferences.themeSpeed = persistedState.preferences.spaceSpeed ?? 1;
+                    }
+                    if (persistedState.preferences.themeDensity === undefined) {
+                        persistedState.preferences.themeDensity = persistedState.preferences.spaceDensity ?? 'medium';
+                    }
+                    if (persistedState.preferences.themeEvents === undefined) {
+                        persistedState.preferences.themeEvents = persistedState.preferences.spaceHazards ?? true;
+                    }
+                    if (persistedState.preferences.boardDrift === undefined) {
+                        persistedState.preferences.boardDrift = true;
+                    }
+
+                    // Clean up old keys (optional, but good for hygiene)
+                    delete persistedState.preferences.spaceSpeed;
+                    delete persistedState.preferences.spaceDensity;
+                    delete persistedState.preferences.spaceHazards;
+
                     if (!persistedState.preferences.backgroundMode) {
                         persistedState.preferences.backgroundMode = 'theme';
                     }

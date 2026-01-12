@@ -1,7 +1,7 @@
 'use client';
 
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera, Environment } from '@react-three/drei';
+import { OrbitControls, PerspectiveCamera, Environment, Float } from '@react-three/drei';
 import { Board } from '@/components/Game/Board';
 import { GameUI } from '@/components/Game/GameUI';
 import { Header } from '@/components/Layout/Header';
@@ -58,7 +58,13 @@ export default function Home() {
 
                     <Environment preset="city" />
                     <BackgroundSystem />
-                    <Board />
+                    {preferences.boardDrift ? (
+                        <Float speed={2} rotationIntensity={0.2} floatIntensity={1} floatingRange={[-0.5, 0.5]}>
+                            <Board />
+                        </Float>
+                    ) : (
+                        <Board />
+                    )}
                 </Canvas>
             </main>
             <CookieConsent />

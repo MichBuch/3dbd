@@ -114,6 +114,7 @@ export const translations = {
         themeWood: "Wood",
         themeChineseNewYear: "Chinese New Year",
         themeDiwali: "Diwali",
+        themeToys: "Toys",
         // Page
     },
     zh: {
@@ -226,6 +227,7 @@ export const translations = {
         themeWood: "木纹",
         themeChineseNewYear: "春节",
         themeDiwali: "排灯节",
+        themeToys: "玩具",
         // Page
     },
     es: {
@@ -338,6 +340,7 @@ export const translations = {
         themeWood: "Madera",
         themeChineseNewYear: "Año Nuevo Chino",
         themeDiwali: "Diwali",
+        themeToys: "Juguetes",
         // Page
     },
     ja: {
@@ -450,6 +453,7 @@ export const translations = {
         themeWood: "木",
         themeChineseNewYear: "春節",
         themeDiwali: "ディワリ",
+        themeToys: "おもちゃ",
         // Page
     },
     hi: {
@@ -562,6 +566,7 @@ export const translations = {
         themeWood: "लकड़ी",
         themeChineseNewYear: "चीनी नव वर्ष",
         themeDiwali: "दिवाली",
+        themeToys: "खिलौने",
         // Page
     }
 };
