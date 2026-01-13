@@ -62,9 +62,9 @@ export function Header() {
                         <Link href="/" className="pointer-events-auto no-underline">
                             {/* Explicit inline styles to override any potential conflicts */}
                             <span
-                                className="font-bold text-3xl tracking-tighter"
+                                className="font-bold text-3xl tracking-tighter !text-[#39ff14]" // Use Tailwind for important
                                 style={{
-                                    color: '#39ff14 !important', // Neon Green
+                                    // color: '#39ff14', // Handled by class above
                                     textShadow: '0 0 10px #39ff14, 0 0 20px #ffff00', // Green + Yellow Glow
                                     position: 'relative',
                                     zIndex: 100
