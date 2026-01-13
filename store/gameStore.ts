@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { THEME_CONFIG } from '@/lib/themeConfig';
 
 export type Player = 'white' | 'black';
 export type BoardState = (Player | null)[][][]; // [x][y][z] where z is height (0-3)
@@ -31,6 +32,8 @@ interface UserPreferences {
     themeDensity?: 'low' | 'medium' | 'high';
     themeEvents?: boolean; // "Hazards" or "Special Events"
     boardDrift?: boolean;  // New toggle for floating board effect
+    soundVolume: number;   // 0 to 1
+    musicVolume: number;   // 0 to 1
 }
 
 interface GameState {
@@ -154,9 +157,13 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
             difficulty: 'hard',
             scores: { white: 0, black: 0 },
             winningCells: [],
-            // Default: Standard Dark Mode (White vs Black)
-            // Default: Standard Dark Mode (White vs Black)
-            theme: { id: 'dark', base: '#222222', white: '#ffffff', black: '#444444', skin: 'default' },
+            theme: {
+                id: 'space',
+                base: THEME_CONFIG.space.base,
+                white: THEME_CONFIG.space.white,
+                black: THEME_CONFIG.space.black,
+                skin: THEME_CONFIG.space.skin
+            },
             preferences: {
                 showScoreboard: true,
                 showLeaderboard: true,
@@ -172,6 +179,8 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
                 themeDensity: 'medium',
                 themeEvents: true,
                 boardDrift: true,
+                soundVolume: 0.5,
+                musicVolume: 0.3,
             },
 
             resetGame: () => set({
@@ -211,6 +220,8 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
                     themeSpeed: 1,
                     themeDensity: 'medium',
                     themeEvents: true,
+                    soundVolume: 0.5,
+                    musicVolume: 0.3,
                 }
             }),
 

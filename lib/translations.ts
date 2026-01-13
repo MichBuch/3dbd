@@ -39,6 +39,18 @@ export const translations = {
         turnIndicator: "Turn Indicator",
         reset: "Reset",
         done: "Done",
+        // Themes
+        themeDark: "Dark",
+        themeLight: "Light",
+        themeSpace: "Space",
+        themeToys: "Toys",
+        themeRoute66: "Route 66",
+        themeArea51: "Area 51",
+        themePickleball: "Pickleball",
+        themePadel: "Padel Tennis",
+        themeRugby: "Rugby",
+        themeCozy: "Cozy Fireplace",
+        themeRubik: "Rubik's Cube",
         // Auth
         welcome: "Welcome to 3DBD",
         welcomeBack: "Welcome back",

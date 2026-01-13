@@ -12,9 +12,12 @@ import Link from 'next/link';
 import { useTranslation } from '@/lib/translations';
 
 import { BackgroundSystem } from '@/components/Game/Backgrounds/BackgroundSystem';
+import { SoundManager } from '@/components/Game/SoundManager';
+
+import { PreferenceSync } from '@/components/Game/PreferenceSync';
 
 export default function Home() {
-    const { preferences } = useGameStore();
+    const preferences = useGameStore((state) => state.preferences);
     const { t } = useTranslation();
 
     // Adjust camera distance based on board scale

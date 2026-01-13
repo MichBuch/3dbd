@@ -39,6 +39,8 @@ export const users = pgTable("user", {
     isBot: boolean("is_bot").default(false).notNull(),
     // Admin Role
     role: text("role").$type<"user" | "admin">().default("user").notNull(),
+    // Settings Sync
+    preferences: json("preferences"),
 });
 
 export const themeAssets = pgTable("theme_assets", {

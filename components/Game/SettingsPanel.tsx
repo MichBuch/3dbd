@@ -4,51 +4,13 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useGameStore } from '@/store/gameStore';
 import { useTranslation } from '@/lib/translations';
-import { X, Eye, Palette, ChevronDown, ChevronUp, Monitor, Gamepad2, Settings as SettingsIcon } from 'lucide-react';
+import { THEMES, THEME_CONFIG } from '@/lib/themeConfig';
+import { X, Eye, Palette, ChevronDown, ChevronUp, Monitor, Gamepad2, Volume2, Settings as SettingsIcon } from 'lucide-react';
 
 interface SettingsPanelProps {
     isOpen: boolean;
     onClose: () => void;
 }
-
-const THEMES = [
-    { id: 'beach', translationKey: 'themeBeach' },
-    { id: 'black_white', translationKey: 'themeBlackWhite' },
-    { id: 'chinese_new_year', translationKey: 'themeChineseNewYear' },
-    { id: 'diwali', translationKey: 'themeDiwali' },
-    { id: 'xmas', translationKey: 'themeXmas' },
-    { id: 'dark', translationKey: 'themeDark' },
-    { id: 'easter', translationKey: 'themeEaster' },
-    { id: 'halloween', translationKey: 'themeHalloween' },
-    { id: 'rubik', translationKey: 'themeRubik' },
-    { id: 'snow', translationKey: 'themeSnow' },
-    { id: 'space', translationKey: 'themeSpace' },
-    { id: 'starry', translationKey: 'themeStarry' },
-    { id: 'tennis', translationKey: 'themeTennis' },
-    { id: 'winter', translationKey: 'themeWinter' },
-    { id: 'wood', translationKey: 'themeWood' },
-    { id: 'toys', translationKey: 'themeToys' },
-];
-
-// Export Theme Config for use in other components (e.g. Sync)
-export const THEME_CONFIG: Record<string, { base: string, white: string, black: string, skin?: 'default' | 'tennis' | 'easter' | 'xmas' | 'wood' | 'rubik' }> = {
-    dark: { base: '#222222', white: '#ffffff', black: '#444444', skin: 'default' },
-    black_white: { base: '#1a1a1a', white: '#ffffff', black: '#000000', skin: 'default' },
-    wood: { base: '#5D4037', white: '#D7CCC8', black: '#3E2723', skin: 'wood' },
-    tennis: { base: '#2E8B57', white: '#ccff00', black: '#ffffff', skin: 'tennis' },
-    xmas: { base: '#1a472a', white: '#ff0000', black: '#00ff00', skin: 'xmas' },
-    easter: { base: '#FFF8E7', white: '#FFB7B2', black: '#B5EAD7', skin: 'easter' },
-    winter: { base: '#F0F8FF', white: '#87CEFA', black: '#4682B4', skin: 'default' },
-    snow: { base: '#FFFFFF', white: '#E0FFFF', black: '#B0E0E6', skin: 'default' },
-    starry: { base: '#0B1026', white: '#FFFFD4', black: '#4B0082', skin: 'default' },
-    space: { base: '#000000', white: '#E6E6FAB0', black: '#800080', skin: 'default' },
-    beach: { base: '#FFE5B4', white: '#FF6F61', black: '#40E0D0', skin: 'default' },
-    halloween: { base: '#1C1C1C', white: '#FF7518', black: '#5C2C90', skin: 'default' },
-    rubik: { base: '#000000', white: '#ffffff', black: '#ff0000', skin: 'rubik' },
-    chinese_new_year: { base: '#8B0000', white: '#FFD700', black: '#FF0000', skin: 'default' }, // Red & Gold
-    diwali: { base: '#FF6F00', white: '#FFD54F', black: '#FF6F00', skin: 'default' }, // Orange & Yellow
-    toys: { base: '#87CEEB', white: '#FFFF00', black: '#FF0000', skin: 'default' }, // Sky Blue, Yellow/Red beads
-};
 
 export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
     const {
@@ -67,7 +29,7 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
 
     // Removed local selectedTheme state since we use store now
     // Collapsible Sections State
-    const [openSection, setOpenSection] = useState<'gameplay' | 'appearance' | 'interface' | null>('gameplay');
+    const [openSection, setOpenSection] = useState<'gameplay' | 'audio' | 'appearance' | 'interface' | null>('gameplay');
 
     if (!isOpen) return null;
 
@@ -86,17 +48,29 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
         </button>
     );
 
+    if (!isOpen) return null;
+
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="relative bg-[#111] border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[85vh]">
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/80 backdrop-blur-sm p-0 md:p-4 animate-in fade-in duration-200">
+            <div className="
+                relative 
+                bg-[#111] 
+                border-t md:border border-white/10 
+                rounded-t-2xl md:rounded-2xl 
+                w-full md:w-auto md:min-w-[480px] max-w-lg 
+                shadow-2xl 
+                flex flex-col 
+                max-h-[85vh] md:max-h-[90vh] 
+                animate-in slide-in-from-bottom-10 md:slide-in-from-bottom-0 md:zoom-in-95 duration-200
+            ">
 
                 {/* Header */}
-                <div className="p-6 border-b border-white/10 flex justify-between items-center">
+                <div className="p-5 md:p-6 border-b border-white/10 flex justify-between items-center bg-[#111] sticky top-0 z-10 rounded-t-2xl">
                     <h2 className="text-xl font-bold text-white flex items-center gap-2">
                         <SettingsIcon className="text-neonBlue" /> {t.settings}
                     </h2>
-                    <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors">
-                        <X size={20} />
+                    <button onClick={onClose} className="p-2 -mr-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-full transition-colors">
+                        <X size={24} />
                     </button>
                 </div>
 
@@ -128,7 +102,40 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                         </div>
                     )}
 
-                    {/* 2. Appearance Section */}
+                    {/* 2. Audio Section */}
+                    <SectionHeader id="audio" label="AUDIO" icon={Volume2} />
+                    {openSection === 'audio' && (
+                        <div className="space-y-4 p-2 animate-in slide-in-from-top-2 duration-200">
+                            <div className="p-4 bg-white/5 rounded-xl border border-white/5 space-y-4">
+                                <div>
+                                    <label className="text-white font-bold text-xs uppercase tracking-wider block mb-2 flex justify-between">
+                                        <span>Music Volume</span>
+                                        <span>{Math.round(preferences.musicVolume * 100)}%</span>
+                                    </label>
+                                    <input
+                                        type="range" min="0" max="1" step="0.1"
+                                        value={preferences.musicVolume}
+                                        onChange={(e) => setPreference('musicVolume', parseFloat(e.target.value))}
+                                        className="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-neonBlue"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-white font-bold text-xs uppercase tracking-wider block mb-2 flex justify-between">
+                                        <span>Sound Effects</span>
+                                        <span>{Math.round(preferences.soundVolume * 100)}%</span>
+                                    </label>
+                                    <input
+                                        type="range" min="0" max="1" step="0.1"
+                                        value={preferences.soundVolume}
+                                        onChange={(e) => setPreference('soundVolume', parseFloat(e.target.value))}
+                                        className="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-neonBlue"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 3. Appearance Section */}
                     <SectionHeader id="appearance" label={t.appearance} icon={Palette} />
                     {openSection === 'appearance' && (
                         <div className="space-y-4 p-2 animate-in slide-in-from-top-2 duration-200">
