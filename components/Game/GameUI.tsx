@@ -78,7 +78,7 @@ export const GameUI = () => {
                             <span className="hidden md:inline text-base font-bold text-white">
                                 {session?.user?.name || t.player1}
                             </span>
-                            <span className="text-xl md:text-2xl font-mono font-black text-red-500 drop-shadow-[0_0_12px_rgba(255,0,0,0.5)] min-w-[24px] md:min-w-[32px] text-center">
+                            <span className="text-xl md:text-2xl font-mono font-black min-w-[24px] md:min-w-[32px] text-center" style={{ color: theme.white, textShadow: `0 0 12px ${theme.white}80` }}>
                                 {scores.white}
                             </span>
                         </div>
@@ -88,7 +88,7 @@ export const GameUI = () => {
 
                         {/* Player 2 / Black */}
                         <div className="flex items-center gap-2">
-                            <span className="text-xl md:text-2xl font-mono font-black text-green-500 drop-shadow-[0_0_12px_rgba(0,255,0,0.5)] min-w-[24px] md:min-w-[32px] text-center">
+                            <span className="text-xl md:text-2xl font-mono font-black min-w-[24px] md:min-w-[32px] text-center" style={{ color: theme.black, textShadow: `0 0 12px ${theme.black}80` }}>
                                 {scores.black}
                             </span>
                             <span className="hidden md:inline text-base font-bold text-white">
@@ -101,7 +101,13 @@ export const GameUI = () => {
                             <>
                                 <div className="h-6 w-px bg-white/20" />
                                 <div className="flex items-center gap-1.5">
-                                    <div className={`w-2.5 h-2.5 rounded-full shadow-[0_0_8px_currentColor] transition-colors duration-500 ${currentPlayer === 'white' ? 'bg-[red] shadow-[0_0_8px_red]' : 'bg-[green] shadow-[0_0_8px_green]'}`} />
+                                    <div
+                                        className="w-2.5 h-2.5 rounded-full transition-colors duration-500"
+                                        style={{
+                                            backgroundColor: currentPlayer === 'white' ? theme.white : theme.black,
+                                            boxShadow: `0 0 8px ${currentPlayer === 'white' ? theme.white : theme.black}`
+                                        }}
+                                    />
                                     <span className="text-xs font-bold text-white/90">
                                         {currentPlayer === 'white' ? `${session?.user?.name || t.player1}${t.turn}` : `${t.player2}${t.turn}`}
                                     </span>

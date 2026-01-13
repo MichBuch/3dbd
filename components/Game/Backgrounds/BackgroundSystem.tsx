@@ -16,6 +16,7 @@ import { SportsBackground } from './SportsBackground';
 import { WinterBackground } from './WinterBackground';
 import { FestiveBackground } from './FestiveBackground';
 import { CozyBackground } from './CozyBackground';
+import { ComingSoonFlyby } from './ComingSoonFlyby';
 
 export const BackgroundSystem = () => {
     const { preferences, theme } = useGameStore();
@@ -68,25 +69,36 @@ export const BackgroundSystem = () => {
     // Render 3D Backgrounds ONLY if in Theme mode
     if (preferences.backgroundMode !== 'theme') return null;
 
-    if (theme.id === 'space') return <><StarField /><SpaceObjects /></>;
-    if (theme.id === 'rubik') return <RubiksCubeBackground />;
-    if (theme.id === 'toys') return <ToyObjects />;
-    if (theme.id === 'route66') return <Route66Background />;
-    if (theme.id === 'area51') return <Area51Background />;
-    if (theme.id === 'beach') return <BeachBackground />;
-    if (theme.id === 'halloween') return <HalloweenBackground />;
+    // Coming Soon Banner Logic
+    // User requested "Coming Soon" on most themes except Space
+    const showComingSoon = ![
+        'space', // Specifically excluded
+        'dark',  // Default/Classic
+        'wood',  // Classic
+        'black_white' // Minimalist
+    ].includes(theme.id);
 
-    // Sports Pack
-    if (['tennis', 'padel', 'pickleball', 'rugby'].includes(theme.id)) {
-        return <SportsBackground />;
-    }
+    return (
+        <>
+            {theme.id === 'space' && <><StarField /><SpaceObjects /></>}
+            {theme.id === 'rubik' && <RubiksCubeBackground />}
+            {theme.id === 'toys' && <ToyObjects />}
+            {theme.id === 'route66' && <Route66Background />}
+            {theme.id === 'area51' && <Area51Background />}
+            {theme.id === 'beach' && <BeachBackground />}
+            {theme.id === 'halloween' && <HalloweenBackground />}
 
-    // Festive Pack
-    if (['chinese_new_year', 'diwali', 'easter'].includes(theme.id)) {
-        return <FestiveBackground />;
-    }
+            {/* Sports Pack */}
+            {['tennis', 'padel', 'pickleball', 'rugby'].includes(theme.id) && <SportsBackground />}
 
-    if (theme.id === 'cozy') return <CozyBackground />;
+            {/* Festive Pack */}
+            {['chinese_new_year', 'diwali', 'easter'].includes(theme.id) && <FestiveBackground />}
 
-    return null;
+            {theme.id === 'snow' && <WinterBackground />}
+            {theme.id === 'starry' && <StarField />}
+
+            {/* Flyby Banner for incomplete themes */}
+            {showComingSoon && <ComingSoonFlyby />}
+        </>
+    );
 };

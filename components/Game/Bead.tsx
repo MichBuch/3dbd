@@ -73,50 +73,135 @@ const createPatternTexture = (type: 'easter' | 'xmas' | 'space', colorHex: strin
             ctx.fillRect(x - 3, y + 1, 10, 2);
         }
     } else if (type === 'space') {
-        const isMoon = colorHex.toLowerCase().includes('fff') || colorHex === '#ffffff';
-        // Base
-        ctx.fillStyle = isMoon ? '#dddddd' : '#552222'; // Moon Grey or Dark Red
+        const isMoon = colorHex === '#FDFD96'; // Matches config exactly now
+
+        // --- BASE COLOR ---
+        // Moon: Pale Yellowish (#FDFD96)
+        // Mars: Deep Red (#552222)
+        const baseColor = colorHex;
+        const shadowColor = isMoon ? '#C9C978' : '#330000';
+
+        // Dark Side Gradient (Radial for spherical look)
+        // Light moves from top-left (Bright) to bottom-right (Dark)
+        const gradient = ctx.createRadialGradient(
+            150, 80, 20,   // Inner Circle (Highlight source)
+            256, 128, 300  // Outer Circle (Falloff)
+        );
+        gradient.addColorStop(0, '#FFFFD0');  // Bright Highlight
+        gradient.addColorStop(0.3, baseColor); // Base Yellow
+        gradient.addColorStop(0.7, shadowColor); // Shadow boundary
+        gradient.addColorStop(1, '#221111');   // Deep Dark Side
+
+        ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, 512, 256);
 
-        // Craters
-        ctx.fillStyle = 'rgba(0,0,0,0.4)';
-        for (let i = 0; i < 30; i++) {
-            const size = Math.random() * 40 + 5;
+        // --- SURFACE NOISE ---
+        ctx.fillStyle = isMoon ? 'rgba(200,200,160,0.15)' : 'rgba(255,100,0,0.1)';
+        for (let i = 0; i < 1500; i++) {
             const x = Math.random() * 512;
             const y = Math.random() * 256;
-            ctx.beginPath();
-            ctx.arc(x, y, size, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.fillRect(x, y, 1, 1);
         }
-        // Surface Noise
-        ctx.fillStyle = isMoon ? 'rgba(255,255,255,0.1)' : 'rgba(255,100,0,0.1)';
-        for (let i = 0; i < 400; i++) {
-            const x = Math.random() * 512;
-            const y = Math.random() * 256;
-            ctx.fillRect(x, y, 2, 2);
-        }
-    } else if (type === 'space') {
-        const isMoon = colorHex.toLowerCase().includes('fff') || colorHex === '#ffffff';
-        // Base
-        ctx.fillStyle = isMoon ? '#dddddd' : '#552222'; // Moon Grey or Dark Red
-        ctx.fillRect(0, 0, 512, 256);
 
-        // Craters
-        ctx.fillStyle = 'rgba(0,0,0,0.4)';
-        for (let i = 0; i < 30; i++) {
-            const size = Math.random() * 40 + 5;
+        // --- CRATERS (Irregular & Realistic) ---
+        const craters: { x: number, y: number, r: number }[] = [];
+        const maxCraters = isMoon ? 20 : 30;
+        const craterFloor = isMoon ? 'rgba(90, 90, 70, 0.6)' : 'rgba(0,0,0,0.4)';
+        const rimHighlight = isMoon ? 'rgba(255, 255, 230, 0.7)' : 'rgba(255,100,100,0.2)';
+        const rimShadow = isMoon ? 'rgba(50, 50, 30, 0.4)' : 'rgba(0,0,0,0.5)';
+
+        let attempts = 0;
+        while (craters.length < maxCraters && attempts < 400) {
+            attempts++;
+            const size = Math.random() * 25 + 10;
             const x = Math.random() * 512;
             const y = Math.random() * 256;
-            ctx.beginPath();
-            ctx.arc(x, y, size, 0, Math.PI * 2);
-            ctx.fill();
-        }
-        // Surface Noise
-        ctx.fillStyle = isMoon ? 'rgba(255,255,255,0.1)' : 'rgba(255,100,0,0.1)';
-        for (let i = 0; i < 400; i++) {
-            const x = Math.random() * 512;
-            const y = Math.random() * 256;
-            ctx.fillRect(x, y, 2, 2);
+
+            // Strict Overlap Check
+            let overlap = false;
+            for (const c of craters) {
+                const dx = c.x - x;
+                const dy = c.y - y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                // Allow slight overlap for compound craters? No, user wants distinct.
+                if (dist < (c.r + size + 6)) {
+                    overlap = true;
+                    break;
+                }
+            }
+
+            if (!overlap) {
+                craters.push({ x, y, r: size });
+
+                // Draw Irregular Crater Shape
+                // We draw the main circle + 2-3 smaller offsets to distort it
+                const drawIrregularCircle = (cx: number, cy: number, r: number, style: string) => {
+                    ctx.fillStyle = style;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                    // Distort 1
+                    ctx.arc(cx + r * 0.2, cy - r * 0.1, r * 0.9, 0, Math.PI * 2);
+                    // Distort 2
+                    ctx.arc(cx - r * 0.1, cy + r * 0.2, r * 0.85, 0, Math.PI * 2);
+                    ctx.fill();
+                };
+
+                // 1. EJECTA (Rays) - Only for big ones
+                if (size > 18) {
+                    ctx.save();
+                    ctx.translate(x, y);
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+                    ctx.lineWidth = 1;
+                    const rays = Math.floor(Math.random() * 8) + 8;
+                    for (let r = 0; r < rays; r++) {
+                        const len = size * (1.8 + Math.random());
+                        const ang = (Math.PI * 2 * r) / rays + (Math.random() * 0.5);
+                        ctx.beginPath();
+                        ctx.moveTo(0, 0);
+                        ctx.lineTo(Math.cos(ang) * len, Math.sin(ang) * len);
+                        ctx.stroke();
+                    }
+                    ctx.restore();
+                }
+
+                // 2. RIM (Outer Highlight)
+                ctx.beginPath();
+                ctx.arc(x, y, size + 2.5, 0, Math.PI * 2); // Keep rim somewhat rounder for structure
+                ctx.fillStyle = rimHighlight;
+                ctx.fill();
+
+                // 3. INNER SHADOW (Depth)
+                ctx.beginPath();
+                ctx.arc(x, y, size + 1, 0, Math.PI * 2);
+                ctx.fillStyle = rimShadow;
+                ctx.fill();
+
+                // 4. CRATER FLOOR (The Pit) - Irregular
+                drawIrregularCircle(x, y, size, craterFloor);
+
+                // 5. INTERNAL SHADOW (Wall Shadow)
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.clip();
+                ctx.beginPath();
+                ctx.arc(x + size * 0.4, y + size * 0.3, size, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0,0,0,0.35)';
+                ctx.fill();
+                ctx.restore();
+
+                // 6. CENTRAL PEAK (Sometimes)
+                if (size > 20 && Math.random() > 0.5) {
+                    ctx.beginPath();
+                    ctx.arc(x + 1, y + 1, size * 0.15, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255,255,255,0.2)'; // Lit peak
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(x - 1, y - 1, size * 0.15, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(0,0,0,0.3)'; // Shadow side
+                    ctx.fill();
+                }
+            }
         }
     }
 

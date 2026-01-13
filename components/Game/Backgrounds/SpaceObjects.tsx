@@ -249,6 +249,86 @@ function FloatingObject({ data, position, velocity, rotationSpeed, distance = 1 
                     )}
                 </group>
             )}
+            {/* --- BALLOON (Spy/Weather) --- */}
+            {data.type === 'balloon' && (
+                <group scale={[data.scale, data.scale, data.scale]}>
+                    <mesh position={[0, 1, 0]}>
+                        <sphereGeometry args={[1, 32, 32]} />
+                        <meshStandardMaterial color="white" roughness={0.2} transparent opacity={0.9} />
+                    </mesh>
+                    {/* String */}
+                    <mesh position={[0, -0.2, 0]}>
+                        <cylinderGeometry args={[0.02, 0.02, 0.5]} />
+                        <meshBasicMaterial color="#333" />
+                    </mesh>
+                    {/* Payload */}
+                    <mesh position={[0, -0.5, 0]}>
+                        <boxGeometry args={[0.4, 0.3, 0.4]} />
+                        <meshStandardMaterial color="#888" metalness={0.5} />
+                    </mesh>
+                    {/* Solar Panels */}
+                    <mesh position={[0, -0.5, 0]} rotation={[0, 0, 1.57]}>
+                        <boxGeometry args={[1.2, 0.05, 0.2]} />
+                        <meshStandardMaterial color="#00008B" metalness={0.8} />
+                    </mesh>
+                </group>
+            )}
+
+            {/* --- SPACEX ROCKET (Starship) --- */}
+            {data.type === 'rocket_spacex' && (
+                <group scale={[data.scale, data.scale, data.scale]} rotation={[1.57, 0, 0]}>
+                    {/* Body - Stainless Steel */}
+                    <mesh>
+                        <cylinderGeometry args={[0.5, 0.5, 3, 16]} />
+                        <meshStandardMaterial color="#C0C0C0" metalness={0.9} roughness={0.1} />
+                    </mesh>
+                    {/* Nose Cone */}
+                    <mesh position={[0, 1.8, 0]}>
+                        <coneGeometry args={[0.5, 1, 16]} />
+                        <meshStandardMaterial color="#C0C0C0" metalness={0.9} roughness={0.1} />
+                    </mesh>
+                    {/* Fins */}
+                    {[0, 1.57, 3.14, 4.71].map((r, i) => (
+                        <mesh key={i} position={[Math.sin(r) * 0.4, -1.2, Math.cos(r) * 0.4]} rotation={[0, r, 0]}>
+                            <boxGeometry args={[0.1, 0.5, 0.4]} />
+                            <meshStandardMaterial color="#A0A0A0" metalness={0.8} />
+                        </mesh>
+                    ))}
+                    {/* Engine Glow */}
+                    <mesh position={[0, -1.6, 0]}>
+                        <cylinderGeometry args={[0.3, 0.1, 0.2]} />
+                        <meshBasicMaterial color="#FF4500" />
+                    </mesh>
+                </group>
+            )}
+
+            {/* --- BLUE ORIGIN (The Shape) --- */}
+            {data.type === 'rocket_blue' && (
+                <group scale={[data.scale, data.scale, data.scale]} rotation={[1.57, 0, 0]}>
+                    {/* Shaft */}
+                    <mesh>
+                        <cylinderGeometry args={[0.4, 0.5, 2, 16]} />
+                        <meshStandardMaterial color="white" roughness={0.2} />
+                    </mesh>
+                    {/* Capsule (The Head) - Distinctive Mushroom shape */}
+                    <mesh position={[0, 1.2, 0]}>
+                        <sphereGeometry args={[0.6, 16, 16, 0, Math.PI * 2, 0, 2]} />
+                        <meshStandardMaterial color="#333" roughness={0.5} />
+                    </mesh>
+                    {/* Blue Feather Logo Mockup */}
+                    <mesh position={[0, 0, 0.41]} rotation={[0, 0, 0]}>
+                        <boxGeometry args={[0.3, 1, 0.05]} />
+                        <meshBasicMaterial color="#0000FF" />
+                    </mesh>
+                    {/* Legs */}
+                    {[0, 1.57, 3.14, 4.71].map((r, i) => (
+                        <mesh key={i} position={[Math.sin(r) * 0.4, -1.0, Math.cos(r) * 0.4]} rotation={[0, r, 0.5]}>
+                            <boxGeometry args={[0.1, 0.6, 0.1]} />
+                            <meshStandardMaterial color="#555" />
+                        </mesh>
+                    ))}
+                </group>
+            )}
         </group>
     );
 }

@@ -2,12 +2,12 @@
 
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef, useState } from 'react';
-import { useTexture, Billboard } from '@react-three/drei';
+import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 
 export const CozyBackground = () => {
-    // Load Textures
-    const alienTex = useTexture('/assets/sprites/alien_santa_peek_sprite.png');
+    // Generate Warm Lighting for Fireplace Effect
+
     // Using a simple wood texture or color for the room
 
     // Fire Flickering Logic
@@ -57,7 +57,7 @@ export const CozyBackground = () => {
                 </mesh>
             </group>
 
-            {/* The Window (Looking outside) */}
+            {/* Window View - Just Snow, No Alien */}
             <group position={[20, 5, -24.9]}>
                 {/* Frame */}
                 <mesh>
@@ -65,9 +65,6 @@ export const CozyBackground = () => {
                     <meshStandardMaterial color="#1a1a1a" />
                 </mesh>
                 {/* Glass/Outside View */}
-                {/* Masking logic is hard in simple R3F without stencil. 
-                    We'll just place a 'Sky' plane behind the window frame and some snow particles localized there. 
-                */}
                 <mesh position={[0, 0, -0.6]}>
                     <planeGeometry args={[10, 10]} />
                     <meshBasicMaterial color="#001133" />
@@ -75,23 +72,14 @@ export const CozyBackground = () => {
 
                 {/* Falling Snow appearing outside */}
                 <SnowWindow />
-
-                {/* Peeking Alien */}
-                <AlienPeek tex={alienTex} />
             </group>
 
             {/* Coffee Table (Foreground) */}
             <group position={[0, -6, 15]}>
-                {/* Table Top (Board sits on/near this, but board is at [0,0,0] usually? 
-                    Actually Game board is centered. We should place table BELOW the board.
-                    Board is usually at y=0 or floating. 
-                    Let's put table at y = -3.
-                */}
                 <mesh position={[0, 3, 0]}>
                     <boxGeometry args={[40, 0.5, 20]} />
                     <meshStandardMaterial color="#3E2723" roughness={0.1} />
                 </mesh>
-                {/* Legs */}
                 <mesh position={[-18, 1.5, -9]}><boxGeometry args={[2, 3, 2]} /><meshStandardMaterial color="#2E1715" /></mesh>
                 <mesh position={[18, 1.5, -9]}><boxGeometry args={[2, 3, 2]} /><meshStandardMaterial color="#2E1715" /></mesh>
                 <mesh position={[-18, 1.5, 9]}><boxGeometry args={[2, 3, 2]} /><meshStandardMaterial color="#2E1715" /></mesh>
@@ -131,34 +119,5 @@ const SnowWindow = () => {
             <sphereGeometry args={[1, 8, 8]} />
             <meshBasicMaterial color="white" />
         </instancedMesh>
-    )
-}
-
-const AlienPeek = ({ tex }: { tex: THREE.Texture }) => {
-    const ref = useRef<THREE.Group>(null);
-    // Random peek logic
-    useFrame((state) => {
-        if (!ref.current) return;
-        const t = state.clock.elapsedTime;
-        // Peek every ~10 seconds
-        const cycle = t % 10;
-        if (cycle > 8) {
-            // Peeking up
-            const peekProgress = Math.sin((cycle - 8) * Math.PI); // 0 -> 1 -> 0
-            ref.current.position.y = -5 + peekProgress * 4;
-        } else {
-            ref.current.position.y = -10; // Hidden
-        }
-    });
-
-    return (
-        <group ref={ref} position={[0, -5, -0.8]}>
-            <Billboard>
-                <mesh scale={[4, 4, 1]}>
-                    <planeGeometry />
-                    <meshBasicMaterial map={tex} transparent side={THREE.DoubleSide} alphaTest={0.5} />
-                </mesh>
-            </Billboard>
-        </group>
     )
 }

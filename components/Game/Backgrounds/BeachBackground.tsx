@@ -2,13 +2,12 @@
 
 import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { useTexture, Billboard, Float } from '@react-three/drei';
+import { Float } from '@react-three/drei';
 import * as THREE from 'three';
 
 export const BeachBackground = () => {
-    // Load Textures
-    const palmTex = useTexture('/assets/sprites/palm_tree.png');
-    const chairTex = useTexture('/assets/sprites/beach_chair.png');
+    // Objects removed for polish
+    // const objects = useMemo(() => [], []);
 
     // Generate Objects around the board
     const objects = useMemo(() => {
@@ -66,58 +65,14 @@ export const BeachBackground = () => {
                 <meshStandardMaterial color="#F4A460" roughness={1} />
             </mesh>
 
-            {/* Objects */}
-            {objects.map((obj) => (
-                <BeachObject key={obj.id} data={obj} palmTex={palmTex} chairTex={chairTex} />
-            ))}
-
             {/* Beach Ball (Bouncing) */}
             <Float speed={5} rotationIntensity={2} floatIntensity={5}>
                 <mesh position={[10, 2, 10]}>
                     <sphereGeometry args={[1.5, 32, 32]} />
                     <meshStandardMaterial color="white" map={null} />
-                    {/* Add stripes via multiple meshes or shader? Just simple colored sphere for now */}
                     <meshStandardMaterial color="red" />
                 </mesh>
-                {/* Multi-colored ball trick: nested meshes slightly larger/smaller? 
-                     Or just a red ball. Red ball is fine. */}
             </Float>
-        </group>
-    );
-};
-
-const BeachObject = ({ data, palmTex, chairTex }: { data: any, palmTex: THREE.Texture, chairTex: THREE.Texture }) => {
-    const ref = useRef<THREE.Group>(null);
-
-    // Wind Sway for Palms
-    useFrame((state) => {
-        if (data.type === 'palm' && ref.current) {
-            ref.current.rotation.z = Math.sin(state.clock.elapsedTime + data.x) * 0.05;
-        }
-    });
-
-    return (
-        <group ref={ref} position={[data.x, 0, data.z]}>
-            {data.type === 'palm' && (
-                <Billboard follow={true} lockX={false} lockY={false} lockZ={false}>
-                    <mesh position={[0, data.scale, 0]} scale={[data.scale * 3, data.scale * 3, 1]}>
-                        <planeGeometry />
-                        <meshBasicMaterial map={palmTex} transparent side={THREE.DoubleSide} alphaTest={0.5} />
-                    </mesh>
-                </Billboard>
-            )}
-
-            {data.type === 'chair' && (
-                <Billboard follow={false} lockX={false} lockY={false} lockZ={false}>
-                    <mesh position={[0, 1, 0]} scale={[data.scale, data.scale, 1]} rotation={[0, data.rot, 0]}>
-                        {/* Chair needs to be upright? Billboard follows camera. 
-                             If we want it sitting on ground, Billboard might look weird if looking down.
-                             But for now, "Cardboard Cutout" style. */}
-                        <planeGeometry />
-                        <meshBasicMaterial map={chairTex} transparent side={THREE.DoubleSide} alphaTest={0.5} />
-                    </mesh>
-                </Billboard>
-            )}
         </group>
     );
 };

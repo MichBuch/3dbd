@@ -2,14 +2,13 @@
 
 import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Billboard, useTexture } from '@react-three/drei';
+import { Billboard } from '@react-three/drei';
 import * as THREE from 'three';
 import { useGameStore } from '@/store/gameStore';
 
 export const Area51Background = () => {
-    // Load Textures (Sprites)
-    const agentTex = useTexture('/assets/sprites/agent_mib.png');
-    const alienTex = useTexture('/assets/sprites/alien_grey.png');
+    // Generate Objects: Aliens, Agents, Hangars
+    // Removed Sprites for cleaner look
 
     // Generate Objects: Aliens, Agents, Hangars
     const objects = useMemo(() => {
@@ -49,8 +48,6 @@ export const Area51Background = () => {
                 <Area51Object
                     key={obj.id}
                     data={obj}
-                    agentTex={agentTex}
-                    alienTex={alienTex}
                 />
             ))}
 
@@ -87,14 +84,14 @@ const PatrolUFOs = () => {
     )
 }
 
-const Area51Object = ({ data, agentTex, alienTex }: { data: any, agentTex: THREE.Texture, alienTex: THREE.Texture }) => {
+// Simplified Area 51 Object rendering (No Sprites)
+const Area51Object = ({ data }: { data: any }) => {
     const { preferences } = useGameStore();
     const ref = useRef<THREE.Group>(null);
     const zPos = useRef(data.zStart);
 
     useFrame((state, delta) => {
         if (!ref.current) return;
-        const time = state.clock.elapsedTime;
         const speed = (preferences.themeSpeed || 1) * 20;
 
         // Move Forward
@@ -105,46 +102,14 @@ const Area51Object = ({ data, agentTex, alienTex }: { data: any, agentTex: THREE
 
         ref.current.position.z = zPos.current;
         ref.current.position.x = data.x;
-
-        // Walking Animation (South Park Style / Sprite Bobbing)
-        // Only for characters (Agent/Alien)
-        if (data.type === 'agent' || data.type === 'alien') {
-            const walkSpeed = 10;
-            // Bob Y (Up/Down)
-            ref.current.position.y = Math.abs(Math.sin(time * walkSpeed)) * 0.3;
-            // Tilt Z (Left/Right)
-            ref.current.rotation.z = Math.sin(time * walkSpeed) * 0.1;
-        }
     });
 
     return (
         <group ref={ref} position={[data.x, 0, data.zStart]}>
-            {/* If you have 3D Models (alien.glb), use <Gltf src="..." /> here instead of Billboard */}
-
-            {/* --- AGENT (Man in Black Sprite) --- */}
-            {data.type === 'agent' && (
-                <Billboard follow={true} lockX={false} lockY={false} lockZ={false}>
-                    <mesh scale={[3, 5, 1]} position={[0, 2.5, 0]}>
-                        <planeGeometry />
-                        <meshBasicMaterial map={agentTex} transparent side={THREE.DoubleSide} alphaTest={0.5} />
-                    </mesh>
-                </Billboard>
-            )}
-
-            {/* --- ALIEN (Sprite) --- */}
-            {data.type === 'alien' && (
-                <Billboard follow={true} lockX={false} lockY={false} lockZ={false}>
-                    <mesh scale={[2.5, 5, 1]} position={[0, 2.5, 0]}>
-                        <planeGeometry />
-                        <meshBasicMaterial map={alienTex} transparent side={THREE.DoubleSide} alphaTest={0.5} />
-                    </mesh>
-                </Billboard>
-            )}
-
-            {/* --- HANGAR --- */}
+            {/* --- HANGAR ONLY --- */}
             {data.type === 'hangar' && (
                 <group scale={[8, 8, 8]}>
-                    <mesh position={[0, 1, 0]} rotation={[0, 0, Math.PI / 2]}> {/* Rotate Mesh, not Geometry */}
+                    <mesh position={[0, 1, 0]} rotation={[0, 0, Math.PI / 2]}>
                         <cylinderGeometry args={[2, 2, 4, 32, 1, false, 0, Math.PI]} />
                         <meshStandardMaterial color="#444" metalness={0.6} />
                     </mesh>

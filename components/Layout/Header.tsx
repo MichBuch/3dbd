@@ -57,16 +57,19 @@ export function Header() {
         <>
             <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10">
                 <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
-                    {/* Logo - Top Left */}
-                    {/* Logo - Top Center (Absolute) */}
-                    {/* Logo - Adaptive Position */}
-                    {/* Mobile: Bottom Center (Fixed to viewport) */}
-                    {/* Desktop: Top Center (Absolute in Header) */}
-                    {/* Logo - Adaptive Position */}
-                    {/* Mobile: Top Center (Absolute) - Text Only, Neon Blue, Slightly Lower, Shifted Left */}
-                    <div className="md:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -ml-6 z-10 pointer-events-none">
-                        <Link href="/" className="pointer-events-auto">
-                            <span className="logo-neon font-bold text-4xl tracking-tighter text-neonBlue drop-shadow-[0_0_15px_rgba(0,255,255,0.8)]">3DBD</span>
+                    {/* Mobile: Logo Left (Flex Item) */}
+                    <div className="md:hidden flex items-center z-50 mr-4 shrink-0">
+                        <Link href="/" className="pointer-events-auto no-underline">
+                            {/* Explicit inline styles to override any potential conflicts */}
+                            <span
+                                className="font-bold text-3xl tracking-tighter"
+                                style={{
+                                    color: '#00f3ff',
+                                    textShadow: '0 0 10px #00f3ff, 0 0 20px #00f3ff'
+                                }}
+                            >
+                                3DBD
+                            </span>
                         </Link>
                     </div>
 

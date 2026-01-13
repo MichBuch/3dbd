@@ -33,7 +33,7 @@ export const THEME_CONFIG: Record<string, { base: string, white: string, black: 
     winter: { base: '#F0F8FF', white: '#87CEFA', black: '#4682B4', skin: 'default' },
     snow: { base: '#FFFFFF', white: '#E0FFFF', black: '#B0E0E6', skin: 'default' },
     starry: { base: '#0B1026', white: '#FFFFD4', black: '#4B0082', skin: 'default' },
-    space: { base: '#000000', white: '#E6E6FAB0', black: '#800080', skin: 'default' },
+    space: { base: '#000000', white: '#FDFD96', black: '#552222', skin: 'default' },
     beach: { base: '#FFE5B4', white: '#FF6F61', black: '#40E0D0', skin: 'default' },
     halloween: { base: '#1C1C1C', white: '#FF7518', black: '#5C2C90', skin: 'default' },
     rubik: { base: '#000000', white: '#ffffff', black: '#ff0000', skin: 'rubik' },
