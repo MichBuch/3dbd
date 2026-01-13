@@ -108,7 +108,9 @@ const SnowWindow = () => {
     const dummy = useMemo(() => new THREE.Object3D(), []);
 
     useFrame((state) => {
-        if (!mesh.current) return;
+        const instance = mesh.current;
+        if (!instance) return;
+
         const t = state.clock.elapsedTime;
         for (let i = 0; i < count; i++) {
             const y = (t + i * 0.1) % 10;
@@ -119,9 +121,9 @@ const SnowWindow = () => {
             );
             dummy.scale.set(0.1, 0.1, 0.1);
             dummy.updateMatrix();
-            mesh.current.setMatrixAt(i, dummy.matrix);
+            instance.setMatrixAt(i, dummy.matrix);
         }
-        mesh.current.instanceMatrix.needsUpdate = true;
+        instance.instanceMatrix.needsUpdate = true;
     });
 
     return (

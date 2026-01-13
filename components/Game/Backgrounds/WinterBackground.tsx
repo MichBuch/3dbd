@@ -24,7 +24,9 @@ export const WinterBackground = () => {
     }, [count]);
 
     useFrame((state, delta) => {
-        if (!mesh.current) return;
+        const instance = mesh.current;
+        if (!instance) return;
+
         particles.forEach((particle, i) => {
             let { t, factor, speed, xFactor, yFactor, zFactor } = particle;
             t = particle.t += speed / 2;
@@ -46,9 +48,9 @@ export const WinterBackground = () => {
             dummy.scale.set(s, s, s);
             dummy.rotation.set(s * 5, s * 5, s * 5);
             dummy.updateMatrix();
-            mesh.current.setMatrixAt(i, dummy.matrix);
+            instance.setMatrixAt(i, dummy.matrix);
         });
-        mesh.current.instanceMatrix.needsUpdate = true;
+        instance.instanceMatrix.needsUpdate = true;
     });
 
     // Trees (Snowy Pines)

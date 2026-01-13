@@ -114,19 +114,19 @@ export const translations = {
         themeBeach: "Beach",
         themeBlackWhite: "Black & White",
         themeXmas: "Christmas",
-        themeDark: "Dark",
+        // themeDark removed (duplicate)
         themeEaster: "Easter",
         themeHalloween: "Halloween",
-        themeRubik: "Rubik's Cube",
+        // themeRubik removed
         themeSnow: "Snow",
-        themeSpace: "Space",
+        // themeSpace removed
         themeStarry: "Starry Night",
         themeTennis: "Tennis",
         themeWinter: "Winter",
         themeWood: "Wood",
         themeChineseNewYear: "Chinese New Year",
         themeDiwali: "Diwali",
-        themeToys: "Toys",
+        // themeToys removed
         // Page
     },
     zh: {

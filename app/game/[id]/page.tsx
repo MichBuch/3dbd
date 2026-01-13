@@ -11,7 +11,7 @@ import { ChatWindow } from '@/components/Game/ChatWindow';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { ThemeBackground } from '@/components/Game/ThemeBackground';
-import { THEME_CONFIG } from '@/components/Game/SettingsPanel'; // Import Theme Config
+import { THEME_CONFIG } from '@/lib/themeConfig'; // Import Theme Config
 
 export default function MultiplayerGame({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);

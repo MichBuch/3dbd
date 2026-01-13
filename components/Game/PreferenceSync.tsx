@@ -3,7 +3,7 @@
 import { useSession } from "next-auth/react";
 import { useEffect, useRef } from "react";
 import { useGameStore } from "@/store/gameStore";
-import { THEME_CONFIG } from "./SettingsPanel";
+import { THEME_CONFIG } from "@/lib/themeConfig";
 
 export const PreferenceSync = () => {
     const { data: session } = useSession();
