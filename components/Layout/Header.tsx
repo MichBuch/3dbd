@@ -59,12 +59,17 @@ export function Header() {
                 <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
                     {/* Logo - Top Left */}
                     {/* Logo - Top Center (Absolute) */}
-                    <div className="absolute left-[45%] top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none">
-                        <Link href="/" className="flex items-center gap-4 pointer-events-auto">
-                            <div className="w-24 h-24 md:w-20 md:h-20 bg-gradient-to-br from-neonBlue to-neonPink rounded-2xl flex items-center justify-center shadow-lg shadow-neonBlue/20">
-                                <span className="text-black font-black text-4xl md:text-3xl">3D</span>
+                    {/* Logo - Adaptive Position */}
+                    {/* Mobile: Bottom Center (Fixed to viewport) */}
+                    {/* Desktop: Top Center (Absolute in Header) */}
+                    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 md:absolute md:top-1/2 md:bottom-auto md:left-[45%] md:-translate-y-1/2 pointer-events-none">
+                        <Link href="/" className="flex items-center gap-3 md:gap-4 pointer-events-auto">
+                            {/* Icon Container */}
+                            <div className="w-12 h-12 md:w-20 md:h-20 bg-gradient-to-br from-neonBlue to-neonPink rounded-xl md:rounded-2xl flex items-center justify-center shadow-lg shadow-neonBlue/20">
+                                <span className="text-black font-black text-xl md:text-3xl">3D</span>
                             </div>
-                            <span className="logo-neon font-bold text-6xl md:text-5xl block tracking-tighter">3DBD</span>
+                            {/* Text Brand */}
+                            <span className="logo-neon font-bold text-3xl md:text-5xl block tracking-tighter text-white drop-shadow-[0_0_10px_rgba(0,255,255,0.5)]">3DBD</span>
                         </Link>
                     </div>
 
