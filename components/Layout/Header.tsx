@@ -57,15 +57,17 @@ export function Header() {
         <>
             <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10">
                 <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
-                    {/* Mobile: Logo Left (Flex Item) */}
-                    <div className="md:hidden flex items-center z-50 mr-4 shrink-0">
+                    {/* Mobile: Logo Left (Absolute now to sit right of Scoreboard) */}
+                    <div className="md:hidden flex items-center z-50 absolute left-[140px] top-1/2 -translate-y-1/2">
                         <Link href="/" className="pointer-events-auto no-underline">
                             {/* Explicit inline styles to override any potential conflicts */}
                             <span
                                 className="font-bold text-3xl tracking-tighter"
                                 style={{
-                                    color: '#00f3ff',
-                                    textShadow: '0 0 10px #00f3ff, 0 0 20px #00f3ff'
+                                    color: '#39ff14 !important', // Neon Green
+                                    textShadow: '0 0 10px #39ff14, 0 0 20px #ffff00', // Green + Yellow Glow
+                                    position: 'relative',
+                                    zIndex: 100
                                 }}
                             >
                                 3DBD
