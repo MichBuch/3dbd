@@ -62,14 +62,21 @@ export function Header() {
                     {/* Logo - Adaptive Position */}
                     {/* Mobile: Bottom Center (Fixed to viewport) */}
                     {/* Desktop: Top Center (Absolute in Header) */}
-                    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 md:absolute md:top-1/2 md:bottom-auto md:left-[45%] md:-translate-y-1/2 pointer-events-none">
-                        <Link href="/" className="flex items-center gap-3 md:gap-4 pointer-events-auto">
-                            {/* Icon Container */}
-                            <div className="w-12 h-12 md:w-20 md:h-20 bg-gradient-to-br from-neonBlue to-neonPink rounded-xl md:rounded-2xl flex items-center justify-center shadow-lg shadow-neonBlue/20">
-                                <span className="text-black font-black text-xl md:text-3xl">3D</span>
+                    {/* Logo - Adaptive Position */}
+                    {/* Mobile: Top Center (Absolute) - Text Only, Neon Blue, Slightly Lower, Shifted Left */}
+                    <div className="md:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 -ml-6 z-10 pointer-events-none">
+                        <Link href="/" className="pointer-events-auto">
+                            <span className="logo-neon font-bold text-4xl tracking-tighter text-neonBlue drop-shadow-[0_0_15px_rgba(0,255,255,0.8)]">3DBD</span>
+                        </Link>
+                    </div>
+
+                    {/* Desktop: Top Center (Absolute in Header), Full Logo */}
+                    <div className="hidden md:block absolute left-[45%] top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none">
+                        <Link href="/" className="flex items-center gap-4 pointer-events-auto">
+                            <div className="w-20 h-20 bg-gradient-to-br from-neonBlue to-neonPink rounded-2xl flex items-center justify-center shadow-lg shadow-neonBlue/20">
+                                <span className="text-black font-black text-3xl">3D</span>
                             </div>
-                            {/* Text Brand */}
-                            <span className="logo-neon font-bold text-3xl md:text-5xl block tracking-tighter text-white drop-shadow-[0_0_10px_rgba(0,255,255,0.5)]">3DBD</span>
+                            <span className="logo-neon font-bold text-5xl block tracking-tighter text-white">3DBD</span>
                         </Link>
                     </div>
 
