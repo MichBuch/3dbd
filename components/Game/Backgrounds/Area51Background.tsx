@@ -2,16 +2,17 @@
 
 import { useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Stars, Text } from '@react-three/drei';
+import { Stars, Text, Sparkles } from '@react-three/drei';
 import * as THREE from 'three';
 import { useGameStore } from '@/store/gameStore';
 import { AnimatedModel } from '../AnimatedModel';
+
 // Helper to generate a procedural sand texture safely
 const useSandTexture = () => {
     const [texture, setTexture] = useState<THREE.Texture | null>(null);
 
     // Use effect to generate texture only on client
-    useMemo(() => { // actually useMemo is fine if we check window, but usually texture generation is side-effecty.
+    useMemo(() => {
         if (typeof window === 'undefined') return;
 
         const width = 1024; // High res
@@ -71,7 +72,7 @@ const useSandTexture = () => {
     return texture;
 };
 
-import { FullMoon, Agent3D, ShootingStar, PassingAircraft, Satellite, SpaceXRocket, Cactus, Rock, Snake, Hoverboard, DryBush, Hill, SpaceDebris, Galaxy } from './Area51Extras';
+import { FullMoon, Agent3D, ShootingStar, Satellite, SpaceXRocket, Cactus, Rock, Snake, Hoverboard, DryBush, Hill, SpaceDebris, Galaxy, ScoutUFO, BannerSatellite } from './Area51Extras';
 
 const PLANET_RADIUS = 1200;
 
@@ -108,7 +109,6 @@ export const Area51Background = () => {
 
     // Refined Scenery: Vegetation, Rocks, Snakes, Hills
     const scenery = useMemo(() => {
-        // ... (re-running previous scenery upgrade since it failed last time)
         const cacti = [...Array(60)].map((_, i) => ({
             x: (Math.random() - 0.5) * 800,
             z: -50 - Math.random() * 600,
@@ -149,32 +149,39 @@ export const Area51Background = () => {
                 <ambientLight intensity={0.6} color="#88AAFF" />
 
                 {/* GALAXIES - Huge and Distant */}
-                <Galaxy position={[-400, 300, -800]} rotation={[0.5, 0.2, 0]} scale={12} />
-                <Galaxy position={[500, 400, -1000]} rotation={[-0.2, 0, 0.5]} scale={15} />
-                <Galaxy position={[0, 700, -600]} rotation={[0, 0, 0]} scale={8} />
+                <Galaxy position={[-400, 300, -800]} rotation={[0.5, 0.2, 0]} scale={20} />
+                <Galaxy position={[500, 400, -1000]} rotation={[-0.2, 0, 0.5]} scale={25} />
+                <Galaxy position={[0, 700, -600]} rotation={[0, 0, 0]} scale={15} />
 
-                {/* STARS LAYER 1: Distant Field (No fade for visibility) */}
-                <Stars radius={2500} depth={500} count={60000} factor={80} saturation={1} fade={false} speed={1} />
+                {/* STARS LAYER 1: Distant Field (Static) */}
+                <Stars radius={2500} depth={500} count={60000} factor={80} saturation={1} fade={false} speed={0} />
 
-                {/* STARS LAYER 2: Bright Foreground */}
-                <Stars radius={1500} depth={100} count={8000} factor={180} saturation={0} fade speed={5} />
+                {/* STARS LAYER 2: Sparkles for VISIBLE STARS - MASSIVE SIZE */}
+                <Sparkles
+                    count={300}
+                    scale={[2000, 1000, 2000]}
+                    size={60}
+                    speed={0}
+                    opacity={1}
+                    color="#ffffff"
+                />
 
                 {/* Sky Traffic */}
                 <group scale={5}><FullMoon /></group>
                 <ShootingStar />
-                <PassingAircraft />
+
                 <Satellite />
                 <SpaceXRocket />
                 <SpaceDebris />
 
-                {/* MOTHERSHIP (Replacing BannerUFO) */}
+                {/* MOTHERSHIP */}
                 <MothershipUFO />
+
+                {/* NEW BANNER SATELLITE (No Plane) */}
+                <BannerSatellite />
 
                 <WhizzingUFOs />
             </group>
-
-            {/* ... Ground Group (PlanetObject mapping) ... */}
-            {/* ... Need to ensure Hills are rendered in the map loop ... */}
 
             <group position={[0, -PLANET_RADIUS - 2, 0]}>
                 <mesh receiveShadow rotation={[0, 0, 0]}>
@@ -218,9 +225,6 @@ export const Area51Background = () => {
     );
 };
 
-// ... (Sub-components: CrashedRoadster, WhizzingUFOs, SingleWhizzingUFO, CrashedUFO stay same) ...
-// ... REPLACING BannerUFO with MothershipUFO ...
-
 const MothershipUFO = () => {
     const group = useRef<THREE.Group>(null);
     useFrame((state) => {
@@ -229,11 +233,11 @@ const MothershipUFO = () => {
         // Slow rotation
         group.current.rotation.y = t * 0.1;
         // Hover
-        group.current.position.y = 80 + Math.sin(t * 0.5) * 5;
+        group.current.position.y = 100 + Math.sin(t * 0.5) * 5;
     });
 
     return (
-        <group ref={group} position={[0, 80, -300]}>
+        <group ref={group} position={[0, 100, -300]}>
             {/* Main Disc */}
             <mesh>
                 <cylinderGeometry args={[40, 10, 5, 32]} />
@@ -251,31 +255,19 @@ const MothershipUFO = () => {
                     <meshBasicMaterial color="#00FFFF" />
                 </mesh>
             ))}
-            {/* Beam */}
-            <mesh position={[0, -20, 0]}>
-                <cylinderGeometry args={[5, 15, 40, 32, 1, true]} />
-                <meshBasicMaterial color="#39FF14" transparent opacity={0.1} side={THREE.DoubleSide} />
-            </mesh>
+            {/* NO BEAM / FUNNEL */}
         </group>
     )
 }
 
-// ... (Area51Object stays same) ...
-
 const Area51Object = ({ data }: { data: any }) => {
     const { preferences } = useGameStore();
     const ref = useRef<THREE.Group>(null);
-    // Use local animation only around the 0,0 center provided by PlanetObject
     const zPos = useRef(0);
 
     useFrame((state, delta) => {
         if (!ref.current) return;
         const speed = (preferences.themeSpeed || 1) * 20;
-
-        // Move Forward - simplistic linear move, ignoring curvature for short distances
-        // Ideally should update "PlanetObject" rotation, but for small animations locally it's fine.
-        // Or if 'alien' walks far, they might clip.
-        // Let's assume Hangars are static. Aliens walk locally.
 
         if (data.type === 'alien') {
             zPos.current += speed * delta;
@@ -290,7 +282,6 @@ const Area51Object = ({ data }: { data: any }) => {
             {data.type === 'hangar' && (
                 <group>
                     {/* QUONSET HUT - FULL CYLINDER (Buried) */}
-                    {/* To ensure full roof is visible, we render full cylinder. Bottom half is underground. */}
                     <mesh position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
                         <cylinderGeometry args={[10, 10, 30, 32, 1, false, 0, Math.PI * 2]} />
                         <meshStandardMaterial color="#444" roughness={0.6} metalness={0.4} side={THREE.DoubleSide} />
@@ -298,7 +289,7 @@ const Area51Object = ({ data }: { data: any }) => {
 
                     {/* FRONT WALL (Z = +14.9) */}
                     <group position={[0, 0, 14.9]}>
-                        {/* Gray Semicircle Wall - Full Circle to match */}
+                        {/* Gray Semicircle Wall */}
                         <mesh rotation={[0, 0, 0]}>
                             <circleGeometry args={[9.8, 32, 0, Math.PI * 2]} />
                             <meshStandardMaterial color="#333" roughness={0.8} side={THREE.DoubleSide} />
@@ -347,8 +338,6 @@ const Area51Object = ({ data }: { data: any }) => {
         </group >
     );
 };
-
-
 
 const CrashedRoadster = () => {
     return (
