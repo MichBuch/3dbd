@@ -27,52 +27,57 @@ export const ComingSoonFlyby = () => {
 
     return (
         <group ref={group} position={[-200, 20, -50]}>
-            {/* The Plane (Low Poly Styled) */}
-            <group rotation={[0, Math.PI / 2, 0]}> {/* Face Forward (X axis) */}
-                {/* Fuselage */}
-                <mesh position={[0, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
-                    <capsuleGeometry args={[1.5, 8, 4, 8]} />
-                    <meshStandardMaterial color="#ffffff" />
+// --- REPLACING PLANE WITH SATELLITE GLOBALLY ---
+            {/* Satellite Body */}
+            <group rotation={[0, Math.PI / 2, 0]}> {/* Face Forward */}
+                <mesh>
+                    <boxGeometry args={[4, 2, 2]} />
+                    <meshStandardMaterial color="#FFD700" metalness={1} roughness={0.3} />
                 </mesh>
-                {/* Wings */}
-                <mesh position={[0, 0.5, 0]}>
-                    <boxGeometry args={[14, 0.2, 3]} />
-                    <meshStandardMaterial color="#cc0000" />
+                {/* Solar Panels */}
+                <mesh position={[0, 0, 3]}>
+                    <boxGeometry args={[2, 0.1, 8]} />
+                    <meshStandardMaterial color="blue" metalness={0.8} />
                 </mesh>
-                {/* Tail */}
-                <mesh position={[0, 1, -3.5]}>
-                    <boxGeometry args={[4, 0.2, 1.5]} />
-                    <meshStandardMaterial color="#cc0000" />
+                <mesh position={[0, 0, -3]}>
+                    <boxGeometry args={[2, 0.1, 8]} />
+                    <meshStandardMaterial color="blue" metalness={0.8} />
                 </mesh>
-                <mesh position={[0, 2, -3.5]}>
-                    <boxGeometry args={[0.2, 2.5, 2]} />
-                    <meshStandardMaterial color="#cc0000" />
+                {/* Antenna */}
+                <mesh position={[0, 1.5, 0]}>
+                    <cylinderGeometry args={[0.1, 0.1, 3]} />
+                    <meshBasicMaterial color="#888" />
                 </mesh>
-                {/* Propeller (Spinning) */}
-                <Propeller />
+                <mesh position={[0, 3, 0]}>
+                    <sphereGeometry args={[0.5]} />
+                    <meshStandardMaterial color="red" emissive="red" emissiveIntensity={2} />
+                </mesh>
             </group>
 
             {/* Tow Line */}
             <mesh position={[-12, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
                 <cylinderGeometry args={[0.05, 0.05, 16]} />
-                <meshBasicMaterial color="#333" />
+                <meshBasicMaterial color="#888" />
             </mesh>
 
             {/* The Banner */}
             <group position={[-28, 0, 0]}>
                 {/* Banner Cloth */}
                 <mesh position={[0, 0, 0]}>
-                    <planeGeometry args={[16, 4]} />
-                    <meshBasicMaterial color="white" side={THREE.DoubleSide} transparent opacity={0.9} />
+                    <planeGeometry args={[20, 5]} />
+                    <meshBasicMaterial color="black" side={THREE.DoubleSide} transparent opacity={0.8} />
+                </mesh>
+                <mesh position={[0, 0, 0]}>
+                    <planeGeometry args={[20.2, 5.2]} />
+                    <meshBasicMaterial color="#00FF00" side={THREE.DoubleSide} wireframe />
                 </mesh>
                 {/* Banner Text */}
                 <Text
                     position={[0, 0, 0.1]}
-                    fontSize={1.5}
-                    color="#cc0000"
+                    fontSize={2}
+                    color="#00FF00"
                     anchorX="center"
                     anchorY="middle"
-                // font="/fonts/Inter-Bold.ttf" // Removed to fix 404, using default
                 >
                     COMING SOON
                 </Text>
@@ -80,8 +85,8 @@ export const ComingSoonFlyby = () => {
                 <Text
                     position={[0, 0, -0.1]}
                     rotation={[0, Math.PI, 0]}
-                    fontSize={1.5}
-                    color="#cc0000"
+                    fontSize={2}
+                    color="#00FF00"
                     anchorX="center"
                     anchorY="middle"
                 >
