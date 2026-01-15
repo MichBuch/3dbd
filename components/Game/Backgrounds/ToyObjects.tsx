@@ -68,8 +68,8 @@ export const ToyObjects = () => {
             <pointLight position={[-10, -10, -10]} intensity={0.5} color="#ffd700" />
 
             {/* Clouds for Fluffiness */}
-            <Cloud position={[-40, 20, -50]} opacity={0.5} speed={0.4} width={10} depth={1.5} segments={20} />
-            <Cloud position={[40, -10, -60]} opacity={0.5} speed={0.4} width={10} depth={1.5} segments={20} />
+            <Cloud position={[-40, 20, -50]} opacity={0.5} speed={0.4} segments={20} />
+            <Cloud position={[40, -10, -60]} opacity={0.5} speed={0.4} segments={20} />
 
             {activeObjects.map((obj) => (
                 <ToyBlock

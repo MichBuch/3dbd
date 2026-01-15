@@ -379,7 +379,7 @@ export const Galaxy = ({ position, rotation, scale = 1 }: { position: [number, n
         <group ref={ref} position={position} rotation={rotation} scale={scale}>
             <points>
                 <bufferGeometry>
-                    <bufferAttribute attach="attributes-position" count={points.length / 3} array={points} itemSize={3} />
+                    <bufferAttribute attach="attributes-position" args={[points, 3]} />
                 </bufferGeometry>
                 <pointsMaterial size={1.5} color="#ccffff" sizeAttenuation transparent opacity={0.6} blending={THREE.AdditiveBlending} />
             </points>
