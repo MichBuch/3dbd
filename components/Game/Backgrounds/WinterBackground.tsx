@@ -26,18 +26,64 @@ export const WinterBackground = () => {
     const mesh = useRef<THREE.InstancedMesh>(null);
     const dummy = useMemo(() => new THREE.Object3D(), []);
 
+    // Generate Snowflake Texture
+    const snowflakeTexture = useMemo(() => {
+        if (typeof document === 'undefined') return null;
+        const canvas = document.createElement('canvas');
+        canvas.width = 64;
+        canvas.height = 64;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return null;
+
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.shadowColor = 'rgba(255,255,255,0.8)';
+        ctx.shadowBlur = 4;
+
+        ctx.translate(32, 32);
+        for (let i = 0; i < 6; i++) {
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, 28);
+            ctx.stroke();
+
+            // Branches
+            ctx.beginPath();
+            ctx.moveTo(0, 15);
+            ctx.lineTo(10, 22);
+            ctx.moveTo(0, 15);
+            ctx.lineTo(-10, 22);
+            ctx.stroke();
+
+            ctx.rotate(Math.PI / 3);
+        }
+
+        const tex = new THREE.CanvasTexture(canvas);
+        tex.needsUpdate = true;
+        return tex;
+    }, []);
+
     // Initialize Particles
     const particles = useMemo(() => {
         const temp = [];
         for (let i = 0; i < count; i++) {
             const t = Math.random() * 100;
-            const factor = 20 + Math.random() * 100;
-            const speed = 0.05 + Math.random() * 0.1; // Base fall speed
-            const xFactor = -100 + Math.random() * 200;
-            const yFactor = -50 + Math.random() * 100;
-            const zFactor = -100 + Math.random() * 200;
-            // Randomize starting wiggle
-            temp.push({ t, speed, xFactor, yFactor, zFactor, my: yFactor, mx: 0 });
+            // Closer distribution: Concentration near 0
+            // Mix of close (board) and far (atmosphere)
+            // Previous was -100 to 100. Let's do -30 to 30 for 60% of flakes, and wider for others.
+            const r = Math.random();
+            const range = r > 0.4 ? 25 : 80;
+
+            const speed = 0.05 + Math.random() * 0.15; // Faster variability
+            const xFactor = (Math.random() - 0.5) * 2 * range;
+            const yFactor = -20 + Math.random() * 50;
+            const zFactor = (Math.random() - 0.5) * 2 * range;
+
+            // Random spin speed
+            const spin = (Math.random() - 0.5) * 0.05;
+
+            temp.push({ t, speed, xFactor, yFactor, zFactor, my: yFactor, mx: 0, spin });
         }
         return temp;
     }, [count]);
@@ -47,32 +93,29 @@ export const WinterBackground = () => {
         if (!instance) return;
 
         // Dynamic wind based on Theme Speed
-        // Horizontal wind increases massively with speed
         const windX = (speedMult * 2) * delta;
-        const fallSpeed = (speedMult * 0.5 + 1) * delta;
+        const fallSpeed = (speedMult * 0.8 + 1) * delta;
 
         particles.forEach((particle, i) => {
             let { xFactor, zFactor } = particle;
 
-            // Update Time for wiggles
-            particle.t += speedMult * delta;
+            particle.t += (speedMult * delta) + particle.spin;
 
             // Falling
             particle.my -= particle.speed * 20 * fallSpeed;
 
-            // Wind (Horizontal Drift)
+            // Wind
             particle.mx += windX;
 
             // Reset loop
-            if (particle.my < -50) {
-                particle.my = 50;
-                particle.mx = 0; // Reset wind drift
-                // Respawn slightly random X to prevent "sheets" of snow
-                particle.mx = (Math.random() - 0.5) * 10;
+            if (particle.my < -20) {
+                particle.my = 30;
+                particle.mx = 0;
+                particle.mx = (Math.random() - 0.5) * 5;
             }
 
             // Wiggle
-            const wiggle = Math.cos(particle.t) * 0.5;
+            const wiggle = Math.cos(particle.t) * 1.5;
 
             dummy.position.set(
                 xFactor + particle.mx + wiggle,
@@ -80,16 +123,15 @@ export const WinterBackground = () => {
                 zFactor + Math.sin(particle.t) * 0.5
             );
 
-            // Scale flakes based on intensity (Blizzard = smaller, sharper flakes?)
-            // Or just keep them visible.
-            const s = 1.0;
+            // Scale flakes: Larger and varying
+            const s = 0.4 + Math.sin(particle.t * 1324) * 0.2; // 0.2 to 0.6 range
             dummy.scale.set(s, s, s);
 
-            // Rotate flakes
+            // Rotate flakes to tumble
             dummy.rotation.set(
-                particle.t * 0.2,
-                particle.t * 0.1,
-                particle.t * 0.3
+                particle.t * 0.5,
+                particle.t * 0.3,
+                particle.t * 0.1
             );
 
             dummy.updateMatrix();
@@ -98,55 +140,59 @@ export const WinterBackground = () => {
         instance.instanceMatrix.needsUpdate = true;
     });
 
-    // Trees (Snowy Pines)
+    // Trees (Snowy Pines) - Keep mostly same, maybe pull in tighter?
     const trees = useMemo(() => {
         const items = [];
-        // More trees in high density? 
         const treeCount = density === 'high' ? 40 : 20;
         for (let i = 0; i < treeCount; i++) {
             const angle = Math.random() * Math.PI * 2;
-            const r = 30 + Math.random() * 80;
+            const r = 25 + Math.random() * 50; // Closer trees: 25-75 range
             items.push({ x: Math.cos(angle) * r, z: Math.sin(angle) * r, s: 1 + Math.random() });
         }
         return items;
     }, [density]);
 
-    // Dynamic Fog & Light
-    // Blizzard = Whiteout (Dense Fog)
-    // Clear = Soft Mist
-    const fogDensity = 200 - (blizzardIntensity * 150); // 200 (clear) -> 50 (dense)
-    const lightInt = 1.0 - (blizzardIntensity * 0.5); // Dimmer in storm
+    // Fog & Light adjustments
+    const fogDensity = 150 - (blizzardIntensity * 100);
+    const lightInt = 1.0 - (blizzardIntensity * 0.5);
 
     return (
         <group>
-            <fog attach="fog" args={['#E0FFFF', 10, fogDensity]} />
+            <fog attach="fog" args={['#E0FFFF', 5, fogDensity]} />
             <ambientLight intensity={0.6} color="#E0FFFF" />
             <directionalLight position={[10, 20, 10]} intensity={lightInt} color="white" />
 
             {/* Snow Floor */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2, 0]} receiveShadow>
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -5, 0]} receiveShadow>
                 <planeGeometry args={[500, 500]} />
                 <meshStandardMaterial color="white" roughness={0.1} />
             </mesh>
 
             {/* Snowfall */}
             <instancedMesh ref={mesh} args={[undefined, undefined, count]}>
-                <dodecahedronGeometry args={[0.15, 0]} />
-                <meshBasicMaterial color="white" transparent opacity={0.9} />
+                <planeGeometry args={[1, 1]} />
+                <meshStandardMaterial
+                    map={snowflakeTexture}
+                    transparent
+                    opacity={0.9}
+                    alphaTest={0.1}
+                    side={THREE.DoubleSide}
+                    emissive="white"
+                    emissiveIntensity={0.2}
+                />
             </instancedMesh>
 
             {/* Trees */}
             {trees.map((t, i) => (
-                <group key={i} position={[t.x, -2, t.z]} scale={[t.s, t.s, t.s]}>
+                <group key={i} position={[t.x, -5, t.z]} scale={[t.s, t.s, t.s]}>
                     <mesh position={[0, 1, 0]}>
                         <cylinderGeometry args={[0.5, 0.5, 2]} />
                         <meshStandardMaterial color="#3E2723" />
                     </mesh>
                     <mesh position={[0, 3, 0]}>
                         <coneGeometry args={[2, 4, 8]} />
-                        <meshStandardMaterial color="white" /> {/* Snow covered */}
+                        <meshStandardMaterial color="white" />
                     </mesh>
-                    {/* Wind Shake Effect? */}
                     <mesh position={[0, 5, 0]}>
                         <coneGeometry args={[1.5, 3, 8]} />
                         <meshStandardMaterial color="white" />

@@ -73,13 +73,17 @@ const createPatternTexture = (type: 'easter' | 'xmas' | 'space', colorHex: strin
             ctx.fillRect(x - 3, y + 1, 10, 2);
         }
     } else if (type === 'space') {
-        const isMoon = colorHex === '#FDFD96'; // Matches config exactly now
+        // Space Pattern
+        // Logic relies on strict color matching or player awareness. 
+        // We know 'white' player sends #FDFD96. 
+        // Let's broaden the check or use the passed color directly if it matches our "Moon" intention.
+        const isMoon = colorHex === '#FDFD96' || colorHex === '#FFFF00' || colorHex === '#FFD700';
 
         // --- BASE COLOR ---
-        // Moon: Pale Yellowish (#FDFD96)
+        // Moon: Bright Yellow (#FFFF00)
         // Mars: Deep Red (#552222)
-        const baseColor = colorHex;
-        const shadowColor = isMoon ? '#C9C978' : '#330000';
+        const baseColor = isMoon ? '#FFD700' : colorHex; // Force Gold/Yellow for Moon
+        const shadowColor = isMoon ? '#8B8000' : '#330000'; // Dark Yellow vs Dark Red
 
         // Dark Side Gradient (Radial for spherical look)
         // Light moves from top-left (Bright) to bottom-right (Dark)
@@ -87,10 +91,11 @@ const createPatternTexture = (type: 'easter' | 'xmas' | 'space', colorHex: strin
             150, 80, 20,   // Inner Circle (Highlight source)
             256, 128, 300  // Outer Circle (Falloff)
         );
-        gradient.addColorStop(0, '#FFFFD0');  // Bright Highlight
-        gradient.addColorStop(0.3, baseColor); // Base Yellow
-        gradient.addColorStop(0.7, shadowColor); // Shadow boundary
-        gradient.addColorStop(1, '#221111');   // Deep Dark Side
+        gradient.addColorStop(0, isMoon ? '#FFFFE0' : '#FFFFD0');  // Bright Highlight
+        gradient.addColorStop(0.2, baseColor); // Base color
+        gradient.addColorStop(0.6, isMoon ? '#000000' : shadowColor); // Core Shadow (Deepest Dark)
+        // Key Fix: Rim Light effect - Edge gets lighter again (Dark Grey)
+        gradient.addColorStop(1, isMoon ? '#333333' : '#221111');
 
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, 512, 256);
@@ -106,9 +111,12 @@ const createPatternTexture = (type: 'easter' | 'xmas' | 'space', colorHex: strin
         // --- CRATERS (Irregular & Realistic) ---
         const craters: { x: number, y: number, r: number }[] = [];
         const maxCraters = isMoon ? 20 : 30;
-        const craterFloor = isMoon ? 'rgba(90, 90, 70, 0.6)' : 'rgba(0,0,0,0.4)';
-        const rimHighlight = isMoon ? 'rgba(255, 255, 230, 0.7)' : 'rgba(255,100,100,0.2)';
-        const rimShadow = isMoon ? 'rgba(50, 50, 30, 0.4)' : 'rgba(0,0,0,0.5)';
+        // Light Side Crater Floor: Deeper Yellow/Gold instead of dark grey
+        const craterFloor = isMoon ? 'rgba(218, 165, 32, 0.6)' : 'rgba(0,0,0,0.4)';
+        const baseRimHighlight = isMoon ? 'rgba(255, 255, 230, 0.7)' : 'rgba(255,100,100,0.2)';
+        // Light Side Rim Shadow: Golden Brown
+        const baseRimShadow = isMoon ? 'rgba(184, 134, 11, 0.4)' : 'rgba(0,0,0,0.5)';
+        const baseCraterFloor = craterFloor;
 
         let attempts = 0;
         while (craters.length < maxCraters && attempts < 400) {
@@ -133,6 +141,21 @@ const createPatternTexture = (type: 'easter' | 'xmas' | 'space', colorHex: strin
             if (!overlap) {
                 craters.push({ x, y, r: size });
 
+                // Dynamic Lighting for Craters based on Terminator line
+                // Light source at (150, 80)
+                const distFromLight = Math.sqrt((x - 150) ** 2 + (y - 80) ** 2);
+                let currentRimHighlight = baseRimHighlight;
+                let currentRimShadow = baseRimShadow;
+                let currentFloor = baseCraterFloor;
+
+                if (isMoon && distFromLight > 180) {
+                    // Dark Side Craters
+                    // Rims should catch very faint light (rim light) or be dark
+                    currentRimHighlight = 'rgba(60, 60, 60, 0.3)'; // Dark Grey Highlight
+                    currentRimShadow = 'rgba(0, 0, 0, 0.9)'; // Pitch Black Shadow
+                    currentFloor = 'rgba(10, 10, 10, 0.8)'; // Darker Floor
+                }
+
                 // Draw Irregular Crater Shape
                 // We draw the main circle + 2-3 smaller offsets to distort it
                 const drawIrregularCircle = (cx: number, cy: number, r: number, style: string) => {
@@ -147,10 +170,11 @@ const createPatternTexture = (type: 'easter' | 'xmas' | 'space', colorHex: strin
                 };
 
                 // 1. EJECTA (Rays) - Only for big ones
+                // Reduce visibility on dark side
                 if (size > 18) {
                     ctx.save();
                     ctx.translate(x, y);
-                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+                    ctx.strokeStyle = (isMoon && distFromLight > 180) ? 'rgba(255, 255, 255, 0.02)' : 'rgba(255, 255, 255, 0.08)';
                     ctx.lineWidth = 1;
                     const rays = Math.floor(Math.random() * 8) + 8;
                     for (let r = 0; r < rays; r++) {
@@ -167,17 +191,17 @@ const createPatternTexture = (type: 'easter' | 'xmas' | 'space', colorHex: strin
                 // 2. RIM (Outer Highlight)
                 ctx.beginPath();
                 ctx.arc(x, y, size + 2.5, 0, Math.PI * 2); // Keep rim somewhat rounder for structure
-                ctx.fillStyle = rimHighlight;
+                ctx.fillStyle = currentRimHighlight;
                 ctx.fill();
 
                 // 3. INNER SHADOW (Depth)
                 ctx.beginPath();
                 ctx.arc(x, y, size + 1, 0, Math.PI * 2);
-                ctx.fillStyle = rimShadow;
+                ctx.fillStyle = currentRimShadow;
                 ctx.fill();
 
                 // 4. CRATER FLOOR (The Pit) - Irregular
-                drawIrregularCircle(x, y, size, craterFloor);
+                drawIrregularCircle(x, y, size, currentFloor);
 
                 // 5. INTERNAL SHADOW (Wall Shadow)
                 ctx.save();
@@ -186,7 +210,10 @@ const createPatternTexture = (type: 'easter' | 'xmas' | 'space', colorHex: strin
                 ctx.clip();
                 ctx.beginPath();
                 ctx.arc(x + size * 0.4, y + size * 0.3, size, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(0,0,0,0.35)';
+                // Update internal shadow for light side to be dark gold/brownish, not black
+                ctx.fillStyle = (isMoon && distFromLight > 180)
+                    ? 'rgba(0,0,0,0.8)' // Dark Side: Black
+                    : (isMoon ? 'rgba(139, 69, 19, 0.4)' : 'rgba(0,0,0,0.35)'); // Light Side: SaddleBrown vs Default
                 ctx.fill();
                 ctx.restore();
 
@@ -194,7 +221,7 @@ const createPatternTexture = (type: 'easter' | 'xmas' | 'space', colorHex: strin
                 if (size > 20 && Math.random() > 0.5) {
                     ctx.beginPath();
                     ctx.arc(x + 1, y + 1, size * 0.15, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(255,255,255,0.2)'; // Lit peak
+                    ctx.fillStyle = (isMoon && distFromLight > 180) ? 'rgba(50,50,50,0.2)' : 'rgba(255,255,255,0.2)'; // Lit peak
                     ctx.fill();
                     ctx.beginPath();
                     ctx.arc(x - 1, y - 1, size * 0.15, 0, Math.PI * 2);
@@ -345,24 +372,8 @@ export const Bead = ({ position, color, player, isWinning = false, scale = 1, sk
     const { theme } = useGameStore();
     const effectiveSkin = (theme.id === 'space' || theme.id === 'toys') ? theme.id : skin;
 
-    const meshRef = useRef<Mesh>(null);
-    const targetY = position[1];
-    const startY = targetY + 10;
-    const initialized = useRef(false);
-
-    useFrame((state, delta) => {
-        if (!meshRef.current) return;
-        if (!initialized.current) {
-            meshRef.current.position.set(position[0], startY, position[2]);
-            initialized.current = true;
-        }
-        const currentY = meshRef.current.position.y;
-        if (Math.abs(currentY - targetY) > 0.01) {
-            meshRef.current.position.y = THREE.MathUtils.lerp(currentY, targetY, 10 * delta);
-        } else {
-            meshRef.current.position.y = targetY;
-        }
-    });
+    const scaleY = (skin === 'easter') ? 1.3 : 1;
+    const isSnow = theme.id === 'snow';
 
     const beadRadius = 0.35 * scale;
 
@@ -383,13 +394,22 @@ export const Bead = ({ position, color, player, isWinning = false, scale = 1, sk
 
     if (effectiveSkin === 'space') {
         // Space Pattern
-        const hexColor = player === 'white' ? '#ffffff' : '#440000';
+        // Moon (White Player) -> Yellowish #FDFD96
+        // Mars (Black Player) -> Red #440000
+        const hexColor = player === 'white' ? '#FDFD96' : '#440000';
         finalColor = new THREE.Color(hexColor);
         map = createPatternTexture('space', hexColor) || null;
         bumpMap = map;
         bumpScale = 0.05;
-        roughness = 0.9; // Rocky
-        metalness = 0.1;
+        roughness = 0.9;
+
+        if (isWinning) {
+            // Strong yellow glow for moon, red for mars
+            emissiveIntensity = 2.0;
+            metalness = 0.5;
+        } else {
+            metalness = 0.1;
+        }
     } else if (effectiveSkin === 'tennis') {
         const hexColor = player === 'white' ? '#ffffff' : '#ccff00';
         finalColor = new THREE.Color(hexColor);
@@ -442,29 +462,56 @@ export const Bead = ({ position, color, player, isWinning = false, scale = 1, sk
         else finalColor.multiplyScalar(0.9);
     }
 
-    const scaleY = (skin === 'easter') ? 1.3 : 1;
+    // FIX: Animate the GROUP so both the Bead and the Snow Cap move together.
+    const groupRef = useRef<THREE.Group>(null);
+    const targetY = position[1];
+    const startY = targetY + 10;
+    const initialized = useRef(false);
 
+    useFrame((state, delta) => {
+        if (!groupRef.current) return;
+        if (!initialized.current) {
+            // Initialize Group position
+            groupRef.current.position.set(position[0], startY, position[2]);
+            initialized.current = true;
+        }
 
+        // Animate Group Y
+        const currentY = groupRef.current.position.y;
+        if (Math.abs(currentY - targetY) > 0.01) {
+            groupRef.current.position.y = THREE.MathUtils.lerp(currentY, targetY, 10 * delta);
+        } else {
+            groupRef.current.position.y = targetY;
+        }
+    });
 
     return (
-        <mesh
-            ref={meshRef}
-            position={position}
-            scale={[1, scaleY, 1]}
-            castShadow
-            receiveShadow
-        >
-            {geometry}
-            <meshStandardMaterial
-                color={(skin === 'rubik' || skin === 'wood' || skin === 'tennis' || skin === 'easter' || skin === 'xmas') ? undefined : finalColor}
-                map={map}
-                bumpMap={bumpMap}
-                bumpScale={bumpScale}
-                roughness={roughness}
-                metalness={metalness}
-                emissive={isWinning ? finalColor : undefined}
-                emissiveIntensity={emissiveIntensity}
-            />
-        </mesh>
+        <group ref={groupRef} scale={[1, scaleY, 1]}>
+            <mesh
+                castShadow
+                receiveShadow
+            // Mesh is now at local 0,0,0
+            >
+                {geometry}
+                <meshStandardMaterial
+                    color={(skin === 'rubik' || skin === 'wood' || skin === 'tennis' || skin === 'easter' || skin === 'xmas') ? undefined : finalColor}
+                    map={map}
+                    bumpMap={bumpMap}
+                    bumpScale={bumpScale}
+                    roughness={roughness}
+                    metalness={metalness}
+                    emissive={isWinning ? finalColor : undefined}
+                    emissiveIntensity={emissiveIntensity}
+                />
+            </mesh>
+
+            {/* Snow Cap for Snow Theme */}
+            {isSnow && (
+                <mesh position={[0, beadRadius * 0.4, 0]} rotation={[0, 0, 0]}>
+                    <sphereGeometry args={[beadRadius * 1.02, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2.5]} />
+                    <meshStandardMaterial color="#ffffff" roughness={1} metalness={0.1} />
+                </mesh>
+            )}
+        </group>
     );
 };

@@ -75,6 +75,7 @@ export const GameUI = () => {
                     <div className="glass-panel px-3 md:px-5 py-1 md:py-2 rounded-2xl flex items-center gap-3 md:gap-5 border border-white/10 pointer-events-auto">
                         {/* Player 1 / White */}
                         <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full shadow-[0_0_5px_currentColor]" style={{ backgroundColor: theme.white, color: theme.white }} />
                             <span className="hidden md:inline text-base font-bold text-white">
                                 {session?.user?.name || t.player1}
                             </span>
@@ -94,6 +95,7 @@ export const GameUI = () => {
                             <span className="hidden md:inline text-base font-bold text-white">
                                 {isAiEnabled ? t.computer : (preferences.opponentName || t.player2)}
                             </span>
+                            <div className="w-3 h-3 rounded-full shadow-[0_0_5px_currentColor]" style={{ backgroundColor: theme.black, color: theme.black }} />
                         </div>
 
                         {/* Turn Indicator - Only show in PVP mode if enabled */}
@@ -130,7 +132,7 @@ export const GameUI = () => {
                             }}
                             className="bg-neonBlue/20 hover:bg-neonBlue/40 text-neonBlue border border-neonBlue px-4 py-2 rounded-lg font-bold transition-all shadow-[0_0_10px_rgba(0,243,255,0.2)] hover:shadow-[0_0_20px_rgba(0,243,255,0.4)] text-xs uppercase tracking-widest"
                         >
-                            ⚔️ {t.playAlgo}
+                            ⚔️ {t.playAlgo || 'Play Bot'}
                         </button>
                     </div>
                     {isPremium && !isAiEnabled ? (

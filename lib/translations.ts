@@ -126,7 +126,8 @@ export const translations = {
         themeWood: "Wood",
         themeChineseNewYear: "Chinese New Year",
         themeDiwali: "Diwali",
-        // themeToys removed
+        // themeToys (defined above)
+        themeMoonBall: "Moon Ball",
         // Page
     },
     zh: {

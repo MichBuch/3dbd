@@ -36,6 +36,7 @@ export default function Home() {
                     </div>
                 </div>
                 <GameUI />
+                <SoundManager />
 
                 {/* Legal Footer */}
                 <div className="absolute bottom-4 left-4 z-40 flex gap-4 text-[10px] md:text-xs text-white/30 hover:text-white/80 transition-colors pointer-events-auto">
@@ -59,7 +60,7 @@ export default function Home() {
                     <pointLight position={[-10, 5, -10]} intensity={1} color="#4444ff" />
                     <spotLight position={[10, 20, 10]} angle={0.3} penumbra={1} castShadow intensity={200} />
 
-                    <Environment preset="city" />
+                    <Environment files="/potsdamer_platz_1k.hdr" />
                     <BackgroundSystem />
                     {preferences.boardDrift ? (
                         <Float speed={2} rotationIntensity={0.2} floatIntensity={1} floatingRange={[-0.5, 0.5]}>

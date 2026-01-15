@@ -299,7 +299,9 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
                         }
                     }
                     // 2. Try to Block (Only Hard)
-                    if (difficulty === 'hard') {
+                    // "Random between Medium and Hard": Occasionally skip the block to make it less perfect
+                    // 15% chance to skip blocking, making it human-like errors
+                    if (difficulty === 'hard' && Math.random() > 0.15) {
                         for (const move of validMoves) {
                             const newBoard = JSON.parse(JSON.stringify(board));
                             const col = newBoard[move.x][move.y];

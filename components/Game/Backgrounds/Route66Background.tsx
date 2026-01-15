@@ -18,7 +18,8 @@ export const Route66Background = () => {
     const objects = useMemo(() => {
         const items = [];
         for (let i = 0; i < 20; i++) {
-            const type = Math.random() > 0.7 ? 'shack' : (Math.random() > 0.5 ? 'sign' : 'cactus');
+            // Removed 'sign' (2D placard). Increased cactus frequency.
+            const type = Math.random() > 0.6 ? 'shack' : 'cactus';
             const side = Math.random() > 0.5 ? 1 : -1;
             const x = side * (15 + Math.random() * 20); // Far side of road
 
@@ -149,19 +150,7 @@ const MovingRoadsideObject = ({ data, signTex }: { data: any, signTex: THREE.Tex
                 </group>
             )}
 
-            {data.type === 'sign' && (
-                <Billboard follow={false} lockX={false} lockY={false} lockZ={false}>
-                    <mesh position={[0, 2.5, 0]} scale={[2, 2, 1]}>
-                        <planeGeometry />
-                        <meshBasicMaterial map={signTex} transparent side={THREE.DoubleSide} alphaTest={0.5} />
-                    </mesh>
-                    {/* Post */}
-                    <mesh position={[0, 1, 0]}>
-                        <cylinderGeometry args={[0.05, 0.05, 2]} />
-                        <meshStandardMaterial color="#555" />
-                    </mesh>
-                </Billboard>
-            )}
+            {/* 2D Sign removed per user request ("less is more") */}
 
             {data.type === 'cactus' && (
                 <group scale={[data.scale * 1.5, data.scale * 1.5, data.scale * 1.5]}>

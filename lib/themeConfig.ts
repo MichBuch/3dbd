@@ -21,11 +21,13 @@ export const THEMES = [
     { id: 'winter', translationKey: 'themeWinter' },
     { id: 'wood', translationKey: 'themeWood' },
     { id: 'xmas', translationKey: 'themeXmas' },
+    { id: 'moonball', translationKey: 'themeMoonBall' },
 ];
 
 export const THEME_CONFIG: Record<string, { base: string, white: string, black: string, skin?: 'default' | 'tennis' | 'easter' | 'xmas' | 'wood' | 'rubik' }> = {
     dark: { base: '#222222', white: '#ffffff', black: '#444444', skin: 'default' },
     black_white: { base: '#1a1a1a', white: '#ffffff', black: '#000000', skin: 'default' },
+    moonball: { base: '#000000', white: '#FFFF00', black: '#FF0000', skin: 'default' }, // Yellow/Red for balls
     wood: { base: '#5D4037', white: '#D7CCC8', black: '#3E2723', skin: 'wood' },
     tennis: { base: '#2E8B57', white: '#ccff00', black: '#ffffff', skin: 'tennis' },
     xmas: { base: '#1a472a', white: '#ff0000', black: '#00ff00', skin: 'xmas' },

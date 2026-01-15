@@ -98,6 +98,63 @@ export const FestiveBackground = () => {
     );
 };
 
+// 3D Lantern Component
+const Lantern3D = ({ color = '#ff0000', scale = 1 }) => (
+    <group scale={[scale, scale, scale]}>
+        {/* Paper Body */}
+        <mesh castShadow>
+            <capsuleGeometry args={[0.5, 1, 4, 8]} />
+            <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.6} transparent opacity={0.9} />
+        </mesh>
+        {/* Rims */}
+        <mesh position={[0, 0.6, 0]}>
+            <cylinderGeometry args={[0.4, 0.4, 0.1, 8]} />
+            <meshStandardMaterial color="#330000" />
+        </mesh>
+        <mesh position={[0, -0.6, 0]}>
+            <cylinderGeometry args={[0.4, 0.4, 0.1, 8]} />
+            <meshStandardMaterial color="#330000" />
+        </mesh>
+        {/* Tassel */}
+        <mesh position={[0, -1.2, 0]}>
+            <cylinderGeometry args={[0.1, 0.2, 1, 4]} />
+            <meshStandardMaterial color="#ffcc00" />
+        </mesh>
+        {/* Internal Light */}
+        <pointLight color="orange" intensity={3} distance={10} decay={2} />
+    </group>
+);
+
+// 3D Diya Component
+const Diya3D = ({ scale = 1 }) => (
+    <group scale={[scale, scale, scale]}>
+        {/* Clay Bowl */}
+        <mesh position={[0, 0, 0]}>
+            {/* Half Sphere */}
+            <sphereGeometry args={[0.5, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2.5]} />
+            <meshStandardMaterial color="#8B4513" roughness={1} />
+        </mesh>
+        {/* Rim */}
+        <mesh position={[0, 0.4, 0]} rotation={[Math.PI / 2, 0, 0]}>
+            <torusGeometry args={[0.5, 0.05, 8, 16]} />
+            <meshStandardMaterial color="#5D4037" roughness={1} />
+        </mesh>
+
+        {/* Flame */}
+        <mesh position={[0, 0.5, 0]}>
+            <coneGeometry args={[0.2, 0.6, 8]} />
+            <meshStandardMaterial color="orange" emissive="yellow" emissiveIntensity={2} transparent opacity={0.8} />
+        </mesh>
+        <mesh position={[0, 0.5, 0]} rotation={[0, 0.8, 0]}>
+            <planeGeometry args={[0.4, 0.8]} />
+            <meshBasicMaterial color="yellow" side={THREE.DoubleSide} transparent opacity={0.4} />
+        </mesh>
+
+        {/* Light */}
+        <pointLight position={[0, 1, 0]} color="orange" intensity={2} distance={8} decay={2} />
+    </group>
+);
+
 const FestiveObject = ({ data, tex }: { data: any, tex: any }) => {
     const ref = useRef<THREE.Group>(null);
 
@@ -111,42 +168,30 @@ const FestiveObject = ({ data, tex }: { data: any, tex: any }) => {
             if (ref.current.position.y > 40) ref.current.position.y = -20;
             // Sway
             ref.current.rotation.z = Math.sin(t + data.id) * 0.05;
+            ref.current.rotation.y += 0.01;
+        } else if (data.type === 'diya') {
+            // Gentle bob (floating on water or ground?)
+            // Initial Z was random radius. Let's make them float slowly around center?
+            // Or just static.
+            ref.current.position.y = 0.5 + Math.sin(t * 2 + data.id) * 0.1;
         } else if (data.type === 'rabbit') {
             // Hop
             const hop = Math.abs(Math.sin(t * data.speed));
             ref.current.position.y = hop * 1;
-            // Move forward slowly?? Just hop in place for now.
         }
     });
 
     return (
         <group ref={ref} position={[data.x, data.type === 'lantern' ? data.y : 0, data.z]}>
             {data.type === 'lantern' && (
-                <Billboard follow={true}>
-                    <mesh scale={[data.scale, data.scale, 1]}>
-                        <planeGeometry />
-                        <meshBasicMaterial map={tex.lantern} transparent side={THREE.DoubleSide} alphaTest={0.5} />
-                    </mesh>
-                </Billboard>
+                <Lantern3D color={data.id % 2 === 0 ? '#ff0000' : '#d42426'} scale={data.scale * 0.5} />
             )}
             {data.type === 'diya' && (
-                <Billboard follow={true}>
-                    <mesh position={[0, 0.5, 0]} scale={[data.scale, data.scale, 1]}>
-                        <planeGeometry />
-                        <meshBasicMaterial map={tex.diya} transparent side={THREE.DoubleSide} alphaTest={0.5} />
-                    </mesh>
-                    {/* Add point light for glow */}
-                    <pointLight position={[0, 0.5, 0.1]} distance={3} intensity={2} color="orange" />
-                </Billboard>
+                <Diya3D scale={data.scale * 0.8} />
             )}
-            {data.type === 'rabbit' && (
-                <Billboard follow={true}>
-                    <mesh position={[0, 1, 0]} scale={[data.scale, data.scale, 1]}>
-                        <planeGeometry />
-                        <meshBasicMaterial map={tex.rabbit} transparent side={THREE.DoubleSide} alphaTest={0.5} />
-                    </mesh>
-                </Billboard>
-            )}
+            {/* Keeping Rabbit as 2D for now as user only complained about Diwali, and rabbits are harder to model procedurally */}
+            {/* User requested removal of ALL 2D placards. Removing rabbits. Less is more. */}
+
             {data.type === 'egg' && (
                 <mesh position={[0, 1, 0]} scale={[1, 1.5, 1]}>
                     <sphereGeometry args={[1, 16, 16]} />

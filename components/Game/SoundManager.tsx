@@ -4,76 +4,84 @@ import { useEffect, useRef } from 'react';
 import { useGameStore } from '@/store/gameStore';
 
 export const SoundManager = () => {
-    const { preferences, theme, moveHistory, winner } = useGameStore();
+    const { board, winner, preferences } = useGameStore();
 
-    // Audio Refs
-    const bgmRef = useRef<HTMLAudioElement | null>(null);
-    const sfxRef = useRef<HTMLAudioElement | null>(null);
-    const previousThemeId = useRef<string>(theme.id);
-    const previousMoveCount = useRef<number>(moveHistory.length);
+    // Track previous state to detect changes
+    const prevBeadCount = useRef(0);
+    const prevWinner = useRef<string | null>(null);
+    const audioContextRef = useRef<AudioContext | null>(null);
 
-    // --- Music Logic ---
+    // Initialize Audio Context interaction
     useEffect(() => {
-        // If theme changed, switch track
-        const playMusic = async () => {
-            if (bgmRef.current) {
-                bgmRef.current.pause();
-                bgmRef.current = null;
-            }
-
-            let src = '';
-            if (theme.id === 'space') src = '/assets/audio/space_theme.mp3';
-            else if (theme.id === 'cozy') src = '/assets/audio/cozy_theme.mp3';
-            else if (['chinese_new_year', 'diwali', 'easter'].includes(theme.id)) src = '/assets/audio/festive_theme.mp3';
-            else src = '/assets/audio/main_theme.mp3'; // Default
-
-            if (!src) return;
-
-            const audio = new Audio(src);
-            audio.loop = true;
-            audio.volume = preferences.musicVolume;
-            bgmRef.current = audio;
-
-            try {
-                await audio.play();
-            } catch (e) {
-                // Autoplay policy might block this until user interaction
-                console.log("Audio autoplay blocked or file missing", e);
+        const initAudio = () => {
+            if (!audioContextRef.current) {
+                audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
             }
         };
+        window.addEventListener('click', initAudio, { once: true });
+        return () => window.removeEventListener('click', initAudio);
+    }, []);
 
-        playMusic();
+    // Helper: Play Synthesized Sound
+    const playTone = (freq: number, type: 'sine' | 'square' | 'sawtooth' | 'triangle', duration: number, volMultiplier: number = 1) => {
+        if (!audioContextRef.current) return;
+        if (preferences.soundVolume === 0) return;
 
-        return () => {
-            if (bgmRef.current) bgmRef.current.pause();
-        };
-    }, [theme.id]);
+        const ctx = audioContextRef.current;
+        const oscillator = ctx.createOscillator();
+        const gainNode = ctx.createGain();
 
-    // Volume Update
+        oscillator.type = type;
+        oscillator.frequency.setValueAtTime(freq, ctx.currentTime);
+
+        const volume = preferences.soundVolume * volMultiplier;
+        gainNode.gain.setValueAtTime(volume, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+
+        oscillator.connect(gainNode);
+        gainNode.connect(ctx.destination);
+
+        oscillator.start();
+        oscillator.stop(ctx.currentTime + duration);
+    };
+
+    const playDropSound = () => {
+        // "Clack" sound
+        playTone(400, 'triangle', 0.1, 0.5);
+        setTimeout(() => playTone(300, 'sine', 0.1, 0.3), 50);
+    };
+
+    const playWinSound = () => {
+        // "Ta-da!" arpeggio
+        playTone(523.25, 'sine', 0.2, 0.5); // C5
+        setTimeout(() => playTone(659.25, 'sine', 0.2, 0.5), 100); // E5
+        setTimeout(() => playTone(783.99, 'sine', 0.4, 0.5), 200); // G5
+        setTimeout(() => playTone(1046.50, 'sine', 0.6, 0.5), 300); // C6
+    };
+
+    // 1. Detect Bead Drop
     useEffect(() => {
-        if (bgmRef.current) {
-            bgmRef.current.volume = preferences.musicVolume;
-        }
-    }, [preferences.musicVolume]);
+        let count = 0;
+        board.forEach(plane => plane.forEach(row => row.forEach(cell => {
+            if (cell !== null) count++;
+        })));
 
-    // --- SFX Logic ---
-    useEffect(() => {
-        // Did a move happen?
-        if (moveHistory.length > previousMoveCount.current) {
-            // Play Drop Sound
-            const audio = new Audio('/assets/audio/bead_drop.mp3');
-            audio.volume = preferences.soundVolume;
-            audio.play().catch(() => { });
-
-            // If winner just happened, maybe fanfair?
-            if (winner) {
-                const winAudio = new Audio('/assets/audio/win_sound.mp3');
-                winAudio.volume = preferences.soundVolume;
-                setTimeout(() => winAudio.play().catch(() => { }), 500);
+        if (count > prevBeadCount.current) {
+            // Bead Added
+            if (prevBeadCount.current > 0) { // Don't play on initial load
+                playDropSound();
             }
         }
-        previousMoveCount.current = moveHistory.length;
-    }, [moveHistory.length, winner, preferences.soundVolume]);
+        prevBeadCount.current = count;
+    }, [board]);
 
-    return null; // Headless component
+    // 2. Detect Win
+    useEffect(() => {
+        if (winner && winner !== prevWinner.current) {
+            playWinSound();
+        }
+        prevWinner.current = (winner as string) || null;
+    }, [winner]);
+
+    return null; // Logic only
 };

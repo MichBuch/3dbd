@@ -17,6 +17,7 @@ import { WinterBackground } from './WinterBackground';
 import { FestiveBackground } from './FestiveBackground';
 import { CozyBackground } from './CozyBackground';
 import { ComingSoonFlyby } from './ComingSoonFlyby';
+import { MoonBallBackground } from './MoonBallBackground';
 
 export const BackgroundSystem = () => {
     const { preferences, theme } = useGameStore();
@@ -96,6 +97,7 @@ export const BackgroundSystem = () => {
 
             {theme.id === 'snow' && <WinterBackground />}
             {theme.id === 'starry' && <StarField />}
+            {theme.id === 'moonball' && <MoonBallBackground />}
 
             {/* Flyby Banner for incomplete themes */}
             {showComingSoon && <ComingSoonFlyby />}

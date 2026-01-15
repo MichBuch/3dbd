@@ -39,6 +39,15 @@ export const Board = () => {
                 <meshStandardMaterial color={theme.base} />
             </mesh>
 
+            {/* Snow Layer for Snow Theme */}
+            {theme.id === 'snow' && (
+                <mesh position={[0, 0.02, 0]} receiveShadow rotation={[-Math.PI / 2, 0, 0]}>
+                    {/* Slightly larger than board */}
+                    <planeGeometry args={[stickSpacing * 4 + 1.2, stickSpacing * 4 + 1.2]} />
+                    <meshStandardMaterial color="#ffffff" roughness={1} metalness={0.1} />
+                </mesh>
+            )}
+
             {/* Pillars and Beads */}
             {pillars.map((p) => (
                 <group key={`${p.x}-${p.y}`}>

@@ -175,15 +175,15 @@ export const LobbyDashboard = () => {
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-6xl mx-auto p-4 md:p-0 relative">
-            <button
-                onClick={() => setPreference('isLobbyVisible', false)}
-                className="absolute -top-12 right-0 p-2 text-white/50 hover:text-white transition-colors z-50 rounded-full hover:bg-white/10"
-                title="Close Lobby Overlay"
-            >
-                <X size={24} />
-            </button>
             {/* Left Col: Online Players */}
             <div className="glass-panel p-6 rounded-2xl border border-white/10 bg-black/60 relative">
+                <button
+                    onClick={() => setPreference('isLobbyVisible', false)}
+                    className="absolute top-2 right-2 p-2 text-white/50 hover:text-white transition-colors z-50 rounded-full hover:bg-white/10 md:-top-12 md:right-0"
+                    title="Close Lobby Overlay"
+                >
+                    <X size={24} />
+                </button>
                 <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                     {t.onlinePlayers} ({activeTab === 'all' ? users.length : friends.length})
