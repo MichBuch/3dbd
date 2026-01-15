@@ -92,46 +92,56 @@ export const WinterBackground = () => {
         const instance = mesh.current;
         if (!instance) return;
 
-        // Dynamic wind based on Theme Speed
-        const windX = (speedMult * 2) * delta;
-        const fallSpeed = (speedMult * 0.8 + 1) * delta;
+        // Dynamic wind based on Theme Speed (Blizzard Factor)
+        // Normal speed = 1. High speed = 5-10.
+        const blizzardFactor = Math.max(0, (speedMult - 1) / 5); // 0 to 1+
+        const windX = (0.5 + blizzardFactor * 8) * delta; // Gentle drift to Raging wind
+        const fallSpeed = (2 + blizzardFactor * 8) * delta; // 2 units/sec to 10+
+        const turbulence = 0.5 + blizzardFactor * 3; // How much random shake
+
+        const time = state.clock.elapsedTime;
 
         particles.forEach((particle, i) => {
-            let { xFactor, zFactor } = particle;
+            // Update internal time
+            particle.t += delta;
 
-            particle.t += (speedMult * delta) + particle.spin;
+            // Downward Movement
+            particle.my -= (particle.speed + 0.1) * 10 * fallSpeed;
 
-            // Falling
-            particle.my -= particle.speed * 20 * fallSpeed;
-
-            // Wind
+            // Lateral Wind (Horizontal)
             particle.mx += windX;
 
-            // Reset loop
-            if (particle.my < -20) {
-                particle.my = 30;
-                particle.mx = 0;
-                particle.mx = (Math.random() - 0.5) * 5;
+            // Add Turbulence (Sin wave based on time)
+            const turbulentX = Math.sin(time * 2 + particle.spin * 100) * turbulence * delta;
+            const turbulentZ = Math.cos(time * 1.5 + particle.spin * 100) * turbulence * delta;
+
+            // Reset loop if below ground or too far sideways
+            if (particle.my < -20 || Math.abs(particle.mx) > 60) {
+                particle.my = 40 + Math.random() * 20; // Respawn high
+                particle.mx = (Math.random() - 0.5) * 10 - (windX * 5); // Respawn upwind
             }
 
-            // Wiggle
-            const wiggle = Math.cos(particle.t) * 1.5;
+            // Wiggle for "Genuine" airy feel
+            const wiggle = Math.cos(particle.t + i) * (0.5 + blizzardFactor);
 
             dummy.position.set(
-                xFactor + particle.mx + wiggle,
+                particle.xFactor + particle.mx + turbulentX + wiggle,
                 particle.my,
-                zFactor + Math.sin(particle.t) * 0.5
+                particle.zFactor + turbulentZ
             );
 
-            // Scale flakes: Larger and varying
-            const s = 0.4 + Math.sin(particle.t * 1324) * 0.2; // 0.2 to 0.6 range
+            // Scale flakes: Larger in Blizzard? No, smaller and sharper?
+            // Actually, light snow = big fluffy flakes. Blizzard = small fast shards.
+            // Let's keep them varied.
+            const s = (0.4 + Math.sin(particle.t * 5) * 0.2) * (1 - blizzardFactor * 0.3);
             dummy.scale.set(s, s, s);
 
-            // Rotate flakes to tumble
+            // Rotate flakes (Tumbling)
+            const rotSpeed = 1 + blizzardFactor * 5;
             dummy.rotation.set(
-                particle.t * 0.5,
-                particle.t * 0.3,
-                particle.t * 0.1
+                particle.t * rotSpeed,
+                particle.t * rotSpeed * 0.5,
+                particle.t * rotSpeed * 0.2
             );
 
             dummy.updateMatrix();
