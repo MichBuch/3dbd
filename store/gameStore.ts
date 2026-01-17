@@ -47,6 +47,10 @@ interface GameState {
     theme: Theme;
     preferences: UserPreferences;
 
+    // Persistence
+    gameId: string | null;
+    lastSynced: number;
+
     // Actions
     resetGame: () => void;
     dropBead: (x: number, y: number) => void;
@@ -62,6 +66,7 @@ interface GameState {
     setCurrentPlayer: (player: Player) => void;
     setWinner: (winner: Player | 'draw' | null) => void;
     setScores: (scores: { white: number; black: number }) => void;
+    setGameId: (id: string | null) => void;
 }
 
 const calculateScores = (board: BoardState): { white: number, black: number, winningCells: string[] } => {
@@ -146,7 +151,7 @@ const calculateScores = (board: BoardState): { white: number, black: number, win
     return { white: wScore, black: bScore, winningCells: [...new Set(winning)] };
 }
 
-export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' | 'hard', setDifficulty: (d: 'easy' | 'medium' | 'hard') => void }>()(
+export const useGameStore = create<GameState & { difficulty: number, setDifficulty: (d: number) => void }>()(
     persist(
         (set, get) => ({
             board: Array(4).fill(null).map(() => Array(4).fill(null).map(() => Array(4).fill(null))),
@@ -154,7 +159,7 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
             winner: null,
             moveHistory: [],
             isAiEnabled: true,
-            difficulty: 'hard',
+            difficulty: 50, // Default to Medium (50/100)
             scores: { white: 0, black: 0 },
             winningCells: [],
             theme: {
@@ -164,6 +169,8 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
                 black: THEME_CONFIG.space.black,
                 skin: THEME_CONFIG.space.skin
             },
+            gameId: null,
+            lastSynced: 0,
             preferences: {
                 showScoreboard: true,
                 showLeaderboard: true,
@@ -189,7 +196,9 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
                 winner: null,
                 scores: { white: 0, black: 0 },
                 winningCells: [],
-                moveHistory: []
+                moveHistory: [],
+                gameId: null,
+                lastSynced: 0
             }),
 
             setAiEnabled: (enabled) => set({ isAiEnabled: enabled }),
@@ -204,6 +213,7 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
             setCurrentPlayer: (player) => set({ currentPlayer: player }),
             setWinner: (winner) => set({ winner }),
             setScores: (scores) => set({ scores }),
+            setGameId: (id) => set({ gameId: id }),
 
             resetPreferences: () => set({
                 preferences: {
@@ -261,7 +271,28 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
                 }));
 
                 if (!newWinner && isAiEnabled && currentPlayer === 'white') {
+                    // Slight delay for AI feel
                     setTimeout(() => get().makeAiMove(), 500);
+                }
+
+                // ---------------------------------------------------------
+                // PERSISTENCE (Release Drill)
+                // Sync state to DB if this is a persisted game (user logged in)
+                // ---------------------------------------------------------
+                const { gameId } = get();
+                if (gameId) {
+                    // Fire and forget - don't await to keep UI snappy
+                    fetch('/api/games/sync', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            gameId,
+                            board: newBoard,
+                            currentPlayer: currentPlayer === 'white' ? 'black' : 'white',
+                            scores: newScores,
+                            winner: newWinner
+                        })
+                    }).catch(err => console.error("Sync Failed:", err));
                 }
             },
 
@@ -280,45 +311,55 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
 
                 if (validMoves.length === 0) return;
 
+                // Difficulty is now 0-100
+                // Skill Check: Should the bot make a "Smart" move?
+                // 0 = Always Random. 100 = Always Optimal (Win/Block).
+                // Logic: 
+                // 1. Can I win? (Priority 1)
+                // 2. Must I block? (Priority 2)
+                // 3. Random
+
+                // Effective Difficulty can be nonlinear? Linear is fine for now.
+                // At 100, we ALWAYS see the win/block.
+                // At 50, we miss it half the time.
+                const isLucid = Math.random() * 100 < (Number(difficulty) || 50);
+
                 let bestMove = validMoves[Math.floor(Math.random() * validMoves.length)];
 
-                // On Hard/Medium, try to find better moves
-                if (difficulty === 'medium' || difficulty === 'hard') {
-                    // 1. Try to Score
+                if (isLucid) {
+                    // 1. Check for Immediate Win
                     for (const move of validMoves) {
                         const newBoard = JSON.parse(JSON.stringify(board));
                         const col = newBoard[move.x][move.y];
                         const z = col.findIndex((val: Player | null) => val === null);
-                        newBoard[move.x][move.y][z] = 'black'; // Algorithm
+                        newBoard[move.x][move.y][z] = 'black'; // Bot (AI is usually black/P2 in local)
 
                         const { black } = calculateScores(newBoard);
                         if (black > scores.black) {
+                            // Found a winning move! Take it immediately.
+                            get().dropBead(move.x, move.y);
+                            return;
+                        }
+                    }
+
+                    // 2. Check for Essential Block
+                    for (const move of validMoves) {
+                        const newBoard = JSON.parse(JSON.stringify(board));
+                        const col = newBoard[move.x][move.y];
+                        const z = col.findIndex((val: Player | null) => val === null);
+                        newBoard[move.x][move.y][z] = 'white'; // Opponent
+
+                        const { white } = calculateScores(newBoard);
+                        if (white > scores.white) {
+                            // If I don't go here, they score. I MUST Block.
                             bestMove = move;
                             get().dropBead(bestMove.x, bestMove.y);
                             return;
                         }
                     }
-                    // 2. Try to Block (Only Hard)
-                    // "Random between Medium and Hard": Occasionally skip the block to make it less perfect
-                    // 15% chance to skip blocking, making it human-like errors
-                    if (difficulty === 'hard' && Math.random() > 0.15) {
-                        for (const move of validMoves) {
-                            const newBoard = JSON.parse(JSON.stringify(board));
-                            const col = newBoard[move.x][move.y];
-                            const z = col.findIndex((val: Player | null) => val === null);
-                            newBoard[move.x][move.y][z] = 'white'; // Opponent
-
-                            const { white } = calculateScores(newBoard);
-                            if (white > scores.white) {
-                                bestMove = move;
-                                get().dropBead(bestMove.x, bestMove.y);
-                                return;
-                            }
-                        }
-                    }
                 }
 
-                // Execute
+                // Execute (Best Found or Random)
                 get().dropBead(bestMove.x, bestMove.y);
             },
 
@@ -329,13 +370,22 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
             partialize: (state) => ({
                 theme: state.theme,
                 isAiEnabled: state.isAiEnabled,
-                difficulty: state.difficulty,
-                preferences: state.preferences
             }),
             // Migrate from old storage key if exists
             migrate: (persistedState: any, version: number) => {
                 // Default new fields
                 if (persistedState && persistedState.preferences) {
+
+                    // Migrate String Difficulty to Number
+                    if (typeof persistedState.difficulty === 'string') {
+                        const map: any = { 'easy': 20, 'medium': 50, 'hard': 90 };
+                        persistedState.difficulty = map[persistedState.difficulty] || 50;
+                    }
+                    if (typeof persistedState.preferences.difficulty === 'string') {
+                        const map: any = { 'easy': 20, 'medium': 50, 'hard': 90 };
+                        persistedState.preferences.difficulty = map[persistedState.preferences.difficulty] || 50;
+                    }
+
                     if (persistedState.preferences.isLobbyVisible === undefined) {
                         persistedState.preferences.isLobbyVisible = true;
                     }
@@ -354,11 +404,6 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
                         persistedState.preferences.boardDrift = true;
                     }
 
-                    // Clean up old keys (optional, but good for hygiene)
-                    delete persistedState.preferences.spaceSpeed;
-                    delete persistedState.preferences.spaceDensity;
-                    delete persistedState.preferences.spaceHazards;
-
                     if (!persistedState.preferences.backgroundMode) {
                         persistedState.preferences.backgroundMode = 'theme';
                     }
@@ -370,16 +415,6 @@ export const useGameStore = create<GameState & { difficulty: 'easy' | 'medium' |
                     }
                 }
 
-                // Try to load from old key
-                const oldData = localStorage.getItem('3dbd-storage-v3');
-                if (oldData && !persistedState) {
-                    try {
-                        const parsed = JSON.parse(oldData);
-                        return parsed.state || persistedState;
-                    } catch (e) {
-                        console.error('Failed to migrate old storage:', e);
-                    }
-                }
                 return persistedState;
             }
         }

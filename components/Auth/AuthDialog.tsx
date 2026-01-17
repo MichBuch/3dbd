@@ -17,6 +17,7 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
     const { t } = useTranslation();
     const [view, setView] = useState<AuthView>('initial');
     const [selectedPlan, setSelectedPlan] = useState<PlanType>('free');
+    const [billingInterval, setBillingInterval] = useState<'yearly' | 'monthly'>('yearly');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -243,63 +244,98 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                 {/* Pricing View */}
                 {view === 'pricing' && (
                     <div className="p-12">
-                        <h2 className="text-3xl font-bold text-white mb-8 text-center">{t.choosePlan}</h2>
+                        <h2 className="text-3xl font-bold text-white mb-4 text-center">{t.choosePlan}</h2>
 
-                        <div className="grid md:grid-cols-2 gap-6 mb-8">
+                        {/* Billing Toggle Removed - Using 3-column layout */}
+
+                        <div className="grid md:grid-cols-3 gap-4 mb-8">
                             {/* Free Plan */}
-                            <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-white/10 rounded-2xl p-8">
-                                <h3 className="text-2xl font-bold text-white mb-2">{t.planFree}</h3>
-                                <div className="text-5xl font-bold text-white mb-4">$0</div>
-                                <p className="text-gray-400 mb-6">{t.playAlgo}</p>
+                            <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-white/10 rounded-2xl p-6 flex flex-col items-center text-center relative overflow-hidden group hover:border-white/30 transition-colors">
+                                <h3 className="text-xl font-bold text-white mb-2">{t.planFree}</h3>
+                                <div className="text-4xl font-bold text-white mb-1">$0</div>
+                                <div className="text-[10px] mb-8 opacity-0 font-mono">Spacer</div>
 
-                                <div className="space-y-3 mb-8">
+                                <div className="space-y-3 mb-8 text-sm w-full flex justify-center">
                                     <div className="flex items-center gap-2 text-gray-300">
-                                        <span className="text-green-400">✓</span>
-                                        <span>Play vs Algorithm (Easy-Hard)</span>
+                                        <span className="text-green-400 font-bold">✓</span>
+                                        <span>Play the Machine</span>
                                     </div>
                                 </div>
+
+                                <div className="flex-1"></div>
 
                                 <button
                                     onClick={() => {
                                         setSelectedPlan('free');
                                         setView('signup');
                                     }}
-                                    className="w-full bg-white/10 border border-white/20 text-white font-bold py-3 rounded-lg hover:bg-white/20 transition-colors flex items-center justify-center text-center"
+                                    className="w-full bg-white/10 border border-white/20 text-white font-bold py-2 rounded-lg hover:bg-white/20 transition-colors"
                                 >
                                     {t.createFree}
                                 </button>
                             </div>
 
-                            {/* Pro Plan */}
-                            <div className="relative bg-gradient-to-br from-gray-800 to-gray-900 border-2 border-neonBlue rounded-2xl p-8">
-                                <div className="absolute -top-3 right-6 bg-gradient-to-r from-neonBlue to-neonPink text-black text-xs font-bold px-4 py-1 rounded-full">
-                                    {t.recommended}
-                                </div>
+                            {/* Monthly Plan */}
+                            <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-neonBlue/50 rounded-2xl p-6 flex flex-col items-center text-center relative overflow-hidden group hover:border-neonBlue transition-colors">
+                                <h3 className="text-xl font-bold text-white mb-2">Monthly</h3>
+                                <div className="text-4xl font-bold text-white mb-8">$4.99<span className="text-sm text-gray-400">/mo</span></div>
 
-                                <h3 className="text-2xl font-bold text-white mb-2">{t.pro}</h3>
-                                <div className="text-5xl font-bold text-white mb-1">
-                                    $9.99
-                                    <span className="text-lg text-gray-400">/year</span>
-                                </div>
-                                <p className="text-gray-400 mb-6">{t.playGlobally}</p>
-
-                                <div className="space-y-3 mb-8">
-                                    <div className="flex items-center gap-2 text-gray-300">
-                                        <span className="text-neonBlue">✓</span>
-                                        <span className="font-semibold">Online Multiplayer</span>
+                                <div className="space-y-3 mb-8 text-sm w-full">
+                                    <div className="flex items-center justify-center gap-2 text-gray-300">
+                                        <span className="text-green-400 font-bold">✓</span>
+                                        <span>Online Multi-player</span>
+                                    </div>
+                                    <div className="flex items-center justify-center gap-2 text-gray-300">
+                                        <span className="text-green-400 font-bold">✓</span>
+                                        <span>Cancel Anytime</span>
                                     </div>
                                 </div>
+
+                                <div className="flex-1"></div>
 
                                 <button
                                     onClick={() => {
                                         setSelectedPlan('pro');
+                                        setBillingInterval('monthly');
                                         setView('signup');
                                     }}
-                                    className="w-full bg-gradient-to-r from-neonBlue to-neonPink text-white font-bold py-3 rounded-lg hover:opacity-90 transition-opacity text-lg shadow-lg"
+                                    className="w-full bg-white/10 border border-neonBlue text-white font-bold py-2 rounded-lg hover:bg-neonBlue/20 transition-colors"
                                 >
-                                    {t.playHumans}
+                                    Select Monthly
                                 </button>
                             </div>
+
+                            {/* Yearly Plan */}
+                            <div className="bg-gradient-to-br from-gray-800 to-gray-900 border border-neonPink/50 rounded-2xl p-6 flex flex-col items-center text-center relative overflow-hidden group hover:border-neonPink transition-colors">
+                                <h3 className="text-xl font-bold text-white mb-2">Yearly</h3>
+                                <div className="text-4xl font-bold text-white mb-1">$9.99<span className="text-sm text-gray-400">/yr</span></div>
+                                <div className="text-[10px] text-neonBlue mb-8 font-mono">SAVE 83% vs Monthly</div>
+
+                                <div className="space-y-3 mb-8 text-sm w-full flex justify-center">
+                                    <div className="flex items-center gap-2 text-gray-300">
+                                        <span className="text-green-400 font-bold">✓</span>
+                                        <span>Online Multi-player</span>
+                                    </div>
+                                </div>
+
+                                <div className="flex-1"></div>
+
+                                <button
+                                    onClick={() => {
+                                        setSelectedPlan('pro');
+                                        setBillingInterval('yearly');
+                                        setView('signup');
+                                    }}
+                                    className="w-full bg-white/10 border border-neonPink text-white font-bold py-2 rounded-lg hover:bg-neonPink/20 transition-colors tracking-wide"
+                                >
+                                    Select Yearly
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Beta Banner */}
+                        <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-6 text-center text-gray-300 text-sm">
+                            The app is in beta get these low price offerings available to the first 1000 signups
                         </div>
 
                         <p className="text-center text-gray-500 text-sm">

@@ -141,13 +141,24 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                                 </div>
                             </div>
 
-                            {/* Difficulty */}
+                            {/* Difficulty Slider */}
                             <div className="p-4 bg-white/5 rounded-xl border border-white/5">
-                                <label className="text-white font-bold text-xs uppercase tracking-wider block mb-3">{t.difficulty}</label>
-                                <div className="flex gap-2">
-                                    {(['easy', 'medium', 'hard'] as const).map(d => (
-                                        <button key={d} onClick={() => setDifficulty(d)} className={`flex-1 py-2 rounded-lg text-sm font-bold uppercase transition-all ${difficulty === d ? 'bg-black text-white border-2 border-[#39ff14] shadow-[0_0_10px_rgba(57,255,20,0.5)]' : 'bg-white/10 text-gray-300 hover:bg-white/20'}`}>{t[d]}</button>
-                                    ))}
+                                <label className="text-white font-bold text-xs uppercase tracking-wider block mb-2 flex justify-between">
+                                    <span>{t.difficulty}</span>
+                                    <span className={difficulty! > 80 ? "text-neonPink animate-pulse" : "text-neonBlue"}>
+                                        {difficulty! < 30 ? "Easy" : difficulty! < 70 ? "Medium" : difficulty! < 95 ? "Hard" : "UNBEATABLE"} ({difficulty})
+                                    </span>
+                                </label>
+                                <input
+                                    type="range" min="0" max="100" step="5"
+                                    value={difficulty ?? 50}
+                                    onChange={(e) => setDifficulty(parseInt(e.target.value))}
+                                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-neonBlue"
+                                />
+                                <div className="flex justify-between text-[10px] text-gray-500 mt-1 font-mono uppercase">
+                                    <span>Random</span>
+                                    <span>Tactical</span>
+                                    <span>Godlike</span>
                                 </div>
                             </div>
                         </div>

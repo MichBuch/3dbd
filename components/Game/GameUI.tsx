@@ -38,15 +38,19 @@ export const GameUI = () => {
                 scores.white,
                 scores.black,
                 winner as 'white' | 'black' | 'draw',
-                difficulty,
+                difficulty >= 80 ? 'hard' : difficulty <= 30 ? 'easy' : 'medium',
                 isAiEnabled ? 'ai' : 'pvp'
             );
         }
     }, [winner, session, scores]);
 
-    const handleUpgrade = async () => {
+    const handleUpgrade = async (plan: 'monthly' | 'yearly' = 'yearly') => {
         try {
-            const res = await fetch('/api/checkout', { method: 'POST' });
+            const res = await fetch('/api/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ plan })
+            });
             if (!res.ok) throw new Error('Checkout failed');
             const data = await res.json();
             window.location.href = data.url;
@@ -160,7 +164,7 @@ export const GameUI = () => {
                             {!isPremium && (
                                 <div className="mt-4 pt-4 border-t border-white/10 text-center">
                                     <button
-                                        onClick={handleUpgrade}
+                                        onClick={() => handleUpgrade('yearly')}
                                         className="w-full bg-gradient-to-r from-neonBlue to-neonPink text-black font-bold py-2 rounded-lg text-xs hover:scale-105 transition-transform"
                                     >
                                         {t.unlockPremium}
@@ -205,28 +209,24 @@ export const GameUI = () => {
                 </div>
             )}
 
-            {/* Ad Banner - Free Tier Only */}
+            {/* Ads & Pricing - Bottom Centered (Hidden for Premium) */}
+            {/* Ads & Pricing - Bottom Centered (Hidden for Premium) */}
             {!isPremium && (
-                <div style={{ position: 'fixed', bottom: '0', left: '0', right: '0', height: '90px', zIndex: 40, pointerEvents: 'none', display: 'flex', justifyContent: 'center', alignItems: 'end', paddingBottom: '10px' }}>
-                    <div className="pointer-events-auto bg-black/80 backdrop-blur-md border-t border-white/10 w-full max-w-3xl h-full rounded-t-xl overflow-hidden shadow-[0_0_30px_rgba(0,0,0,0.5)]">
-                        <AdContainer slotId="PLACEHOLDER_SLOT_ID" />
-                    </div>
-                </div>
-            )}
+                <div className="fixed bottom-0 left-0 right-0 z-[100] flex justify-center pointer-events-none">
+                    <div className="bg-black/80 backdrop-blur-md border-t border-white/10 px-4 md:px-6 py-2 rounded-t-xl pointer-events-auto flex flex-col xl:flex-row gap-4 items-center justify-center flex-wrap">
+                        {/* Pricing Section Removed */}
 
-            {/* Settings Panel Removed */}
-            {/* Ads - Bottom Centered (Hidden for Premium) */}
-            {!isPremium && (
-                <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none">
-                    <div className="bg-black/80 backdrop-blur-md border-t border-white/10 px-6 py-2 rounded-t-xl pointer-events-auto">
-                        <div className="w-[728px] h-[90px] bg-white/5 flex items-center justify-center text-white/20 text-xs uppercase tracking-widest border border-dashed border-white/10">
-                            ADVERTISEMENT
-                            <br />
-                            <span className="text-[10px] opacity-50">Free Tier Support</span>
+                        {/* Ad Banner - Secondary */}
+                        <div className="hidden md:flex w-[728px] h-[90px] bg-white/5 items-center justify-center text-white/20 text-xs uppercase tracking-widest border border-dashed border-white/10 overflow-hidden order-2 xl:order-1">
+                            <AdContainer slotId="PLACEHOLDER_SLOT_ID" />
+                        </div>
+
+                        {/* Mobile Ad Placeholder */}
+                        <div className="md:hidden text-[10px] text-white/20 uppercase tracking-widest pb-2 border-b border-white/10 w-full text-center order-3">
+                            Support us or Go Pro
                         </div>
                     </div>
                 </div>
-            )}
-        </>
+            )}      </>
     );
 };

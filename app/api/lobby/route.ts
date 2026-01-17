@@ -45,8 +45,39 @@ export const GET = async (request: Request) => {
                 losses: true
             },
             orderBy: [desc(users.lastSeen)],
-            limit: 50 // Added Limit for Safety
+            limit: 50
         });
+
+        // ---------------------------------------------------------
+        // BOT SEEDING (Release Drill)
+        // Ensure the lobby never looks dead. Pad with AI Agents.
+        // ---------------------------------------------------------
+        if (onlineUsers.length < 5) {
+            const BOT_NAMES = [
+                "NeonKnight", "CyberPawn", "DeepBlue", "Vector", "Glitch",
+                "Matrix", "Synth", "Pixel", "Vortex", "Byte", "Kilo", "Mega"
+            ];
+
+            const botsNeeded = 8 - onlineUsers.length;
+
+            for (let i = 0; i < botsNeeded; i++) {
+                const name = BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)];
+
+                // Avoid duplicate names if poss (simple check)
+                if (onlineUsers.find((u: any) => u.name === name)) continue;
+
+                onlineUsers.push({
+                    id: `bot-${i}-${Date.now()}`, // Unique Bot ID
+                    name: name,
+                    image: null, // Default avatar
+                    rating: 1200 + Math.floor(Math.random() * 400),
+                    status: Math.random() > 0.3 ? 'online' : 'playing',
+                    wins: Math.floor(Math.random() * 50),
+                    losses: Math.floor(Math.random() * 50)
+                });
+            }
+        }
+        // ---------------------------------------------------------
 
         // 2. Get Open Games (Waiting for opponent)
         // @ts-ignore

@@ -12,7 +12,7 @@ export async function POST(req: Request) {
 
     try {
         const body = await req.json();
-        const { difficulty, theme } = body;
+        const { difficulty, theme, mode } = body;
 
         // Initial 4x4x4 Empty Board
         const initialBoard = Array(4).fill(null).map(() =>
@@ -27,8 +27,8 @@ export async function POST(req: Request) {
                 currentPlayer: 'white', // White starts
                 lastMove: null
             },
-            difficulty: difficulty || 'medium',
-            mode: 'pvp',
+            difficulty: difficulty || 50, // Default numeric difficulty
+            mode: mode || 'pvp',
             theme: theme || 'dark', // Save the theme
             isFinished: false,
             whiteScore: 0,

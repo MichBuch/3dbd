@@ -173,6 +173,21 @@ export function Header() {
                                         <span className="text-[10px] text-neonPink font-bold uppercase tracking-wider">{isPremium ? 'PREMIUM' : 'FREE'}</span>
                                     </div>
                                 </div>
+                                {isPremium && (
+                                    <button
+                                        onClick={async () => {
+                                            const res = await fetch('/api/portal', { method: 'POST' });
+                                            if (res.ok) {
+                                                const data = await res.json();
+                                                window.location.href = data.url;
+                                            }
+                                        }}
+                                        className="hover:bg-white/10 p-2 rounded-lg transition-colors border-0 text-white/50 hover:text-white"
+                                        title="Manage Subscription"
+                                    >
+                                        <Settings size={16} />
+                                    </button>
+                                )}
                                 <button onClick={() => signOut()} className="hover:bg-white/10 p-2 rounded-lg transition-colors border-0" title={t.logout}>
                                     <LogOut size={16} className="text-white/50" />
                                 </button>
@@ -183,7 +198,7 @@ export function Header() {
                                     onClick={() => setIsAuthDialogOpen(true)}
                                     className="hidden md:block text-white/80 hover:text-white font-medium text-sm"
                                 >
-                                    {t.login}
+                                    Login / Signup
                                 </button>
                                 <button
                                     onClick={() => setIsAuthDialogOpen(true)}

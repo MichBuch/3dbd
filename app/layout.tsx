@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Providers } from './providers';
+import { CookieConsent } from '@/components/CookieConsent';
 
 export const viewport: Viewport = {
     themeColor: '#000000', // Black status bar for seamless look
@@ -97,10 +98,13 @@ export default function RootLayout({
                         }),
                     }}
                 />
+                {/* Google AdSense */}
+                <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-YOUR_PUBLISHER_ID_HERE" crossOrigin="anonymous"></script>
             </head>
             <body className="bg-black text-white antialiased overflow-hidden selection:bg-neonPink selection:text-white">
                 <Providers>
                     {children}
+                    <CookieConsent />
                 </Providers>
             </body>
         </html>

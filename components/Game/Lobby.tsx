@@ -58,6 +58,20 @@ export const Lobby = () => {
                     </li>
                 ))}
             </ul>
+            <div className="mt-4 pt-3 border-t border-white/10 text-center">
+                <button
+                    onClick={async () => {
+                        const res = await fetch('/api/portal', { method: 'POST' });
+                        if (res.ok) {
+                            const data = await res.json();
+                            window.location.href = data.url;
+                        }
+                    }}
+                    className="text-[10px] text-gray-500 hover:text-white underline transition-colors"
+                >
+                    Manage Subscription / Cancel
+                </button>
+            </div>
         </div>
     );
 };

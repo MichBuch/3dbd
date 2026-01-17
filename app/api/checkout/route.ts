@@ -26,6 +26,19 @@ export async function POST(req: Request) {
             return new NextResponse("Already Premium", { status: 400 });
         }
 
+        const body = await req.json();
+        const { plan } = body; // 'monthly' | 'yearly'
+
+        let priceId = process.env.STRIPE_PRICE_ID; // Default Yearly
+        if (plan === 'monthly') {
+            priceId = process.env.STRIPE_MONTHLY_PRICE_ID;
+        }
+
+        if (!priceId) {
+            console.error("Missing Stripe Price ID for plan:", plan);
+            return new NextResponse("Server Configuration Error", { status: 500 });
+        }
+
         // Regular Stripe checkout flow
         const checkoutSession = await stripe.checkout.sessions.create({
             // @ts-ignore
@@ -34,7 +47,7 @@ export async function POST(req: Request) {
             },
             line_items: [
                 {
-                    price: 'price_1SiCGICcL18osdGS6bsleSC1', // 3DBD one year game access ($19.99)
+                    price: priceId,
                     quantity: 1,
                 },
             ],
