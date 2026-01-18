@@ -1,3 +1,4 @@
+
 import NextAuth, { DefaultSession } from "next-auth"
 
 declare module "next-auth" {
@@ -6,16 +7,24 @@ declare module "next-auth" {
      */
     interface Session {
         user: {
+            admin?: boolean
             id: string
-            plan: 'free' | 'premium'
+            plan?: "free" | "premium"
+            rating?: number
         } & DefaultSession["user"]
     }
 
     interface User {
-        plan?: 'free' | 'premium'
-        points?: number
-        wins?: number
-        losses?: number
+        admin?: boolean
+        plan?: "free" | "premium"
+        rating?: number
+    }
+}
+
+declare module "next-auth/jwt" {
+    interface JWT {
+        admin?: boolean
+        plan?: "free" | "premium"
         rating?: number
     }
 }

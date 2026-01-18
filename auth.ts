@@ -22,7 +22,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         signIn: '/auth/signin',
         error: '/auth/error',
     },
-    adapter: DrizzleAdapter(db),
+    adapter: DrizzleAdapter(db) as any,
     session: { strategy: "jwt" },
     providers: [
         Google,
@@ -158,6 +158,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 token.rating = user.rating;
                 token.picture = user.image;
                 token.name = user.name;
+                token.admin = user.admin;
             }
             return token;
         },
@@ -169,6 +170,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 session.user.rating = token.rating;
                 session.user.name = token.name;
                 session.user.image = token.picture;
+                session.user.admin = token.admin;
             }
             return session;
         },

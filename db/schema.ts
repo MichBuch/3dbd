@@ -38,7 +38,7 @@ export const users = pgTable("user", {
     // Bot Flag
     isBot: boolean("is_bot").default(false).notNull(),
     // Admin Role
-    role: text("role").$type<"user" | "admin">().default("user").notNull(),
+    admin: boolean("admin").default(false).notNull(),
     // Settings Sync
     preferences: json("preferences"),
 });
@@ -252,5 +252,13 @@ export const webhookLogs = pgTable("webhook_logs", {
     errorMessage: text("error_message"),
     userId: text("user_id").references(() => users.id),
     createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const systemSettings = pgTable("system_settings", {
+    key: text("key").primaryKey(), // e.g., 'theme_music_dark'
+    value: text("value").notNull(), // URL or JSON
+    description: text("description"),
+    updatedAt: timestamp("updated_at").defaultNow(),
+    updatedBy: text("updated_by").references(() => users.id),
 });
 

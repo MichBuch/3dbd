@@ -13,10 +13,10 @@ export async function isAdmin() {
     // Check role in DB
     const user = await db.query.users.findFirst({
         where: eq(users.email, session.user.email),
-        columns: { role: true }
+        columns: { admin: true }
     });
 
-    return user?.role === 'admin';
+    return !!user?.admin;
 }
 
 export async function upsertThemeAsset(themeId: string, url: string, type: 'image' | 'video') {

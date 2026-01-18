@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '@/store/gameStore';
 
 export const SoundManager = () => {
@@ -12,6 +12,18 @@ export const SoundManager = () => {
     const audioContextRef = useRef<AudioContext | null>(null);
     const musicOscillators = useRef<any[]>([]); // Store active music notes
     const isPlayingMusic = useRef(false);
+    const customAudioRef = useRef<HTMLAudioElement | null>(null);
+
+    // Initialize HTML5 Audio
+    useEffect(() => {
+        customAudioRef.current = new Audio();
+        return () => {
+            if (customAudioRef.current) {
+                customAudioRef.current.pause();
+                customAudioRef.current = null;
+            }
+        }
+    }, []);
 
     // Initialize Audio Context interaction
     useEffect(() => {
@@ -71,7 +83,14 @@ export const SoundManager = () => {
         setTimeout(() => playTone(1046.50, 'sine', 0.6, 0.5), 300); // C6
     };
 
-    // --- MUSIC SYSTEM (Procedural / Generative) ---
+    // --- MUSIC SYSTEM ---
+    const [systemSettings, setSystemSettings] = useState<Record<string, string>>({});
+
+    // Fetch Settings on Mount
+    useEffect(() => {
+        fetch('/api/admin/settings').then(res => res.json()).then(setSystemSettings).catch(console.error);
+    }, []);
+
     useEffect(() => {
         if (!preferences.musicVolume || preferences.musicVolume === 0) {
             stopMusic();
@@ -80,13 +99,31 @@ export const SoundManager = () => {
 
         const playMusic = () => {
             if (!audioContextRef.current) return;
-            if (isPlayingMusic.current) return;
+            // Check for Custom URL Override
+            const customUrl = systemSettings[`theme_music_${theme.id}`];
 
+            if (customUrl) {
+                // Play Custom Audio File logic would go here
+                // For now, let's just log it or implement a HTML5 Audio element fallback?
+                // Actually, SoundManager uses WebAudio. We can just use an <audio> element or fetch/decode.
+                // Let's use a simpler HTML5 Audio ref for MP3s to avoid decoding complexity for now.
+                if (customAudioRef.current) {
+                    customAudioRef.current.src = customUrl;
+                    customAudioRef.current.volume = preferences.musicVolume;
+                    customAudioRef.current.loop = true;
+                    customAudioRef.current.play().catch(e => console.error("Audio Play Error", e));
+                    isPlayingMusic.current = true;
+                }
+                return;
+            }
+
+            // Fallback to Procedural
+            if (isPlayingMusic.current) return;
             isPlayingMusic.current = true;
 
             // Simple Ambient Loop
             const scheduleNextNote = () => {
-                if (!isPlayingMusic.current) return;
+                if (!isPlayingMusic.current || customAudioRef.current?.paused === false) return; // Stop if custom music playing
                 const ctx = audioContextRef.current!;
 
                 // Frequencies for a spacey/ambient chord (C Maj 7 usually generic)
@@ -127,8 +164,16 @@ export const SoundManager = () => {
             scheduleNextNote();
         };
 
-        // Start if context exists, otherwise retry
+        // Start if context exists
         const interval = setInterval(() => {
+            // Resume procedural only if NO custom music
+            const customUrl = systemSettings[`theme_music_${theme.id}`];
+            if (customUrl) {
+                playMusic();
+                clearInterval(interval);
+                return;
+            }
+
             if (audioContextRef.current && audioContextRef.current.state === 'running') {
                 playMusic();
                 clearInterval(interval);
@@ -139,7 +184,7 @@ export const SoundManager = () => {
             clearInterval(interval);
             stopMusic();
         }
-    }, [preferences.musicVolume, theme.id]);
+    }, [preferences.musicVolume, theme.id, systemSettings]);
 
     const stopMusic = () => {
         isPlayingMusic.current = false;
