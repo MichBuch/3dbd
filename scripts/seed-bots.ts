@@ -1,10 +1,8 @@
 // Script to seed bot users for testing and initial user experience
 // Run with: npx tsx scripts/seed-bots.ts
 
-import { db } from '../db';
-import { users } from '../db/schema';
-import * as bcrypt from 'bcryptjs';
-import { eq } from 'drizzle-orm';
+import * as dotenv from 'dotenv';
+dotenv.config({ path: '.env.local' });
 
 const BOT_USERS = [
     // Bronze tier bots (800-1000 rating)
@@ -29,10 +27,16 @@ const BOT_USERS = [
 ];
 
 async function seedBots() {
+    // Dynamic imports to ensure env vars are loaded first
+    const { db } = await import('../db');
+    const { users } = await import('../db/schema');
+    const bcrypt = await import('bcryptjs');
+    const { eq } = await import('drizzle-orm');
+
     console.log('🤖 Starting bot user seeding...\n');
 
     // Hash a dummy password (bots won't use it, but schema requires non-null email)
-    const hashedPassword = await bcrypt.hash('bot-password-unused', 10);
+    const hashedPassword = await bcrypt.default.hash('bot-password-unused', 10);
 
     let successCount = 0;
     let skipCount = 0;
