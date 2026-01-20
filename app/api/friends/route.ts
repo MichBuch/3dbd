@@ -7,7 +7,7 @@ import { NextResponse } from "next/server";
 // GET: List Friends
 export const GET = async () => {
     const session = await auth();
-    if (!session?.user?.id) return new NextResponse("Unauthorized", { status: 401 });
+    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     try {
         // Find accepted friends
@@ -37,19 +37,19 @@ export const GET = async () => {
         return NextResponse.json(myFriends);
     } catch (error) {
         console.error("GET /api/friends error:", error);
-        return new NextResponse("Internal Error", { status: 500 });
+        return NextResponse.json({ error: "Internal Error" }, { status: 500 });
     }
 };
 
 // POST: Add Friend
 export const POST = async (req: Request) => {
     const session = await auth();
-    if (!session?.user?.id) return new NextResponse("Unauthorized", { status: 401 });
+    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     try {
         const { friendId } = await req.json();
         if (!friendId || friendId === session.user.id) {
-            return new NextResponse("Invalid Friend ID", { status: 400 });
+            return NextResponse.json({ error: "Invalid Friend ID" }, { status: 400 });
         }
 
         // Demo Mode: Auto-Accept (Create 2 rows for bidirectional)
@@ -61,14 +61,14 @@ export const POST = async (req: Request) => {
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error("POST /api/friends error:", error);
-        return new NextResponse("Internal Error", { status: 500 });
+        return NextResponse.json({ error: "Internal Error" }, { status: 500 });
     }
 }
 
 // DELETE: Remove Friend
 export const DELETE = async (req: Request) => {
     const session = await auth();
-    if (!session?.user?.id) return new NextResponse("Unauthorized", { status: 401 });
+    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     try {
         const { friendId } = await req.json();
@@ -90,6 +90,6 @@ export const DELETE = async (req: Request) => {
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error("DELETE /api/friends error:", error);
-        return new NextResponse("Internal Error", { status: 500 });
+        return NextResponse.json({ error: "Internal Error" }, { status: 500 });
     }
 }

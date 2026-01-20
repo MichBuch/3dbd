@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import { User, Gamepad2, MessageCircle, X, UserPlus, Users, Swords, Bell } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useGameStore } from '@/store/gameStore';
 import { useTranslation } from '@/lib/translations';
+import { ConnectDialog } from './ConnectDialog';
 
 interface OnlineUser {
     id: string;
@@ -39,6 +41,7 @@ interface Challenge {
 export const LobbyDashboard = () => {
     const { data: session } = useSession();
     const { setPreference } = useGameStore();
+    const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState<'all' | 'friends'>('all');
     const { t } = useTranslation();
@@ -65,6 +68,7 @@ export const LobbyDashboard = () => {
     const [showChallengeModal, setShowChallengeModal] = useState<string | null>(null);
     const [challengeMessage, setChallengeMessage] = useState('Let\'s play!');
     const [sentChallengeStatus, setSentChallengeStatus] = useState<string>('');
+    const [showConnectDialog, setShowConnectDialog] = useState(false);
 
     // Initialize Guest ID
     useEffect(() => {
@@ -76,15 +80,21 @@ export const LobbyDashboard = () => {
         setGuestId(id);
     }, []);
 
-    // 3. Fetch Challenges
+    // 3. Fetch Challenges (Incoming)
     const challengesUrl = session?.user
         ? `/api/challenges?toId=${session.user.id}`
-        : guestId
-            ? `/api/challenges?fromId=${guestId}`
-            : null;
+        : null; // Guests don't receive challenges yet, strictly speaking, or use guestId if you want
 
     const { data: challengesData } = useSWR(
         challengesUrl,
+        fetcher,
+        { refreshInterval: 3000 }
+    );
+
+    // 4. Fetch Outgoing Challenges (For redirecting Sender)
+    const outgoingUrl = `/api/challenges?fromId=${session?.user?.id || guestId}`;
+    const { data: outgoingData } = useSWR(
+        (session?.user?.id || guestId) ? outgoingUrl : null,
         fetcher,
         { refreshInterval: 3000 }
     );
@@ -94,21 +104,29 @@ export const LobbyDashboard = () => {
     const games: OpenGame[] = lobbyData?.openGames || [];
     const friends: OnlineUser[] = friendsData || [];
     const activeChallenges: Challenge[] = challengesData || [];
+    const mySentChallenges: Challenge[] = outgoingData || [];
+
     const loading = !lobbyData && !lobbyError;
 
-    // Challenge Logic Side Effects
+    // Challenge Logic Side Effects (Redirect Sender)
     useEffect(() => {
-        if (!session && activeChallenges.length > 0) {
-            const accepted = activeChallenges.find((c: Challenge) => c.status === 'accepted' && c.gameId);
+        if (mySentChallenges.length > 0) {
+            const accepted = mySentChallenges.find((c: Challenge) => c.status === 'accepted' && c.gameId);
+
+            // Debugging
+            console.log("My Sent Challenges:", mySentChallenges);
+
             if (accepted && accepted.gameId) {
-                window.location.href = `/game/${accepted.gameId}`;
-            }
-            if (activeChallenges.length > 0) {
-                const latest = activeChallenges[0];
+                console.log("Redirecting to game:", accepted.gameId);
+                setSentChallengeStatus("Game Accepted! Joining...");
+                router.push(`/game/${accepted.gameId}`);
+            } else {
+                // Update status text
+                const latest = mySentChallenges[0];
                 setSentChallengeStatus(latest.status === 'pending' ? t.waitingResponse : t.challenge + ' ' + latest.status);
             }
         }
-    }, [activeChallenges, session]);
+    }, [mySentChallenges, t, router]);
 
     const addFriend = async (friendId: string) => {
         try {
@@ -125,7 +143,7 @@ export const LobbyDashboard = () => {
     const sendChallenge = async () => {
         if (!showChallengeModal) return;
         try {
-            await fetch('/api/challenges', {
+            const res = await fetch('/api/challenges', {
                 method: 'POST',
                 body: JSON.stringify({
                     action: 'create',
@@ -135,6 +153,21 @@ export const LobbyDashboard = () => {
                     message: challengeMessage
                 })
             });
+
+            const data = await res.json();
+
+            if (data.error) {
+                console.error("Challenge Error:", data.error);
+                setSentChallengeStatus(`Error: ${data.error}`);
+                alert(`Failed to send challenge: ${data.error}`);
+                return;
+            }
+
+            if (data.success && data.gameId) {
+                // Auto-accepted (e.g. Bot)
+                window.location.href = `/game/${data.gameId}`;
+                return;
+            }
 
             setSentChallengeStatus(t.challengeSent);
             setShowChallengeModal(null);
@@ -201,7 +234,7 @@ export const LobbyDashboard = () => {
                                     <span className="font-bold text-neonBlue">{c.fromName}</span>: "{c.message || 'Play?'}"
                                 </div>
                                 <div className="flex gap-2">
-                                    <button onClick={() => respondToChallenge(c.id, 'accept')} className="bg-green-500 text-black px-2 py-1 rounded font-bold hover:bg-green-400">Accept</button>
+                                    <button onClick={() => respondToChallenge(c.id, 'accept')} className="bg-green-500 text-white px-2 py-1 rounded font-bold hover:bg-green-400">Accept</button>
                                     <button onClick={() => respondToChallenge(c.id, 'decline')} className="bg-red-500 text-white px-2 py-1 rounded font-bold hover:bg-red-400">Decline</button>
                                 </div>
                             </div>
@@ -302,19 +335,29 @@ export const LobbyDashboard = () => {
 
                 {session?.user && (
                     <div className="mt-6 pt-6 border-t border-white/10">
-                        <div className="bg-gradient-to-r from-neonPink/10 to-neonBlue/10 rounded-xl p-4 border border-white/10">
-                            <div className="flex items-start gap-3">
+                        <div className="bg-gradient-to-r from-neonPink/10 to-neonBlue/10 rounded-xl p-4 border border-white/10 relative overflow-hidden group">
+                            <div className="absolute right-0 top-0 bottom-0 w-1 bg-gradient-to-b from-neonPink to-neonBlue opacity-50" />
+                            <div className="flex items-start gap-3 relative z-10">
                                 <MessageCircle className="text-neonPink shrink-0 mt-1" size={20} />
-                                <div>
+                                <div className="flex-1">
                                     <h4 className="font-bold text-white text-sm mb-1">{t.makeFriends}</h4>
-                                    <p className="text-xs text-gray-400 leading-relaxed">
-                                        {t.friendTip}
+                                    <p className="text-xs text-gray-400 leading-relaxed mb-3">
+                                        Using Safe Chat? Connect with friends via email.
                                     </p>
+                                    <button
+                                        onClick={() => setShowConnectDialog(true)}
+                                        className="bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors border border-white/10"
+                                    >
+                                        Connect Friend
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 )}
+
+                {/* Connect Dialog */}
+                {showConnectDialog && <ConnectDialog onClose={() => setShowConnectDialog(false)} />}
 
                 {/* CHALLENGE MODAL */}
                 {showChallengeModal && (
@@ -334,7 +377,7 @@ export const LobbyDashboard = () => {
                             />
                             <div className="flex gap-3">
                                 <button onClick={() => setShowChallengeModal(null)} className="flex-1 py-2 bg-white/10 text-gray-400 rounded-lg font-bold hover:bg-white/20">{t.cancel}</button>
-                                <button onClick={sendChallenge} className="flex-1 py-2 bg-neonBlue text-black rounded-lg font-bold hover:bg-white">{t.send}</button>
+                                <button onClick={sendChallenge} className="flex-1 py-2 bg-neonBlue/20 text-neonBlue rounded-lg font-bold hover:bg-neonBlue/30 transition-colors border border-neonBlue/50">{t.send}</button>
                             </div>
                         </div>
                     </div>

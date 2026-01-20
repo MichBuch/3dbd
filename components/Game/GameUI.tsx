@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { useRef } from 'react';
+import { useParams } from 'next/navigation';
 import { useTranslation } from '@/lib/translations';
 import { useSession } from "next-auth/react";
-import { Trophy, Settings, X } from 'lucide-react';
+import { Trophy, Settings, X, Flag } from 'lucide-react';
 import { AdContainer } from '@/components/Ads/AdContainer';
 import { Lobby } from '@/components/Game/Lobby';
 import { saveGameResult } from '@/app/actions/game';
+import { SafeChat } from './SafeChat';
 
 export const GameUI = () => {
     const { data: session } = useSession();
@@ -24,6 +26,10 @@ export const GameUI = () => {
     const { t } = useTranslation();
 
     const [showWinnerDialog, setShowWinnerDialog] = useState(false);
+    const [showResignDialog, setShowResignDialog] = useState(false);
+    const [resignReason, setResignReason] = useState('');
+    const params = useParams();
+    const gameId = params?.id;
 
     useEffect(() => {
         if (winner) {
@@ -43,6 +49,39 @@ export const GameUI = () => {
             );
         }
     }, [winner, session, scores]);
+
+    const handleResign = async () => {
+        if (!gameId) return;
+        try {
+            // 1. Resign API
+            const res = await fetch(`/api/game/${gameId}/resign`, {
+                method: 'POST',
+                body: JSON.stringify({ reason: resignReason })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                // 2. Chat Message
+                const message = `🏳️ I resigned: ${resignReason || 'Good game!'}`;
+                await fetch(`/api/game/${gameId}/chat`, {
+                    method: 'POST',
+                    body: JSON.stringify({ text: message })
+                });
+
+                setShowResignDialog(false);
+                setResignReason('');
+                // Game store polling (or socket) should pick up the "ended" state soon.
+                // For immediate feedback, we could force a reload or store update, 
+                // but let's trust the polling/heartbeat mechanism of the game store first.
+                // Actually, best to reload to ensure state sync if polling is slow.
+                window.location.reload();
+            } else {
+                alert(data.error || "Failed to resign");
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
 
     const handleUpgrade = async (plan: 'monthly' | 'yearly' = 'yearly') => {
         try {
@@ -72,6 +111,19 @@ export const GameUI = () => {
     return (
         <>
             {/* Settings Button Removed - Moved to Header */}
+            {/* Resign Button */}
+            {!winner && (
+                <button
+                    onClick={() => setShowResignDialog(true)}
+                    className="fixed top-24 right-6 z-40 bg-red-500/10 hover:bg-red-500/30 text-red-500 p-2 rounded-lg backdrop-blur-md border border-red-500/20 transition-all hover:scale-105 flex items-center gap-2 group"
+                    title="Resign / End Game"
+                >
+                    <Flag size={16} />
+                    <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 whitespace-nowrap text-xs font-bold uppercase">
+                        {t.resign || "Resign"}
+                    </span>
+                </button>
+            )}
 
             {/* Compact Scoreboard - Top Center - 20% Smaller */}
             {preferences.showScoreboard && (
@@ -176,6 +228,41 @@ export const GameUI = () => {
                 </div>
             )}
 
+            {/* Resign Dialog */}
+            {showResignDialog && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in">
+                    <div className="bg-[#111] border border-white/10 p-6 rounded-2xl w-full max-w-sm shadow-2xl">
+                        <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                            <Flag className="text-red-500" /> Resign Game?
+                        </h3>
+                        <p className="text-gray-400 text-sm mb-4">
+                            You will lose this game. You can leave a message optionally.
+                        </p>
+                        <input
+                            type="text"
+                            placeholder='Reason (e.g. "Late for work", "Good game")'
+                            value={resignReason}
+                            onChange={(e) => setResignReason(e.target.value)}
+                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white mb-6 focus:outline-none focus:border-red-500 transition-colors"
+                        />
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowResignDialog(false)}
+                                className="flex-1 py-2 bg-white/5 text-gray-400 rounded-lg font-bold hover:bg-white/10 hover:text-white transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleResign}
+                                className="flex-1 py-2 bg-red-500/20 text-red-500 border border-red-500/50 rounded-lg font-bold hover:bg-red-500 hover:text-white transition-colors"
+                            >
+                                Confirm Resign
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Winner Overlay */}
             {winner && showWinnerDialog && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-auto z-50 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300">
@@ -227,6 +314,18 @@ export const GameUI = () => {
                         </div>
                     </div>
                 </div>
-            )}      </>
+            )}
+
+            {/* Safe Chat - Only renders if connected */}
+            {gameId && (
+                <SafeChat
+                    gameId={gameId as string}
+                    players={{
+                        white: { id: 'unknown', name: 'White' }, // IDs not easily available in store yet without fetch, but chat API validates session vs DB
+                        black: { id: 'unknown', name: 'Black' }  // The component fetches messages itself
+                    }}
+                />
+            )}
+        </>
     );
 };

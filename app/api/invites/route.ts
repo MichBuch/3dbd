@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 // POST: Generate Invite Link
 export const POST = async () => {
     const session = await auth();
-    if (!session?.user?.id) return new NextResponse("Unauthorized", { status: 401 });
+    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     try {
         // Generate a random 6-char code
@@ -25,6 +25,6 @@ export const POST = async () => {
         return NextResponse.json({ code, expiresAt });
     } catch (error) {
         console.error("POST /api/invites error:", error);
-        return new NextResponse("Internal Error", { status: 500 });
+        return NextResponse.json({ error: "Internal Error" }, { status: 500 });
     }
 }

@@ -11,7 +11,7 @@ export async function POST(req: Request) {
         const session = await auth();
 
         if (!session?.user?.email) {
-            return new NextResponse("Unauthorized", { status: 401 });
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
         // Get user from DB
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
             .limit(1);
 
         if (!user || !user.stripeCustomerId) {
-            return new NextResponse("No subscription found", { status: 400 });
+            return NextResponse.json({ error: "No subscription found" }, { status: 400 });
         }
 
         // Create billing portal session
@@ -34,6 +34,6 @@ export async function POST(req: Request) {
         return NextResponse.json({ url: portalSession.url });
     } catch (error) {
         console.error("[STRIPE_PORTAL_ERROR]", error);
-        return new NextResponse("Internal Error", { status: 500 });
+        return NextResponse.json({ error: "Internal Error" }, { status: 500 });
     }
 }

@@ -16,7 +16,7 @@ export const GET = async (req: Request) => {
             // Secure this: Only allow if session.user.id matches toId
             const session = await auth();
             if (session?.user?.id !== toId) {
-                return new NextResponse("Unauthorized", { status: 401 });
+                return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
             }
 
             const incoming = await db.query.challenges.findMany({
@@ -39,11 +39,11 @@ export const GET = async (req: Request) => {
             return NextResponse.json(myChallenges);
         }
 
-        return new NextResponse("Missing params", { status: 400 });
+        return NextResponse.json({ error: "Missing params" }, { status: 400 });
 
     } catch (error) {
         console.error("GET /api/challenges error:", error);
-        return new NextResponse("Internal Error", { status: 500 });
+        return NextResponse.json({ error: "Internal Error" }, { status: 500 });
     }
 };
 
@@ -56,13 +56,14 @@ export const POST = async (req: Request) => {
         // 1. Create Challenge (Guest or User)
         if (action === 'create') {
             const { fromId, fromName, toId, message } = body;
-            if (!toId || !fromId) return new NextResponse("Missing fields", { status: 400 });
+            if (!toId || !fromId) return NextResponse.json({ error: "Missing fields" }, { status: 400 });
 
+            console.log(`[CHALLENGE] Checking if target ${toId} is a bot...`);
             // Check if the challenged user is a bot
-            const targetUser = await db.query.users.findFirst({
-                // @ts-ignore
-                where: (users, { eq }) => eq(users.id, toId)
-            });
+            const targetUsers = await db.select().from(users).where(eq(users.id, toId)).limit(1);
+            const targetUser = targetUsers[0];
+
+            console.log(`[CHALLENGE] Target user found: ${targetUser?.name}, isBot: ${targetUser?.isBot}`);
 
             // If challenging a bot, auto-accept and create game immediately
             if (targetUser?.isBot) {
@@ -120,7 +121,7 @@ export const POST = async (req: Request) => {
         // 2. Accept Challenge (User only)
         if (action === 'accept') {
             const session = await auth();
-            if (!session?.user?.id) return new NextResponse("Unauthorized", { status: 401 });
+            if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
             const { challengeId } = body;
 
@@ -160,10 +161,10 @@ export const POST = async (req: Request) => {
             return NextResponse.json({ success: true });
         }
 
-        return new NextResponse("Invalid action", { status: 400 });
+        return NextResponse.json({ error: "Invalid action" }, { status: 400 });
 
     } catch (error) {
         console.error("POST /api/challenges error:", error);
-        return new NextResponse("Internal Error", { status: 500 });
+        return NextResponse.json({ error: "Internal Error" }, { status: 500 });
     }
 }

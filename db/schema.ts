@@ -39,6 +39,8 @@ export const users = pgTable("user", {
     isBot: boolean("is_bot").default(false).notNull(),
     // Admin Role
     admin: boolean("admin").default(false).notNull(),
+    // Referrals
+    referrerId: text("referrer_id"), // Self-reference added in relations
     // Settings Sync
     preferences: json("preferences"),
 });
@@ -170,14 +172,38 @@ export const userPreferences = pgTable("user_preferences", {
     updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const trustedConnections = pgTable("trusted_connections", {
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+    friendId: text("friend_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+    createdAt: timestamp("created_at").defaultNow(),
+}, (t) => ({
+    pk: primaryKey({ columns: [t.userId, t.friendId] }),
+}));
+
+export const connectionRequests = pgTable("connection_requests", {
+    token: text("token").primaryKey(),
+    fromId: text("from_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+    toEmail: text("to_email").notNull(),
+    status: text("status").$type<'pending' | 'accepted' | 'expired'>().default('pending'),
+    expiresAt: timestamp("expires_at").notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+});
+
 // RELATIONS
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ many, one }) => ({
     gamesAsWhite: many(games, { relationName: "whitePlayer" }),
     gamesAsBlack: many(games, { relationName: "blackPlayer" }),
     chats: many(chats),
     friends: many(friends, { relationName: "userFriends" }),
     invites: many(invites, { relationName: "userInvites" }),
     challengesAsRecipient: many(challenges, { relationName: "userChallenges" }),
+    referrer: one(users, {
+        fields: [users.referrerId],
+        references: [users.id],
+        relationName: "referredUsers"
+    }),
+    referredUsers: many(users, { relationName: "referredUsers" }),
+    trustedConnections: many(trustedConnections, { relationName: "userTrustedConnections" }),
 }));
 
 export const invitesRelations = relations(invites, ({ one }) => ({
@@ -253,6 +279,19 @@ export const webhookLogs = pgTable("webhook_logs", {
     userId: text("user_id").references(() => users.id),
     createdAt: timestamp("created_at").defaultNow(),
 });
+
+export const trustedConnectionsRelations = relations(trustedConnections, ({ one }) => ({
+    user: one(users, {
+        fields: [trustedConnections.userId],
+        references: [users.id],
+        relationName: "userTrustedConnections"
+    }),
+    friend: one(users, {
+        fields: [trustedConnections.friendId],
+        references: [users.id],
+        relationName: "friendTrustedConnection"
+    })
+}));
 
 export const systemSettings = pgTable("system_settings", {
     key: text("key").primaryKey(), // e.g., 'theme_music_dark'

@@ -10,7 +10,7 @@ export async function GET() {
         const session = await auth();
 
         if (!session?.user?.id) {
-            return new NextResponse("Unauthorized", { status: 401 });
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
         const [prefs] = await db
@@ -30,7 +30,7 @@ export async function GET() {
         });
     } catch (error) {
         console.error("[PREFERENCES_GET_ERROR]", error);
-        return new NextResponse("Internal Error", { status: 500 });
+        return NextResponse.json({ error: "Internal Error" }, { status: 500 });
     }
 }
 
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
         const session = await auth();
 
         if (!session?.user?.id) {
-            return new NextResponse("Unauthorized", { status: 401 });
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
         const body = await req.json();
@@ -87,6 +87,6 @@ export async function POST(req: Request) {
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error("[PREFERENCES_POST_ERROR]", error);
-        return new NextResponse("Internal Error", { status: 500 });
+        return NextResponse.json({ error: "Internal Error" }, { status: 500 });
     }
 }

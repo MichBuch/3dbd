@@ -7,7 +7,7 @@ import { NextResponse } from "next/server";
 export async function GET() {
     const session = await auth();
     if (!session?.user?.email) {
-        return new NextResponse("Unauthorized", { status: 401 });
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     try {
@@ -15,19 +15,19 @@ export async function GET() {
             where: eq(users.email, session.user.email),
         });
 
-        if (!user) return new NextResponse("User not found", { status: 404 });
+        if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
         return NextResponse.json(user.preferences || {});
     } catch (error) {
         console.error("Failed to fetch preferences:", error);
-        return new NextResponse("Internal Error", { status: 500 });
+        return NextResponse.json({ error: "Internal Error" }, { status: 500 });
     }
 }
 
 export async function POST(req: Request) {
     const session = await auth();
     if (!session?.user?.email) {
-        return new NextResponse("Unauthorized", { status: 401 });
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     try {
@@ -43,6 +43,6 @@ export async function POST(req: Request) {
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error("Failed to save preferences:", error);
-        return new NextResponse("Internal Error", { status: 500 });
+        return NextResponse.json({ error: "Internal Error" }, { status: 500 });
     }
 }

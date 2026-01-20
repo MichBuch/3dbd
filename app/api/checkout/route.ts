@@ -11,7 +11,7 @@ export async function POST(req: Request) {
         const session = await auth();
 
         if (!session?.user?.email) {
-            return new NextResponse("Unauthorized", { status: 401 });
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
         // Get user from DB to check current plan
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
 
         // Check if user is already premium
         if (user && user.plan === 'premium') {
-            return new NextResponse("Already Premium", { status: 400 });
+            return NextResponse.json({ error: "Already Premium" }, { status: 400 });
         }
 
         const body = await req.json();
@@ -34,9 +34,15 @@ export async function POST(req: Request) {
             priceId = process.env.STRIPE_MONTHLY_PRICE_ID;
         }
 
+        // Apply Referral Discount if applicable
+        if (user?.referrerId && process.env.STRIPE_REFERRAL_PRICE_ID) {
+            console.log("Applying Referral Discount for user:", user.email);
+            priceId = process.env.STRIPE_REFERRAL_PRICE_ID;
+        }
+
         if (!priceId) {
             console.error("Missing Stripe Price ID for plan:", plan);
-            return new NextResponse("Server Configuration Error", { status: 500 });
+            return NextResponse.json({ error: "Server Configuration Error" }, { status: 500 });
         }
 
         // Regular Stripe checkout flow
@@ -64,6 +70,6 @@ export async function POST(req: Request) {
         return NextResponse.json({ url: checkoutSession.url });
     } catch (error) {
         console.error("[STRIPE_ERROR]", error);
-        return new NextResponse("Internal Error", { status: 500 });
+        return NextResponse.json({ error: "Internal Error" }, { status: 500 });
     }
 }

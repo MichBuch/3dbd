@@ -84,6 +84,7 @@ export const translations = {
         wins: "WINS",
         draw: "DRAW",
         playAgain: "Play Again",
+        resign: "Resign",
         topPlayers: "Top Players",
         // Lobby
         onlinePlayers: "Online Players",
@@ -106,6 +107,7 @@ export const translations = {
         joinGame: "Join Game",
         makeFriends: "Make New Friends!",
         friendTip: "Click the icon to add players to your friend list.",
+        connectFriend: "Connect Friend",
         // Difficulties
         easy: "Easy",
         medium: "Medium",
@@ -198,6 +200,7 @@ export const translations = {
         wins: "获胜",
         draw: "平局",
         playAgain: "再玩一次",
+        resign: "认输",
         topPlayers: "顶尖玩家",
         // Lobby
         onlinePlayers: "在线玩家",
@@ -220,6 +223,7 @@ export const translations = {
         joinGame: "加入游戏",
         makeFriends: "结交新朋友！",
         friendTip: "点击图标将玩家添加到好友列表。",
+        connectFriend: "连接好友",
         // Difficulties
         easy: "简单",
         medium: "中等",
@@ -311,6 +315,7 @@ export const translations = {
         wins: "GANA",
         draw: "EMPATE",
         playAgain: "Jugar de nuevo",
+        resign: "Rendirse",
         topPlayers: "Mejores Jugadores",
         // Lobby
         onlinePlayers: "Jugadores en línea",
@@ -333,6 +338,7 @@ export const translations = {
         joinGame: "Unirse",
         makeFriends: "¡Haz nuevos amigos!",
         friendTip: "Haz clic en el icono para añadir amigos.",
+        connectFriend: "Conectar Amigo",
         // Difficulties
         easy: "Fácil",
         medium: "Medio",
@@ -424,6 +430,7 @@ export const translations = {
         wins: "の勝利",
         draw: "引き分け",
         playAgain: "もう一度プレイ",
+        resign: "投了",
         topPlayers: "トッププレイヤー",
         // Lobby
         onlinePlayers: "オンライン",
@@ -446,6 +453,7 @@ export const translations = {
         joinGame: "参加",
         makeFriends: "友達を作ろう！",
         friendTip: "アイコンをクリックして友達追加。",
+        connectFriend: "友達とつながる",
         // Difficulties
         easy: "簡単",
         medium: "普通",
@@ -537,6 +545,7 @@ export const translations = {
         wins: "जीत गया",
         draw: "मैच ड्रा",
         playAgain: "फिर से खेलें",
+        resign: "हार मानें",
         topPlayers: "शीर्ष खिलाड़ी",
         // Lobby
         onlinePlayers: "ऑनलाइन खिलाड़ी",
@@ -559,6 +568,7 @@ export const translations = {
         joinGame: "शामिल हों",
         makeFriends: "नए दोस्त बनाएं!",
         friendTip: "मित्र सूची में जोड़ने के लिए आइकन पर क्लिक करें।",
+        connectFriend: "मित्र कनेक्ट करें",
         // Difficulties
         easy: "आसान",
         medium: "मध्यम",
