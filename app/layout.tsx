@@ -101,7 +101,7 @@ export default function RootLayout({
                 {/* Google AdSense */}
                 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-YOUR_PUBLISHER_ID_HERE" crossOrigin="anonymous"></script>
             </head>
-            <body className="bg-black text-white antialiased overflow-hidden selection:bg-neonPink selection:text-white">
+            <body className="bg-black text-white antialiased overflow-hidden selection:bg-neonPink selection:text-white" suppressHydrationWarning>
                 <Providers>
                     {children}
                     <CookieConsent />

@@ -125,16 +125,7 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
                 {/* HUD Replaced by GameUI */}
                 <GameUI />
                 <div className="absolute top-24 left-0 right-0 z-10 flex flex-col items-center pointer-events-none">
-                    <div className="bg-white/10 px-4 py-2 rounded-xl text-white backdrop-blur-md pointer-events-auto border border-white/20 text-xs">
-                        <div className="flex gap-4">
-                            <div className={isMyTurn ? "text-green-400 font-bold" : "text-gray-400"}>{isMyTurn ? "YOUR TURN" : "OPPONENT'S TURN"}</div>
-                            <div className="text-gray-500">|</div>
-                            <button onClick={() => {
-                                navigator.clipboard.writeText(window.location.href);
-                                alert("Link Copied!");
-                            }} className="text-neonBlue hover:text-white font-bold uppercase">Copy Invite Link</button>
-                        </div>
-                    </div>
+                    {/* Banner removed */}
                 </div>
 
                 <Canvas shadows>

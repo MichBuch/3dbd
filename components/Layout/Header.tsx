@@ -8,11 +8,13 @@ import { SettingsPanel } from '@/components/Game/SettingsPanel';
 import { useGameStore } from '@/store/gameStore';
 import { LanguageSelector } from './LanguageSelector';
 import { useTranslation } from '@/lib/translations';
+import { InviteDialog } from '@/components/InviteDialog';
 
 export function Header() {
     const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
     const [showMobileLeaderboard, setShowMobileLeaderboard] = useState(false);
+    const [showInviteDialog, setShowInviteDialog] = useState(false);
     const { data: session } = useSession();
     // @ts-ignore
     const isPremium = session?.user?.plan === 'premium';
@@ -137,29 +139,6 @@ export function Header() {
 
                         {session ? (
                             <div className="hidden md:flex glass-panel px-4 py-2 rounded-xl items-center gap-3 justify-between">
-                                {/* Invite Button */}
-                                <button
-                                    onClick={async () => {
-                                        try {
-                                            const res = await fetch('/api/invites', { method: 'POST' });
-                                            const { code } = await res.json();
-                                            const link = `${window.location.origin}/invite/${code}`;
-                                            navigator.clipboard.writeText(link);
-                                            // In a real app we'd use a toast here
-                                            const btn = document.getElementById('invite-btn');
-                                            if (btn) btn.style.color = '#00ff00';
-                                            setTimeout(() => { if (btn) btn.style.color = ''; }, 2000);
-                                        } catch (e) {
-                                            console.error(e);
-                                        }
-                                    }}
-                                    id="invite-btn"
-                                    className="p-1.5 bg-neonPink/20 text-neonPink hover:bg-neonPink hover:text-black rounded-lg transition-all animate-pulse mr-2"
-                                    title="Invite a Friend (Get Free Premium)"
-                                >
-                                    <Gift size={18} />
-                                </button>
-
                                 <div className="flex items-center gap-3">
                                     {session.user?.image ? (
                                         <img src={session.user.image} alt="User" className="w-8 h-8 rounded-full border border-neonBlue shadow-[0_0_10px_#00f3ff]" />
@@ -173,6 +152,16 @@ export function Header() {
                                         <span className="text-[10px] text-neonPink font-bold uppercase tracking-wider">{isPremium ? 'PREMIUM' : 'FREE'}</span>
                                     </div>
                                 </div>
+
+                                {/* Invite Button - Moved here */}
+                                <button
+                                    onClick={() => setShowInviteDialog(true)}
+                                    className="p-1.5 bg-neonPink/20 text-neonPink hover:bg-neonPink hover:text-black rounded-lg transition-all animate-pulse ml-2"
+                                    title="Invite a Friend"
+                                >
+                                    <Gift size={18} />
+                                </button>
+
                                 {isPremium && (
                                     <button
                                         onClick={async () => {
@@ -228,6 +217,7 @@ export function Header() {
 
             <AuthDialog isOpen={isAuthDialogOpen} onClose={() => setIsAuthDialogOpen(false)} />
             <SettingsPanel isOpen={showSettings} onClose={() => setShowSettings(false)} />
+            <InviteDialog isOpen={showInviteDialog} onClose={() => setShowInviteDialog(false)} />
         </>
     );
 }

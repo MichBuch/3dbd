@@ -288,14 +288,7 @@ export const LobbyDashboard = () => {
                             <div key={u.id} className="flex items-center justify-between bg-white/5 p-3 rounded-xl border border-white/5 hover:border-neonBlue/50 transition-colors group">
                                 <div className="flex items-center gap-3">
                                     <div className="relative">
-                                        {u.image ? (
-                                            <img src={u.image} className="w-10 h-10 rounded-full border border-gray-600" />
-                                        ) : (
-                                            <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center">
-                                                <User size={16} className="text-gray-400" />
-                                            </div>
-                                        )}
-                                        <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-black ${u.status === 'playing' ? 'bg-yellow-500' : 'bg-green-500'}`} />
+                                        <div className={`w-3 h-3 rounded-full border-2 border-black ${u.status === 'playing' ? 'bg-yellow-500' : 'bg-green-500'}`} />
                                     </div>
                                     <div>
                                         <div className="font-bold text-white text-sm">{u.name}</div>

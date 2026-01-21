@@ -115,7 +115,7 @@ export const GameUI = () => {
             {!winner && (
                 <button
                     onClick={() => setShowResignDialog(true)}
-                    className="fixed top-24 right-6 z-40 bg-red-500/10 hover:bg-red-500/30 text-red-500 p-2 rounded-lg backdrop-blur-md border border-red-500/20 transition-all hover:scale-105 flex items-center gap-2 group"
+                    className="fixed top-24 left-6 z-40 bg-red-500/10 hover:bg-red-500/30 text-red-500 p-2 rounded-lg backdrop-blur-md border border-red-500/20 transition-all hover:scale-105 flex items-center gap-2 group"
                     title="Resign / End Game"
                 >
                     <Flag size={16} />

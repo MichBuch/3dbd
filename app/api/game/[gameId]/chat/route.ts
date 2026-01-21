@@ -1,15 +1,8 @@
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { games, trustedConnections, users } from "@/db/schema";
-import { eq, or, and } from "drizzle-orm";
+import { games, trustedConnections, chats, users } from "@/db/schema";
+import { eq, and, asc } from "drizzle-orm";
 import { NextResponse } from "next/server";
-
-// --- IN-MEMORY STORE ---
-// In a serverless/Edge env, this global might reset. 
-// For Vercel Serverless Functions, it effectively resets between warm starts.
-// For a production app, use Redis (Upstash).
-// But per requirement "cache locally but not maintain history in DB", this works for now.
-const CHAT_STORE: Record<string, { id: string; senderId: string; senderName: string; text: string; createdAt: number }[]> = {};
 
 // GET: Fetch Messages OR Check Permission
 export async function GET(req: Request, { params }: { params: Promise<{ gameId: string }> }) {
@@ -42,8 +35,6 @@ export async function GET(req: Request, { params }: { params: Promise<{ gameId: 
         ).limit(1);
 
         if (trust.length === 0) {
-            // Also check the reverse direction to be safe, though our Verify logic creates bidirectional rows
-            // Optimization: If rows are guaranteed bidirectional, this is enough.
             return NextResponse.json({ allowed: false });
         }
 
@@ -51,8 +42,26 @@ export async function GET(req: Request, { params }: { params: Promise<{ gameId: 
             return NextResponse.json({ allowed: true });
         }
 
-        // Return Messages
-        const messages = CHAT_STORE[gameId] || [];
+        // Return Messages from DB
+        const result = await db.select({
+            id: chats.id,
+            senderId: chats.senderId,
+            senderName: users.name,
+            text: chats.message,
+            createdAt: chats.createdAt
+        })
+            .from(chats)
+            .leftJoin(users, eq(chats.senderId, users.id))
+            .where(eq(chats.gameId, gameId))
+            .orderBy(asc(chats.createdAt));
+
+        // Map to ensure createdAt is number/date as expected by frontend
+        const messages = result.map(msg => ({
+            ...msg,
+            senderName: msg.senderName || "Unknown",
+            createdAt: msg.createdAt ? new Date(msg.createdAt).getTime() : Date.now()
+        }));
+
         return NextResponse.json({ allowed: true, messages });
 
     } catch (error) {
@@ -72,26 +81,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ gameId:
 
         const { gameId } = await params;
 
-        // (We assume permissions checked by UI/GET, but good to double check if strict security needed)
-        // For speed, logging only here.
-
-        if (!CHAT_STORE[gameId]) {
-            CHAT_STORE[gameId] = [];
-        }
-
-        // Add Message
-        CHAT_STORE[gameId].push({
-            id: crypto.randomUUID(),
+        // Insert into DB
+        await db.insert(chats).values({
+            gameId,
             senderId: session.user.id,
-            senderName: session.user.name || "Player",
-            text,
-            createdAt: Date.now()
+            message: text,
         });
-
-        // Cap at 50 messages to prevent memory leak
-        if (CHAT_STORE[gameId].length > 50) {
-            CHAT_STORE[gameId] = CHAT_STORE[gameId].slice(-50);
-        }
 
         return NextResponse.json({ success: true });
 
