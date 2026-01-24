@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Mail, MessageCircle, Copy, Check, Smartphone } from 'lucide-react';
+import { X, Mail, MessageCircle, Copy, Check, Smartphone, Share2 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 
 interface InviteDialogProps {
@@ -91,8 +91,8 @@ export function InviteDialog({ isOpen, onClose }: InviteDialogProps) {
                     <button
                         onClick={handleCopy}
                         className={`p-2 rounded-lg transition-all ${copied
-                                ? 'bg-green-500/20 text-green-500'
-                                : 'bg-white/10 text-white hover:bg-white/20'
+                            ? 'bg-green-500/20 text-green-500'
+                            : 'bg-white/10 text-white hover:bg-white/20'
                             }`}
                         title="Copy to Clipboard"
                     >
@@ -122,6 +122,15 @@ export function InviteDialog({ isOpen, onClose }: InviteDialogProps) {
                         <Mail size={24} />
                         <span className="text-xs font-bold">Email App</span>
                     </button>
+                    {typeof navigator !== 'undefined' && navigator.share && (
+                        <button
+                            onClick={() => navigator.share({ title: 'Play 3DBD', text: 'Come play 3DBD with me!', url: inviteUrl })}
+                            className="flex flex-col items-center gap-2 p-3 bg-white/10 text-white hover:bg-white/20 border border-white/20 rounded-lg transition-colors"
+                        >
+                            <Share2 size={24} />
+                            <span className="text-xs font-bold">Share</span>
+                        </button>
+                    )}
                 </div>
 
                 {/* Direct Email Form (Optional) */}

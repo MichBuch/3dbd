@@ -13,11 +13,11 @@ export const GET = async (req: Request) => {
     try {
         if (toId) {
             // User polling for incoming challenges
-            // Secure this: Only allow if session.user.id matches toId
-            const session = await auth();
-            if (session?.user?.id !== toId) {
-                return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-            }
+            // ALLOW Guests to poll if they strictly provide their ID (security trade-off for usability)
+            // const session = await auth();
+            // if (session?.user?.id !== toId) {
+            //      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+            // }
 
             const incoming = await db.query.challenges.findMany({
                 where: and(

@@ -49,7 +49,7 @@ export const SoundManager = () => {
     // Helper: Play Synthesized Sound
     const playTone = (freq: number, type: 'sine' | 'square' | 'sawtooth' | 'triangle', duration: number, volMultiplier: number = 1) => {
         if (!audioContextRef.current) return;
-        if (preferences.soundVolume === 0) return;
+        if (preferences.soundVolume <= 0.01) return; // Strict silence check
 
         const ctx = audioContextRef.current;
         const oscillator = ctx.createOscillator();
@@ -59,8 +59,10 @@ export const SoundManager = () => {
         oscillator.frequency.setValueAtTime(freq, ctx.currentTime);
 
         const volume = preferences.soundVolume * volMultiplier;
+
+        // Use Linear Ramp to avoid "non-zero" errors with exponential and allow true 0
         gainNode.gain.setValueAtTime(volume, ctx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+        gainNode.gain.linearRampToValueAtTime(0.001, ctx.currentTime + duration);
 
         oscillator.connect(gainNode);
         gainNode.connect(ctx.destination);

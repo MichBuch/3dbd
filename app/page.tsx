@@ -1,5 +1,7 @@
 'use client';
 
+
+import { useEffect, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, Environment, Float } from '@react-three/drei';
 import { Board } from '@/components/Game/Board';
@@ -19,6 +21,14 @@ import { PreferenceSync } from '@/components/Game/PreferenceSync';
 export default function Home() {
     const preferences = useGameStore((state) => state.preferences);
     const { t } = useTranslation();
+    const setAiEnabled = useGameStore((state) => state.setAiEnabled);
+
+
+    // Force AI enabled on Home Page (Landing)
+    // This ensures local play is always against the Bot by default
+    useEffect(() => {
+        useGameStore.setState({ isAiEnabled: true });
+    }, []);
 
     // Adjust camera distance based on board scale
     const baseCameraDistance = 12;
@@ -29,7 +39,7 @@ export default function Home() {
     return (
         <>
             <Header />
-            <main className="relative bg-black" style={{ width: '100vw', height: '100vh' }}>
+            <main className="relative bg-black touch-none" style={{ width: '100vw', height: '100vh' }}>
                 <div className="absolute inset-0 z-30 pointer-events-none flex items-center justify-center">
                     <div className="pointer-events-auto w-full max-w-6xl px-6">
                         {preferences.isLobbyVisible && <LobbyDashboard />}

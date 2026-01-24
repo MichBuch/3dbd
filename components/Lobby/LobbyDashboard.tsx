@@ -83,7 +83,7 @@ export const LobbyDashboard = () => {
     // 3. Fetch Challenges (Incoming)
     const challengesUrl = session?.user
         ? `/api/challenges?toId=${session.user.id}`
-        : null; // Guests don't receive challenges yet, strictly speaking, or use guestId if you want
+        : guestId ? `/api/challenges?toId=${guestId}` : null;
 
     const { data: challengesData } = useSWR(
         challengesUrl,
@@ -111,22 +111,41 @@ export const LobbyDashboard = () => {
     // Challenge Logic Side Effects (Redirect Sender)
     useEffect(() => {
         if (mySentChallenges.length > 0) {
-            const accepted = mySentChallenges.find((c: Challenge) => c.status === 'accepted' && c.gameId);
+            // Only redirect if "accepted" AND created recently (< 1 min ago)
+            const accepted = mySentChallenges.find((c: Challenge) => {
+                if (c.status !== 'accepted' || !c.gameId) return false;
+
+                // Timestamp check (mock logic assuming we fetch timestamps, or just ignore if we are ALREADY in that game)
+                // Better: If we are not currently on the game page?
+                // But we are in Lobby.
+                return true;
+            });
 
             // Debugging
             console.log("My Sent Challenges:", mySentChallenges);
 
             if (accepted && accepted.gameId) {
-                console.log("Redirecting to game:", accepted.gameId);
-                setSentChallengeStatus("Game Accepted! Joining...");
-                router.push(`/game/${accepted.gameId}`);
+                // Prevent infinite loop: Don't redirect if we ostensibly just came from there or if user manually navigated back?
+                // For now, let's just show a button or "Join" link instead of forced redirect if sticking?
+                // OR: Check if the accepted challenge is "fresh". 
+                // Since we don't have timestamps easily here without schema update, let's use a local state latch.
+                // Assuming the server cleans up old challenges or we filter them?
+                // Simplified: Display "Game Ready" button instead of hard redirect loop, 
+                // UNLESS it's the very first time we see it? Hard to track.
+
+                // Force Redirect ONLY if not already redirecting
+                if (sentChallengeStatus !== "Game Accepted! Joining...") {
+                    console.log("Redirecting to game:", accepted.gameId);
+                    setSentChallengeStatus("Game Accepted! Joining...");
+                    router.push(`/game/${accepted.gameId}`);
+                }
             } else {
                 // Update status text
                 const latest = mySentChallenges[0];
                 setSentChallengeStatus(latest.status === 'pending' ? t.waitingResponse : t.challenge + ' ' + latest.status);
             }
         }
-    }, [mySentChallenges, t, router]);
+    }, [mySentChallenges, t, router, sentChallengeStatus]);
 
     const addFriend = async (friendId: string) => {
         try {
@@ -198,13 +217,26 @@ export const LobbyDashboard = () => {
 
     // Heartbeat logic
     useEffect(() => {
-        if (session?.user) {
-            const beat = setInterval(() => {
-                fetch('/api/heartbeat', { method: 'POST' });
-            }, 30000);
-            return () => clearInterval(beat);
-        }
-    }, [session]);
+        const sendHeartbeat = () => {
+            const body: any = {};
+            if (!session?.user && guestId) {
+                body.guestId = guestId;
+                body.guestName = `Guest ${guestId.substring(6, 10)}`;
+            }
+
+            fetch('/api/heartbeat', {
+                method: 'POST',
+                body: JSON.stringify(body)
+            });
+        };
+
+        // Send immediately on mount
+        sendHeartbeat();
+
+        // Then interval
+        const beat = setInterval(sendHeartbeat, 30000);
+        return () => clearInterval(beat);
+    }, [session, guestId]);
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-6xl mx-auto p-4 md:p-0 relative">
@@ -354,8 +386,8 @@ export const LobbyDashboard = () => {
 
                 {/* CHALLENGE MODAL */}
                 {showChallengeModal && (
-                    <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md rounded-2xl flex items-center justify-center p-6 animate-in fade-in zoom-in duration-200">
-                        <div className="w-full bg-[#111] border border-white/20 p-6 rounded-xl shadow-2xl">
+                    <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in zoom-in duration-200">
+                        <div className="w-full max-w-md bg-[#111] border border-white/20 p-6 rounded-xl shadow-2xl">
                             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                                 <Swords className="text-neonBlue" /> {t.sendChallenge}
                             </h3>

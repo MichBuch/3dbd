@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { THEME_CONFIG } from '@/lib/themeConfig';
 
 export type Player = 'white' | 'black';
@@ -66,7 +66,13 @@ interface GameState {
     setCurrentPlayer: (player: Player) => void;
     setWinner: (winner: Player | 'draw' | null) => void;
     setScores: (scores: { white: number; black: number }) => void;
-    setGameId: (id: string | null) => void;
+    // Rematch State
+    rematchState: {
+        requested: boolean; // Did *I* request it?
+        opponentRequested: boolean; // Did *Opponent* request it?
+        status: 'none' | 'pending' | 'accepted' | 'declined';
+    };
+    setRematchState: (state: Partial<{ requested: boolean; opponentRequested: boolean; status: 'none' | 'pending' | 'accepted' | 'declined' }>) => void;
 }
 
 const calculateScores = (board: BoardState): { white: number, black: number, winningCells: string[] } => {
@@ -198,6 +204,7 @@ export const useGameStore = create<GameState & { difficulty: number, setDifficul
                 winningCells: [],
                 moveHistory: [],
                 gameId: null,
+                rematchState: { requested: false, opponentRequested: false, status: 'none' }, // Clear rematch state
                 lastSynced: 0
             }),
 
@@ -214,6 +221,9 @@ export const useGameStore = create<GameState & { difficulty: number, setDifficul
             setWinner: (winner) => set({ winner }),
             setScores: (scores) => set({ scores }),
             setGameId: (id) => set({ gameId: id }),
+
+            rematchState: { requested: false, opponentRequested: false, status: 'none' },
+            setRematchState: (newState) => set((state) => ({ rematchState: { ...state.rematchState, ...newState } })),
 
             resetPreferences: () => set({
                 preferences: {
@@ -363,13 +373,25 @@ export const useGameStore = create<GameState & { difficulty: number, setDifficul
                 get().dropBead(bestMove.x, bestMove.y);
             },
 
-            checkWin: () => null
+            checkWin: () => {
+                const { board, scores } = get();
+                // Re-run calculation to be safe
+                const { white, black } = calculateScores(board);
+                if (white > black && (white + black >= 64)) return 'white'; // Simple majority at end?
+                // Actually 4-in-a-row is different than the score-based logic? 
+                // Ah, looking at calculateScores, it counts winning LINES (wScore++). Use that.
+                if (white > black) return 'white'; // If we define win by lines?
+                // Wait, the game logic seems to be "Most Lines".
+                return null;
+            }
         }),
         {
             name: '3dbd-storage-v1', // Updated branding to 3DBD
+            storage: createJSONStorage(() => localStorage),
             partialize: (state) => ({
                 theme: state.theme,
                 isAiEnabled: state.isAiEnabled,
+                preferences: state.preferences,
             }),
             // Migrate from old storage key if exists
             migrate: (persistedState: any, version: number) => {

@@ -112,6 +112,50 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             return NextResponse.json({ success: true });
         }
 
+        // REMATCH VOTE
+        // Store votes in the 'state' JSONB to avoid schema changes for now, 
+        // or just Reset immediately if this is simpler for V1?
+        // Let's implement a "Reset" logic immediately if this is local dev or low stakes?
+        // No, need consensus.
+        if (action === 'rematch') {
+            // Who is voting?
+            const role = game.whitePlayerId === session.user.id ? 'white' : 'black';
+
+            // Get current votes from state (initialize if missing)
+            const currentState = game.state as any;
+            const votes = currentState.rematchVotes || { white: false, black: false };
+            votes[role] = true;
+
+            // Check Consensus
+            if (votes.white && votes.black) {
+                // RESET GAME
+                const newBoard = Array(4).fill(null).map(() => Array(4).fill(null).map(() => Array(4).fill(null)));
+                // Swap starting player? Let's alternate.
+                const newStarter = currentState.currentPlayer === 'white' ? 'black' : 'white';
+
+                await db.update(games).set({
+                    state: {
+                        board: newBoard,
+                        currentPlayer: newStarter,
+                        lastMove: null,
+                        rematchVotes: { white: false, black: false } // Clear votes
+                    },
+                    winnerId: null, // Clear winner
+                    isFinished: false,
+                    updatedAt: new Date()
+                    // Keep scores!
+                }).where(eq(games.id, id));
+
+                return NextResponse.json({ success: true, status: 'reset' });
+            } else {
+                // Just record vote
+                await db.update(games).set({
+                    state: { ...currentState, rematchVotes: votes }
+                }).where(eq(games.id, id));
+                return NextResponse.json({ success: true, status: 'pending' });
+            }
+        }
+
         return NextResponse.json({ error: "Invalid action" }, { status: 400 });
 
     } catch (error) {

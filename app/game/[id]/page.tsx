@@ -71,41 +71,75 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
     };
 
     // 2. Poll for Updates
+    const [connectionStatus, setConnectionStatus] = useState<'connected' | 'reconnecting'>('connected');
+    const lastHeartbeat = useRef(Date.now());
+
     useEffect(() => {
         const interval = setInterval(async () => {
-            const res = await fetch(`/api/games/${id}`);
-            const data = await res.json();
+            try {
+                const startTime = Date.now();
+                const res = await fetch(`/api/games/${id}`);
 
-            if (data.state) {
-                // Use the setters exposed in GameState
-                setBoard(data.state.board);
-                setCurrentPlayer(data.state.currentPlayer);
-                // setWinner(data.state.winner); // Optional if tracked
-
-                // Sync Scoreboard
-                useGameStore.setState({
-                    isAiEnabled: false,
-                    scores: { white: data.whiteScore || 0, black: data.blackScore || 0 }
-                });
-
-                // Update Opponent Name
-                if (data.players) {
-                    const amIWhite = data.whitePlayerId === session?.user?.id;
-                    const opponent = amIWhite ? data.players.black : data.players.white;
-                    useGameStore.setState({
-                        preferences: {
-                            ...useGameStore.getState().preferences,
-                            opponentName: opponent?.name || 'Waiting...'
-                        }
-                    });
+                if (res.status === 401) {
+                    // Session expired?
+                    return;
                 }
 
-                setGameData(data);
+                const data = await res.json();
+                setConnectionStatus('connected');
+                lastHeartbeat.current = Date.now();
+
+                if (data.state) {
+                    const myRole = data.whitePlayerId === session?.user?.id ? 'white' : 'black';
+                    const opponentRole = myRole === 'white' ? 'black' : 'white';
+                    const votes = data.state.rematchVotes || {};
+
+                    // Atomic update
+                    useGameStore.setState({
+                        board: data.state.board,
+                        currentPlayer: data.state.currentPlayer,
+                        // Only sync winner if we aren't already locally aware (to avoid flicker) or if it CLEARED (rematch)
+                        winner: data.winnerId ? (data.winnerId === data.whitePlayerId ? 'white' : data.winnerId === data.blackPlayerId ? 'black' : 'draw') : null,
+                        scores: { white: data.whiteScore || 0, black: data.blackScore || 0 },
+                        winningCells: data.state.winningCells || [],
+                        isAiEnabled: data.mode === 'ai',
+
+                        // Sync Rematch State
+                        rematchState: {
+                            requested: votes[myRole] || false,
+                            opponentRequested: votes[opponentRole] || false,
+                            status: (votes.white && votes.black) ? 'accepted' : (votes[myRole] ? 'pending' : 'none')
+                        },
+
+                        preferences: {
+                            ...useGameStore.getState().preferences,
+                            opponentName: (data.whitePlayerId === session?.user?.id
+                                ? data.players?.black?.name
+                                : data.players?.white?.name) || 'Waiting...'
+                        }
+                    });
+
+                    setGameData(data);
+                }
+            } catch (e) {
+                console.error("Polling error", e);
+                // If persistent error > 3s
+                if (Date.now() - lastHeartbeat.current > 4000) {
+                    setConnectionStatus('reconnecting');
+                }
             }
-        }, 2000); // 2s polling
+        }, 1000); // Optimized to 1s polling
 
         return () => clearInterval(interval);
     }, [id, setBoard, setCurrentPlayer, session]);
+
+    // Connection Badge Component (Inline)
+    const ConnectionBadge = () => (
+        <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 px-3 py-1 rounded-full text-xs font-bold transition-all duration-300 ${connectionStatus === 'connected' ? 'opacity-0 pointer-events-none' : 'opacity-100 bg-red-500 text-white animate-pulse'
+            }`}>
+            {connectionStatus === 'reconnecting' ? '⚠️ Reconnecting...' : ''}
+        </div>
+    );
 
     // Camera
     const baseCameraDistance = 12;
@@ -127,6 +161,7 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
                 <div className="absolute top-24 left-0 right-0 z-10 flex flex-col items-center pointer-events-none">
                     {/* Banner removed */}
                 </div>
+                <ConnectionBadge />
 
                 <Canvas shadows>
                     <PerspectiveCamera makeDefault position={[0, 8, cameraZ]} fov={45} />
@@ -146,7 +181,7 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
 
 // Component to listen to store changes and push to server
 function SyncListener({ gameId, isMyTurn }: { gameId: string, isMyTurn: boolean }) {
-    const { board, currentPlayer, scores, winner, setWinner } = useGameStore(); // Use scores object
+    const { board, currentPlayer, scores, winner, winningCells } = useGameStore(); // Use scores object
     const previousBoard = useRef(board);
     const firstRun = useRef(true);
 
@@ -159,7 +194,7 @@ function SyncListener({ gameId, isMyTurn }: { gameId: string, isMyTurn: boolean 
         // Simple diff check (reference usually changes in Zustand on updates)
         if (board !== previousBoard.current) {
             if (isMyTurn) {
-                console.log("Pushing move to server...");
+                // Pushing move to server
                 fetch(`/api/games/${gameId}`, {
                     method: 'POST',
                     body: JSON.stringify({
@@ -167,7 +202,8 @@ function SyncListener({ gameId, isMyTurn }: { gameId: string, isMyTurn: boolean 
                         gameState: {
                             state: {
                                 board: board,
-                                currentPlayer: currentPlayer
+                                currentPlayer: currentPlayer,
+                                winningCells: winningCells // Push winning cells
                             },
                             // Extract scores from object
                             whiteScore: scores.white,
@@ -179,7 +215,7 @@ function SyncListener({ gameId, isMyTurn }: { gameId: string, isMyTurn: boolean 
             }
             previousBoard.current = board;
         }
-    }, [board, currentPlayer, isMyTurn, gameId, scores, winner]);
+    }, [board, currentPlayer, isMyTurn, gameId, scores, winner, winningCells]);
 
     return null;
 }

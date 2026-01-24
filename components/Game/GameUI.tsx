@@ -167,7 +167,9 @@ export const GameUI = () => {
                                         }}
                                     />
                                     <span className="text-xs font-bold text-white/90">
-                                        {currentPlayer === 'white' ? `${session?.user?.name || t.player1}${t.turn}` : `${t.player2}${t.turn}`}
+                                        {currentPlayer === 'white'
+                                            ? `${session?.user?.name || t.player1}${t.turn}`
+                                            : `${isAiEnabled ? t.computer : (preferences.opponentName || t.player2)}${t.turn}`}
                                     </span>
                                 </div>
                             </>
@@ -179,18 +181,36 @@ export const GameUI = () => {
             {/* Right Panel - Leaderboard - HIDDEN ON MOBILE */}
             {preferences.showLeaderboard && (
                 <div className="hidden md:block" style={{ position: 'fixed', top: '80px', right: '24px', zIndex: 50 }}>
-                    <div className="mb-4 text-right">
-                        <button
-                            onClick={async () => {
-                                const res = await fetch('/api/games/create', { method: 'POST', body: JSON.stringify({ difficulty: difficulty }) });
-                                const game = await res.json();
-                                if (game.id) window.location.href = `/game/${game.id}`;
-                            }}
-                            className="bg-neonBlue/20 hover:bg-neonBlue/40 text-neonBlue border border-neonBlue px-4 py-2 rounded-lg font-bold transition-all shadow-[0_0_10px_rgba(0,243,255,0.2)] hover:shadow-[0_0_20px_rgba(0,243,255,0.4)] text-xs uppercase tracking-widest"
-                        >
-                            ⚔️ {t.playAlgo || 'Play Bot'}
-                        </button>
-                    </div>
+                    {/* Only show 'Play Bot' if NOT in a multiplayer game (or implement lobby logic to go back) */}
+                    {!gameId && (
+                        <div className="mb-4 text-right">
+                            <button
+                                onClick={async () => {
+                                    if (!session?.user) {
+                                        // Logged out? Play Locally immediately
+                                        useGameStore.getState().setAiEnabled(true);
+                                        useGameStore.getState().resetGame();
+                                        window.location.href = '/'; // Ensure we are on landing
+                                        return;
+                                    }
+
+                                    // Logged In? Create Server Game
+                                    const res = await fetch('/api/games/create', {
+                                        method: 'POST',
+                                        body: JSON.stringify({
+                                            difficulty: difficulty,
+                                            mode: 'ai' // Explicitly set AI mode
+                                        })
+                                    });
+                                    const game = await res.json();
+                                    if (game.id) window.location.href = `/game/${game.id}`;
+                                }}
+                                className="bg-neonBlue/20 hover:bg-neonBlue/40 text-neonBlue border border-neonBlue px-4 py-2 rounded-lg font-bold transition-all shadow-[0_0_10px_rgba(0,243,255,0.2)] hover:shadow-[0_0_20px_rgba(0,243,255,0.4)] text-xs uppercase tracking-widest"
+                            >
+                                ⚔️ {t.playAlgo || 'Play Bot'}
+                            </button>
+                        </div>
+                    )}
                     {isPremium && !isAiEnabled ? (
                         <Lobby />
                     ) : (
@@ -283,15 +303,50 @@ export const GameUI = () => {
                                     : isAiEnabled ? t.computer : `${t.player2} ${t.wins}`
                             }
                         </h2>
-                        <div className="text-gray-400 mb-10 font-mono text-xl">
-                            Red <span className="text-white font-bold text-2xl mx-1">{scores.white}</span> - <span className="text-white font-bold text-2xl mx-1">{scores.black}</span> Green
+                        <div className="text-gray-400 mb-10 font-mono text-xl flex items-center justify-center gap-4">
+                            <span className="font-bold text-2xl" style={{ color: theme.white }}>{scores.white}</span>
+                            <span>-</span>
+                            <span className="font-bold text-2xl" style={{ color: theme.black }}>{scores.black}</span>
                         </div>
-                        <button
-                            onClick={resetGame}
-                            className="bg-white text-black px-10 py-4 rounded-full font-bold text-xl hover:scale-105 hover:shadow-[0_0_20px_rgba(255,255,255,0.5)] transition-all"
-                        >
-                            {t.playAgain}
-                        </button>
+                        <div className="flex flex-col gap-4 items-center">
+                            {gameId ? (
+                                <button
+                                    onClick={async () => {
+                                        if (useGameStore.getState().rematchState.requested) return;
+
+                                        // Request Rematch
+                                        useGameStore.getState().setRematchState({ requested: true });
+
+                                        await fetch(`/api/games/${gameId}`, {
+                                            method: 'POST',
+                                            body: JSON.stringify({ action: 'rematch' })
+                                        });
+                                    }}
+                                    className={`px-10 py-4 rounded-full font-bold text-xl transition-all ${useGameStore.getState().rematchState.requested
+                                            ? 'bg-gray-500 text-white cursor-wait'
+                                            : 'bg-white text-black hover:scale-105 hover:shadow-[0_0_20px_rgba(255,255,255,0.5)]'
+                                        }`}
+                                >
+                                    {useGameStore.getState().rematchState.requested
+                                        ? (useGameStore.getState().rematchState.status === 'accepted' ? 'Rematch Starting...' : 'Waiting for Opponent...')
+                                        : t.playAgain}
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={resetGame}
+                                    className="bg-white text-black px-10 py-4 rounded-full font-bold text-xl hover:scale-105 hover:shadow-[0_0_20px_rgba(255,255,255,0.5)] transition-all"
+                                >
+                                    {t.playAgain}
+                                </button>
+                            )}
+
+                            <button
+                                onClick={() => window.location.href = '/'}
+                                className="text-white/60 hover:text-white font-mono uppercase tracking-widest text-sm hover:underline transition-all"
+                            >
+                                Exit to Lobby
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

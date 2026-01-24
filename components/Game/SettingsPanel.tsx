@@ -165,7 +165,7 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                     )}
 
                     {/* 2. Audio Section */}
-                    <SectionHeader id="audio" label="AUDIO" icon={Volume2} />
+                    <SectionHeader id="audio" label="Audio" icon={Volume2} />
                     {openSection === 'audio' && (
                         <div className="space-y-4 p-2 animate-in slide-in-from-top-2 duration-200">
                             <div className="p-4 bg-white/5 rounded-xl border border-white/5 space-y-4">
