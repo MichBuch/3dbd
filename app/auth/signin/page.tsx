@@ -5,12 +5,17 @@ import Link from 'next/link';
 
 export default function SignInPage() {
     const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
 
     const handleEmailSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        await signIn('nodemailer', { email, callbackUrl: '/' });
+        if (password) {
+            await signIn('credentials', { email, password, callbackUrl: '/' });
+        } else {
+            await signIn('nodemailer', { email, callbackUrl: '/' });
+        }
         setLoading(false);
     };
 
@@ -146,16 +151,35 @@ export default function SignInPage() {
                         />
                     </div>
 
-                    <div className="bg-blue-500/10 border border-blue-500/20 p-3 rounded-lg text-xs text-blue-200 mb-4">
-                        We'll send you a magic link to sign in instantly. No password required.
+                    <div>
+                        <div className="flex justify-between items-center mb-2">
+                            <label className="block text-sm text-gray-300">Password (Optional)</label>
+                            <Link href="/auth/forgot-password" className="text-xs text-blue-400 hover:underline">
+                                Forgot Password?
+                            </Link>
+                        </div>
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="........"
+                            className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-gray-500"
+                        />
+                        <p className="text-[10px] text-gray-500 mt-1">Leave blank to use Magic Link</p>
                     </div>
+
+                    {!password ? (
+                        <div className="bg-blue-500/10 border border-blue-500/20 p-3 rounded-lg text-xs text-blue-200 mb-4">
+                            We'll send you a magic link to sign in instantly. No password required.
+                        </div>
+                    ) : null}
 
                     <button
                         type="submit"
                         disabled={loading}
                         className="w-full bg-gradient-to-r from-neonBlue to-purple-600 text-white font-semibold py-3 rounded-lg hover:opacity-90 transition-all disabled:opacity-50 hover:scale-[1.02]"
                     >
-                        {loading ? 'Sending Magic Link...' : 'Send Magic Link'}
+                        {loading ? 'Processing...' : (password ? 'Log In' : 'Send Magic Link')}
                     </button>
                 </form>
 

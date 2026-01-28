@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from 'next';
+import Script from 'next/script';
 import './globals.css';
 import { Providers } from './providers';
 import { CookieConsent } from '@/components/CookieConsent';
+import { GlobalGameListener } from '@/components/GlobalGameListener';
 
 export const viewport: Viewport = {
     themeColor: '#000000', // Black status bar for seamless look
@@ -72,6 +74,7 @@ export default function RootLayout({
         <html lang="en" suppressHydrationWarning>
             <head>
                 <script
+                    id="schema-org"
                     type="application/ld+json"
                     dangerouslySetInnerHTML={{
                         __html: JSON.stringify({
@@ -80,31 +83,30 @@ export default function RootLayout({
                             name: '3DBD',
                             applicationCategory: 'Game',
                             genre: 'Strategy Game',
-                            description: 'Play 3DBD, the ultimate 3D Four in a Row game online. Challenge friends, compete globally, and master the 4x4x4 board.',
-                            url: process.env.NEXTAUTH_URL || 'https://3dbd.vercel.app',
+                            description: 'Play 3DBD, the ultimate 3D Four in a Row game online.',
+                            url: 'https://3dbd.vercel.app',
                             operatingSystem: 'Web Browser',
                             offers: {
                                 '@type': 'Offer',
-                                price: '19.99',
+                                price: '0',
                                 priceCurrency: 'USD',
-                                priceValidUntil: '2026-12-31',
                                 availability: 'https://schema.org/InStock',
-                            },
-                            aggregateRating: {
-                                '@type': 'AggregateRating',
-                                ratingValue: '4.8',
-                                reviewCount: '1250',
-                            },
+                            }
                         }),
                     }}
                 />
-                {/* Google AdSense */}
-                <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-YOUR_PUBLISHER_ID_HERE" crossOrigin="anonymous"></script>
             </head>
             <body className="bg-black text-white antialiased overflow-hidden selection:bg-neonPink selection:text-white" suppressHydrationWarning>
+                {/* Google AdSense via Strategy to avoid Hydration issues */}
+                <Script
+                    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-YOUR_PUBLISHER_ID_HERE"
+                    crossOrigin="anonymous"
+                    strategy="afterInteractive"
+                />
                 <Providers>
                     {children}
                     <CookieConsent />
+                    <GlobalGameListener />
                 </Providers>
             </body>
         </html>

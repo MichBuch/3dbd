@@ -437,8 +437,8 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                             ← Back
                         </button>
 
-                        <h2 className="text-3xl font-bold text-white mb-2">{t.welcomeBack}</h2>
-                        <p className="text-gray-400 mb-6">{t.loginSubtitle}</p>
+                        <h2 className="text-3xl font-bold text-white mb-2 text-center">{t.welcomeBack}</h2>
+                        <p className="text-gray-400 mb-6 text-center">{t.loginSubtitle}</p>
 
                         <div className="mb-6">
                             <p className="text-gray-400 text-sm mb-4 text-center">{t.connectWith}</p>
@@ -480,7 +480,16 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                                 />
                             </div>
                             <div className="w-full flex flex-col items-center">
-                                <label className="block text-sm text-gray-300 mb-2 w-1/2 text-left">Password (Optional)</label>
+                                <div className="flex justify-between items-center w-1/2 mb-2">
+                                    <label className="block text-sm text-gray-300">Password (Optional)</label>
+                                    <button
+                                        type="button"
+                                        onClick={() => window.location.href = '/auth/forgot-password'}
+                                        className="text-xs text-blue-400 hover:underline"
+                                    >
+                                        Forgot Password?
+                                    </button>
+                                </div>
                                 <input
                                     type="password"
                                     value={password}

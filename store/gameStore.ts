@@ -60,12 +60,16 @@ interface GameState {
     setTheme: (theme: Partial<Theme>) => void;
     setPreference: <K extends keyof UserPreferences>(key: K, value: UserPreferences[K]) => void;
     resetPreferences: () => void;
+    setGameId: (id: string | null) => void;
 
     // Multiplayer Sync setters
     setBoard: (board: BoardState) => void;
     setCurrentPlayer: (player: Player) => void;
     setWinner: (winner: Player | 'draw' | null) => void;
     setScores: (scores: { white: number; black: number }) => void;
+    // Robust Sync Action
+    setSyncState: (serverState: Partial<GameState>) => void;
+
     // Rematch State
     rematchState: {
         requested: boolean; // Did *I* request it?
@@ -222,6 +226,38 @@ export const useGameStore = create<GameState & { difficulty: number, setDifficul
             setScores: (scores) => set({ scores }),
             setGameId: (id) => set({ gameId: id }),
 
+            setSyncState: (serverState) => {
+                const local = get();
+
+                // 1. If server indicates game over, always accept
+                if (serverState.winner || serverState.winningCells?.length) {
+                    set((state) => ({ ...state, ...serverState }));
+                    return;
+                }
+
+                // 2. Version Check
+                const serverMoves = serverState.moveHistory?.length || 0;
+                const localMoves = local.moveHistory.length;
+
+                // SPECIAL CASE: Game Reset / Rematch
+                // If server has 0 moves but we have moves...
+                // Trust the server. It's the authority. 
+                // If server says "New Game" (0 moves), we reset.
+                if (serverMoves === 0 && localMoves > 0) {
+                    set((state) => ({ ...state, ...serverState }));
+                    return;
+                }
+
+                if (serverMoves > localMoves) {
+                    // Server is ahead -> Fast Forward
+                    set((state) => ({ ...state, ...serverState }));
+                } else if (serverMoves === localMoves) {
+                    // Constant sync
+                    set((state) => ({ ...state, ...serverState }));
+                }
+                // else: serverMoves < localMoves (Optimistic, ignore)
+            },
+
             rematchState: { requested: false, opponentRequested: false, status: 'none' },
             setRematchState: (newState) => set((state) => ({ rematchState: { ...state.rematchState, ...newState } })),
 
@@ -287,23 +323,9 @@ export const useGameStore = create<GameState & { difficulty: number, setDifficul
 
                 // ---------------------------------------------------------
                 // PERSISTENCE (Release Drill)
-                // Sync state to DB if this is a persisted game (user logged in)
+                // Sync state to DB is now handled by the SyncListener component
+                // in app/game/[id]/page.tsx to ensure full state (including history) is sent.
                 // ---------------------------------------------------------
-                const { gameId } = get();
-                if (gameId) {
-                    // Fire and forget - don't await to keep UI snappy
-                    fetch('/api/games/sync', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            gameId,
-                            board: newBoard,
-                            currentPlayer: currentPlayer === 'white' ? 'black' : 'white',
-                            scores: newScores,
-                            winner: newWinner
-                        })
-                    }).catch(err => console.error("Sync Failed:", err));
-                }
             },
 
             makeAiMove: () => {

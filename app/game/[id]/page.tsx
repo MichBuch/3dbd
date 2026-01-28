@@ -33,6 +33,13 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
     useEffect(() => {
         if (!session) return;
 
+        // Reset Store if entering a new game ID
+        // This prevents "Ghost Beads" from previous games appearing
+        if (useGameStore.getState().gameId !== id) {
+            useGameStore.getState().resetGame();
+            useGameStore.getState().setGameId(id);
+        }
+
         fetch(`/api/games/${id}`)
             .then(res => res.json())
             .then(data => {
@@ -75,6 +82,9 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
     const lastHeartbeat = useRef(Date.now());
 
     useEffect(() => {
+        // Set Game ID for Global Listener (Busy Status)
+        useGameStore.getState().setGameId(id);
+
         const interval = setInterval(async () => {
             try {
                 const startTime = Date.now();
@@ -94,8 +104,8 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
                     const opponentRole = myRole === 'white' ? 'black' : 'white';
                     const votes = data.state.rematchVotes || {};
 
-                    // Atomic update
-                    useGameStore.setState({
+                    // Use Robust Sync Action
+                    useGameStore.getState().setSyncState({
                         board: data.state.board,
                         currentPlayer: data.state.currentPlayer,
                         // Only sync winner if we aren't already locally aware (to avoid flicker) or if it CLEARED (rematch)
@@ -116,8 +126,18 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
                             opponentName: (data.whitePlayerId === session?.user?.id
                                 ? data.players?.black?.name
                                 : data.players?.white?.name) || 'Waiting...'
-                        }
+                        },
+
+                        // Pass Move History for Version Check
+                        moveHistory: data.state.moveHistory || []
                     });
+
+                    // Detect Bot Takeover
+                    if (data.mode === 'ai' && !useGameStore.getState().isAiEnabled) {
+                        useGameStore.setState({ isAiEnabled: true });
+                        // Optionally notify user via Toast?
+                        // For now, the game just continues seamlessly.
+                    }
 
                     setGameData(data);
                 }
@@ -130,8 +150,12 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
             }
         }, 1000); // Optimized to 1s polling
 
-        return () => clearInterval(interval);
-    }, [id, setBoard, setCurrentPlayer, session]);
+        return () => {
+            clearInterval(interval);
+            // Clear Busy Status on Exit
+            useGameStore.getState().setGameId(null);
+        };
+    }, [id, session]);
 
     // Connection Badge Component (Inline)
     const ConnectionBadge = () => (
@@ -181,7 +205,7 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
 
 // Component to listen to store changes and push to server
 function SyncListener({ gameId, isMyTurn }: { gameId: string, isMyTurn: boolean }) {
-    const { board, currentPlayer, scores, winner, winningCells } = useGameStore(); // Use scores object
+    const { board, currentPlayer, scores, winner, winningCells, moveHistory } = useGameStore(); // Use scores object
     const previousBoard = useRef(board);
     const firstRun = useRef(true);
 
@@ -193,7 +217,21 @@ function SyncListener({ gameId, isMyTurn }: { gameId: string, isMyTurn: boolean 
 
         // Simple diff check (reference usually changes in Zustand on updates)
         if (board !== previousBoard.current) {
+            // STOP SYNC if game is over. 
+            // We should not push "old" winner state over a "new" empty board.
+            // Was: if (winner) return; 
+            // We MUST sync if there is a winner, otherwise the opponent never sees the checkmate move.
+
+            console.log("SyncListener Triggered:", { isMyTurn, winner, action: 'check' });
+
             if (isMyTurn) {
+                console.log("SyncListener: Sending Move...", {
+                    currentPlayer,
+                    whiteScore: scores.white,
+                    blackScore: scores.black,
+                    moveCount: moveHistory.length
+                });
+
                 // Pushing move to server
                 fetch(`/api/games/${gameId}`, {
                     method: 'POST',
@@ -203,19 +241,24 @@ function SyncListener({ gameId, isMyTurn }: { gameId: string, isMyTurn: boolean 
                             state: {
                                 board: board,
                                 currentPlayer: currentPlayer,
-                                winningCells: winningCells // Push winning cells
+                                winningCells: winningCells, // Push winning cells
+                                moveHistory: moveHistory // Push move history
                             },
                             // Extract scores from object
                             whiteScore: scores.white,
                             blackScore: scores.black,
-                            winnerId: winner ? 'winner' : null
+                            winnerId: winner ? (currentPlayer === 'white' ? 'black' : 'white') : null // Win logic is complex, usually 'winner' from store is the winner string 'white'/'black'
+                            // Wait, store 'winner' IS 'white'/'black'. And 'currentPlayer' has already flipped.
+                            // If `winner` is 'white', then winnerId should be mapped to the player. 
+                            // BE handles generic 'winnerId' which might be the string 'white'/'black' mapped or null.
+                            // Let's pass the raw store value and let backend decide or pass 'white'/'black' explicitly.
                         }
                     })
-                });
+                }).catch(e => console.error("Sync Send Error:", e));
             }
             previousBoard.current = board;
         }
-    }, [board, currentPlayer, isMyTurn, gameId, scores, winner, winningCells]);
+    }, [board, currentPlayer, isMyTurn, gameId, scores, winner, winningCells, moveHistory]);
 
     return null;
 }

@@ -4,7 +4,7 @@ import { useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslation } from '@/lib/translations';
 import { useSession } from "next-auth/react";
-import { Trophy, Settings, X, Flag } from 'lucide-react';
+import { Trophy, Settings, X, Flag, AlertTriangle } from 'lucide-react';
 import { AdContainer } from '@/components/Ads/AdContainer';
 import { Lobby } from '@/components/Game/Lobby';
 import { saveGameResult } from '@/app/actions/game';
@@ -53,27 +53,19 @@ export const GameUI = () => {
     const handleResign = async () => {
         if (!gameId) return;
         try {
-            // 1. Resign API
             const res = await fetch(`/api/game/${gameId}/resign`, {
                 method: 'POST',
                 body: JSON.stringify({ reason: resignReason })
             });
             const data = await res.json();
-
             if (data.success) {
-                // 2. Chat Message
                 const message = `🏳️ I resigned: ${resignReason || 'Good game!'}`;
                 await fetch(`/api/game/${gameId}/chat`, {
                     method: 'POST',
                     body: JSON.stringify({ text: message })
                 });
-
                 setShowResignDialog(false);
                 setResignReason('');
-                // Game store polling (or socket) should pick up the "ended" state soon.
-                // For immediate feedback, we could force a reload or store update, 
-                // but let's trust the polling/heartbeat mechanism of the game store first.
-                // Actually, best to reload to ensure state sync if polling is slow.
                 window.location.reload();
             } else {
                 alert(data.error || "Failed to resign");
@@ -81,6 +73,18 @@ export const GameUI = () => {
         } catch (e) {
             console.error(e);
         }
+    };
+
+    const handleAbort = async () => {
+        if (!gameId || !confirm("Are you sure you want to FORCE END this game? It will be marked as aborted/draw.")) return;
+        try {
+            const res = await fetch(`/api/games/${gameId}/abort`, { method: 'POST' });
+            if (res.ok) {
+                window.location.reload();
+            } else {
+                alert("Failed to abort");
+            }
+        } catch (e) { console.error(e); }
     };
 
     const handleUpgrade = async (plan: 'monthly' | 'yearly' = 'yearly') => {
@@ -279,6 +283,14 @@ export const GameUI = () => {
                                 Confirm Resign
                             </button>
                         </div>
+                        <div className="mt-4 pt-4 border-t border-white/10 text-center">
+                            <button
+                                onClick={handleAbort}
+                                className="text-xs text-red-700 hover:text-red-500 flex items-center justify-center gap-1 mx-auto"
+                            >
+                                <AlertTriangle size={12} /> Force End (Stuck Game)
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
@@ -312,24 +324,17 @@ export const GameUI = () => {
                             {gameId ? (
                                 <button
                                     onClick={async () => {
-                                        if (useGameStore.getState().rematchState.requested) return;
-
-                                        // Request Rematch
-                                        useGameStore.getState().setRematchState({ requested: true });
-
-                                        await fetch(`/api/games/${gameId}`, {
-                                            method: 'POST',
-                                            body: JSON.stringify({ action: 'rematch' })
+                                        // NEW FLOW: Leave Game (Bot takes over)
+                                        // User gets a fresh start at Home
+                                        await fetch(`/api/games/${gameId}/leave`, {
+                                            method: 'POST'
                                         });
+                                        // Hard Redirect to ensure fresh state
+                                        window.location.href = '/';
                                     }}
-                                    className={`px-10 py-4 rounded-full font-bold text-xl transition-all ${useGameStore.getState().rematchState.requested
-                                            ? 'bg-gray-500 text-white cursor-wait'
-                                            : 'bg-white text-black hover:scale-105 hover:shadow-[0_0_20px_rgba(255,255,255,0.5)]'
-                                        }`}
+                                    className="bg-white text-black px-10 py-4 rounded-full font-bold text-xl hover:scale-105 hover:shadow-[0_0_20px_rgba(255,255,255,0.5)] transition-all"
                                 >
-                                    {useGameStore.getState().rematchState.requested
-                                        ? (useGameStore.getState().rematchState.status === 'accepted' ? 'Rematch Starting...' : 'Waiting for Opponent...')
-                                        : t.playAgain}
+                                    {t.playAgain} / New Game
                                 </button>
                             ) : (
                                 <button

@@ -381,7 +381,7 @@ export const Bead = ({ position, color, player, isWinning = false, scale = 1, sk
     let finalColor = new THREE.Color(color);
     let roughness = isWinning ? 0.1 : 0.3;
     let metalness = isWinning ? 0.9 : 0.4;
-    let emissiveIntensity = isWinning ? 0.8 : 0;
+    let emissiveIntensity = isWinning ? 3.0 : 0; // Much brighter default glow
 
     // Geometry Selection
     let geometry = effectiveSkin === 'rubik'
@@ -405,7 +405,7 @@ export const Bead = ({ position, color, player, isWinning = false, scale = 1, sk
 
         if (isWinning) {
             // Strong yellow glow for moon, red for mars
-            emissiveIntensity = 2.0;
+            emissiveIntensity = 4.0; // Boost space glow
             metalness = 0.5;
         } else {
             metalness = 0.1;
@@ -419,8 +419,8 @@ export const Bead = ({ position, color, player, isWinning = false, scale = 1, sk
         roughness = 1.0;
         metalness = 0.0;
         if (isWinning) {
-            emissiveIntensity = 0.4;
-            finalColor.multiplyScalar(1.2);
+            emissiveIntensity = 2.5; // Boost tennis glow
+            finalColor.multiplyScalar(1.5);
         }
     } else if (skin === 'easter') {
         const hexColor = player === 'white' ? '#FFB7B2' : '#B5EAD7';
@@ -428,37 +428,38 @@ export const Bead = ({ position, color, player, isWinning = false, scale = 1, sk
         map = createPatternTexture('easter', hexColor) || null;
         roughness = 0.5;
         metalness = 0.1;
+        if (isWinning) emissiveIntensity = 2.5;
     } else if (skin === 'xmas') {
         const hexColor = player === 'white' ? '#D42426' : '#165B33';
         finalColor = new THREE.Color(hexColor);
         map = createPatternTexture('xmas', hexColor) || null;
         metalness = 0.9;
         roughness = 0.1;
-        if (isWinning) emissiveIntensity = 1.0;
+        if (isWinning) emissiveIntensity = 3.0;
     } else if (skin === 'wood') {
         map = createWoodTexture(color) || null;
         roughness = 0.8;
         metalness = 0.0;
-        if (isWinning) emissiveIntensity = 0.3;
+        if (isWinning) emissiveIntensity = 1.5; // Wood shouldn't glow TOO much, but needs visibility
     } else if (skin === 'rubik') {
         // Rubik logic
         map = createRubikTexture(player === 'white' ? '#ffffff' : '#ff0000') || null;
         roughness = 0.2; // Plastic
         metalness = 0.1;
-        if (isWinning) emissiveIntensity = 0.5;
+        if (isWinning) emissiveIntensity = 2.5;
     } else if (effectiveSkin === 'toys') {
         // High Gloss Plastic
         roughness = 0.05;
         metalness = 0.1;
         // Keep base color from config
         if (isWinning) {
-            emissiveIntensity = 0.5;
-            finalColor.multiplyScalar(1.5);
+            emissiveIntensity = 2.5;
+            finalColor.multiplyScalar(2.0);
         }
     }
 
     if (skin === 'default') {
-        if (isWinning) finalColor.multiplyScalar(1.2);
+        if (isWinning) finalColor.multiplyScalar(1.5);
         else finalColor.multiplyScalar(0.9);
     }
 

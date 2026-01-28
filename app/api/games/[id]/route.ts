@@ -96,15 +96,33 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
         // SUBMIT MOVE
         if (action === 'move') {
+            console.log(`[API] Move Received for Game ${id}`);
             // Validate turn
-            // Save new state
+
+            // Fix Winner ID Mapping
+            // gameState.winnerId might be 'white'/'black' string or null?
+            // The frontend is sending: winner ? (currentPlayer==='white'?'black':'white') : null
+            // Actually let's assume frontend sends 'white' | 'black' | 'draw' | null string in a field called 'winner' inside gameState?
+            // No, look at previous code: winnerId: winner ? 'winner' : null. 
+
+            // Let's trust the FE to send "moveHistory" and "board".
+            // We need to determine if finished.
+
+            const winningPlayer = gameState.state.winningCells?.length > 0
+                ? (gameState.state.currentPlayer === 'white' ? 'black' : 'white') // The person who JUST moved wins. CurrentPlayer is already next.
+                : null;
+
+            const winnerId = winningPlayer === 'white'
+                ? game.whitePlayerId
+                : (winningPlayer === 'black' ? game.blackPlayerId : null);
+
             await db.update(games)
                 .set({
                     state: gameState.state, // Board + currentTurn
                     whiteScore: gameState.whiteScore,
                     blackScore: gameState.blackScore,
-                    winnerId: gameState.winnerId,
-                    isFinished: !!gameState.winnerId,
+                    winnerId: winnerId,
+                    isFinished: !!winnerId,
                     updatedAt: new Date()
                 })
                 .where(eq(games.id, id));
@@ -127,6 +145,25 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             votes[role] = true;
 
             // Check Consensus
+            // ROBUST AUTO-VOTE: Check if opponent is a Bot using DB lookup (if mode check failed)
+            let isBotOpponent = game.mode === 'ai' || !game.blackPlayerId;
+
+            if (!isBotOpponent && game.blackPlayerId) {
+                // Double check if the user is actually a bot (legacy games or mode mismatch)
+                const blackUser = await db.query.users.findFirst({
+                    where: eq(users.id, game.blackPlayerId),
+                    columns: { isBot: true }
+                });
+                if (blackUser?.isBot) {
+                    isBotOpponent = true;
+                }
+            }
+
+            if (isBotOpponent) {
+                votes.white = true;
+                votes.black = true; // Bot/System always wants to play
+            }
+
             if (votes.white && votes.black) {
                 // RESET GAME
                 const newBoard = Array(4).fill(null).map(() => Array(4).fill(null).map(() => Array(4).fill(null)));
@@ -138,7 +175,9 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
                         board: newBoard,
                         currentPlayer: newStarter,
                         lastMove: null,
-                        rematchVotes: { white: false, black: false } // Clear votes
+                        rematchVotes: { white: false, black: false }, // Clear votes
+                        moveHistory: [], // Explicitly clear move history
+                        winningCells: [] // Explicitly clear winning cells
                     },
                     winnerId: null, // Clear winner
                     isFinished: false,

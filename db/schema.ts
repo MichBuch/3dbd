@@ -297,7 +297,18 @@ export const systemSettings = pgTable("system_settings", {
     key: text("key").primaryKey(), // e.g., 'theme_music_dark'
     value: text("value").notNull(), // URL or JSON
     description: text("description"),
-    updatedAt: timestamp("updated_at").defaultNow(),
     updatedBy: text("updated_by").references(() => users.id),
 });
+
+export const passwordResetTokens = pgTable(
+    "password_reset_token",
+    {
+        identifier: text("identifier").notNull(),
+        token: text("token").notNull(),
+        expires: timestamp("expires", { mode: "date" }).notNull(),
+    },
+    (t) => ({
+        pk: primaryKey({ columns: [t.identifier, t.token] }),
+    })
+);
 
