@@ -37,7 +37,7 @@ export async function POST(req: Request) {
             updatedBy: session.user.id
         }).onConflictDoUpdate({
             target: systemSettings.key,
-            set: { value, updatedAt: new Date(), updatedBy: session.user.id }
+            set: { value, updatedBy: session.user.id }
         });
 
         return NextResponse.json({ success: true });

@@ -4,14 +4,14 @@ import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const session = await auth();
         if (!session?.user?.email) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const gameId = params.id;
+        const { id: gameId } = await params;
 
         // Verify the game exists and user is a player (or just allow it for now if stuck?)
         // Safer to check player.
@@ -25,7 +25,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
         // Allow players or admin to abort
         const isPlayer = game.whitePlayerId === session.user.id || game.blackPlayerId === session.user.id;
-        const isAdmin = session.user.role === 'admin' || session.user.email === 'michbuch1966@gmail.com'; // Hardcoded fallback
+        const isAdmin = session.user.admin || session.user.email === 'michbuch1966@gmail.com'; // Hardcoded fallback
 
         // Identify legacy/migrated users by name/email match if IDs differ (common in dev seed)
         // ... (Skipping complex logic, assume IDs match or Admin force)
@@ -39,8 +39,8 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         // Force End
         await db.update(games)
             .set({
-                winner: 'draw', // Or 'aborted' if schema allows
-                status: 'finished',
+                winnerId: null, // Draw
+                isFinished: true,
                 // Optional: Clear board data to be safe?
                 // state: ... 
             })
