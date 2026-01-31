@@ -53,6 +53,7 @@ interface GameState {
 
     // Actions
     resetGame: () => void;
+    forceReset: () => void; // Hard reset including persistence keys if needed
     dropBead: (x: number, y: number) => void;
     checkWin: (board: BoardState) => Player | null;
     setAiEnabled: (enabled: boolean) => void;
@@ -212,6 +213,24 @@ export const useGameStore = create<GameState & { difficulty: number, setDifficul
                 lastSynced: 0
             }),
 
+            forceReset: () => {
+                // Clear LOCAL state immediately
+                set({
+                    board: Array(4).fill(null).map(() => Array(4).fill(null).map(() => Array(4).fill(null))),
+                    currentPlayer: 'white',
+                    winner: null,
+                    scores: { white: 0, black: 0 },
+                    winningCells: [],
+                    moveHistory: [],
+                    gameId: null,
+                    rematchState: { requested: false, opponentRequested: false, status: 'none' },
+                    lastSynced: 0
+                });
+                // In a persisted store, `set` updates localStorage automatically.
+                // However, if we need to nuking specific keys external to this store, do it here.
+                localStorage.removeItem('guest_id'); // Optional: reset guest identity if issues persist? No, keep guest.
+            },
+
             setAiEnabled: (enabled) => set({ isAiEnabled: enabled }),
             setDifficulty: (d) => set({ difficulty: d }),
             setTheme: (newTheme) => set((state) => ({ theme: { ...state.theme, ...newTheme } })),
@@ -241,10 +260,20 @@ export const useGameStore = create<GameState & { difficulty: number, setDifficul
 
                 // SPECIAL CASE: Game Reset / Rematch
                 // If server has 0 moves but we have moves...
-                // Trust the server. It's the authority. 
-                // If server says "New Game" (0 moves), we reset.
+                // We must distinguish between "I just made Move 1 and Server hasn't seen it" (Lag)
+                // vs "We finished a game and Server reset it" (Rematch).
+                const isLocalFinished = !!local.winner || local.winningCells.length > 0;
+
                 if (serverMoves === 0 && localMoves > 0) {
-                    set((state) => ({ ...state, ...serverState }));
+                    // Only Force Sync (Reset) if:
+                    // 1. We thought the game was over (Rematch scenario)
+                    // 2. We are desynced by a huge amount (Generic safety)
+                    if (isLocalFinished || localMoves > 2) {
+                        set((state) => ({ ...state, ...serverState }));
+                        return;
+                    }
+                    // Otherwise: It is likely Move 1 Lag. Maintain Optimistic State.
+                    // Do NOT sync.
                     return;
                 }
 

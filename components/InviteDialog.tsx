@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { X, Mail, MessageCircle, Copy, Check, Smartphone, Share2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Mail, MessageCircle, Copy, Check, Smartphone, Share2, Loader2 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 
 interface InviteDialogProps {
@@ -13,30 +13,37 @@ export function InviteDialog({ isOpen, onClose }: InviteDialogProps) {
     const { data: session } = useSession();
     const [copied, setCopied] = useState(false);
     const [email, setEmail] = useState('');
+    const [inviteCode, setInviteCode] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (isOpen && !inviteCode) {
+            setLoading(true);
+            fetch('/api/invites', { method: 'POST' })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.code) {
+                        setInviteCode(data.code);
+                    } else {
+                        setError('Failed to generate code');
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    setError('Connection error');
+                })
+                .finally(() => setLoading(false));
+        }
+    }, [isOpen]);
 
     if (!isOpen) return null;
 
-    // Generate a generic invite link (landing page)
-    // For specific game invites, we'd need game context, but Header is usually global.
-    // If we want a specific "Connect" invite, we use the code flow.
-    // user requested "Invite via email, whatsapp, sms or cut and paste".
-
-    // Let's assume this is a generic "Come play with me" link for now, 
-    // unless we are in a game context. 
-    // Given it's in the Header, it's likely a global app invite or friend connection invite.
-
-    // Ideally, this should generate a unique invite CODE for friend connection.
-    // But for a simple "Invite", the homepage URL is safest if no specific feature is triggered.
-    // However, the user mentioned "copy invite link does not work... leads to hydration error", 
-    // implying there IS an existing link logic.
-
-    // We'll fetch the invite code on mount or use a static one?
-    // Let's implement the UI first and fetch logic inside.
-
-    const inviteUrl = typeof window !== 'undefined' ? window.location.origin : '';
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const inviteUrl = inviteCode ? `${origin}/invite/${inviteCode}` : (loading ? 'Generating link...' : 'Error generating link');
 
     const handleCopy = async () => {
+        if (!inviteCode) return;
         try {
             await navigator.clipboard.writeText(inviteUrl);
             setCopied(true);
@@ -47,19 +54,21 @@ export function InviteDialog({ isOpen, onClose }: InviteDialogProps) {
     };
 
     const handleWhatsApp = () => {
+        if (!inviteCode) return;
         const text = encodeURIComponent(`Come play 3DBD with me! It's an awesome 3D Connect 4 game. Play here: ${inviteUrl}`);
         window.open(`https://wa.me/?text=${text}`, '_blank');
     };
 
     const handleSMS = () => {
+        if (!inviteCode) return;
         const text = encodeURIComponent(`Come play 3DBD with me! ${inviteUrl}`);
         window.open(`sms:?body=${text}`, '_blank');
     };
 
     const handleEmail = (e: React.FormEvent) => {
         e.preventDefault();
-        // Use mailto for simplicity, or backend API if needed. 
-        // Mailto is safer for "client-side only" interaction without backend spam risk.
+        if (!inviteCode) return;
+
         const subject = encodeURIComponent("Play 3DBD with me!");
         const body = encodeURIComponent(`Hey,\n\nI'm playing 3DBD, a cool 3D strategy game. Come join me!\n\n${inviteUrl}`);
         window.open(`mailto:${email}?subject=${subject}&body=${body}`, '_blank');
@@ -85,39 +94,52 @@ export function InviteDialog({ isOpen, onClose }: InviteDialogProps) {
 
                 {/* Copy Link Section */}
                 <div className="bg-white/5 rounded-xl p-4 mb-6 border border-white/10 flex items-center gap-3">
-                    <code className="flex-1 text-neonBlue text-sm truncate font-mono">
-                        {inviteUrl}
-                    </code>
-                    <button
-                        onClick={handleCopy}
-                        className={`p-2 rounded-lg transition-all ${copied
-                            ? 'bg-green-500/20 text-green-500'
-                            : 'bg-white/10 text-white hover:bg-white/20'
-                            }`}
-                        title="Copy to Clipboard"
-                    >
-                        {copied ? <Check size={18} /> : <Copy size={18} />}
-                    </button>
+                    {loading ? (
+                        <div className="flex items-center gap-2 text-white/50 w-full justify-center py-2">
+                            <Loader2 size={16} className="animate-spin" /> Generating Link...
+                        </div>
+                    ) : error ? (
+                        <div className="text-red-500 text-sm w-full text-center">{error}</div>
+                    ) : (
+                        <>
+                            <code className="flex-1 text-neonBlue text-sm truncate font-mono">
+                                {inviteUrl}
+                            </code>
+                            <button
+                                onClick={handleCopy}
+                                className={`p-2 rounded-lg transition-all ${copied
+                                    ? 'bg-green-500/20 text-green-500'
+                                    : 'bg-white/10 text-white hover:bg-white/20'
+                                    }`}
+                                title="Copy to Clipboard"
+                            >
+                                {copied ? <Check size={18} /> : <Copy size={18} />}
+                            </button>
+                        </>
+                    )}
                 </div>
 
                 <div className="grid grid-cols-3 gap-3 mb-6">
                     <button
                         onClick={handleWhatsApp}
-                        className="flex flex-col items-center gap-2 p-3 bg-green-500/10 text-green-500 hover:bg-green-500/20 border border-green-500/20 rounded-lg transition-colors"
+                        disabled={loading || !inviteCode}
+                        className="flex flex-col items-center gap-2 p-3 bg-green-500/10 text-green-500 hover:bg-green-500/20 border border-green-500/20 rounded-lg transition-colors disabled:opacity-50"
                     >
                         <MessageCircle size={24} />
                         <span className="text-xs font-bold">WhatsApp</span>
                     </button>
                     <button
                         onClick={handleSMS}
-                        className="flex flex-col items-center gap-2 p-3 bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 border border-blue-500/20 rounded-lg transition-colors"
+                        disabled={loading || !inviteCode}
+                        className="flex flex-col items-center gap-2 p-3 bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 border border-blue-500/20 rounded-lg transition-colors disabled:opacity-50"
                     >
                         <Smartphone size={24} />
                         <span className="text-xs font-bold">SMS</span>
                     </button>
                     <button
                         onClick={() => window.open(`mailto:?subject=Play 3DBD&body=${inviteUrl}`, '_self')}
-                        className="flex flex-col items-center gap-2 p-3 bg-white/10 text-white hover:bg-white/20 border border-white/20 rounded-lg transition-colors"
+                        disabled={loading || !inviteCode}
+                        className="flex flex-col items-center gap-2 p-3 bg-white/10 text-white hover:bg-white/20 border border-white/20 rounded-lg transition-colors disabled:opacity-50"
                     >
                         <Mail size={24} />
                         <span className="text-xs font-bold">Email App</span>
@@ -125,7 +147,8 @@ export function InviteDialog({ isOpen, onClose }: InviteDialogProps) {
                     {typeof navigator !== 'undefined' && navigator.share && (
                         <button
                             onClick={() => navigator.share({ title: 'Play 3DBD', text: 'Come play 3DBD with me!', url: inviteUrl })}
-                            className="flex flex-col items-center gap-2 p-3 bg-white/10 text-white hover:bg-white/20 border border-white/20 rounded-lg transition-colors"
+                            disabled={loading || !inviteCode}
+                            className="flex flex-col items-center gap-2 p-3 bg-white/10 text-white hover:bg-white/20 border border-white/20 rounded-lg transition-colors disabled:opacity-50"
                         >
                             <Share2 size={24} />
                             <span className="text-xs font-bold">Share</span>
@@ -147,7 +170,8 @@ export function InviteDialog({ isOpen, onClose }: InviteDialogProps) {
                         />
                         <button
                             type="submit"
-                            className="bg-neonPink hover:bg-neonPink/80 text-black font-bold px-4 py-2 rounded-lg text-sm transition-colors"
+                            disabled={loading || !inviteCode}
+                            className="bg-neonPink hover:bg-neonPink/80 text-black font-bold px-4 py-2 rounded-lg text-sm transition-colors disabled:opacity-50"
                         >
                             Send
                         </button>

@@ -36,6 +36,36 @@ export const GlobalGameListener = () => {
 
     const myId = session?.user?.id || guestId;
 
+    // 1.5. Validate Game State (Prevent Phantom Games)
+    useEffect(() => {
+        if (!activeGameId) return;
+
+        const validateGame = async () => {
+            try {
+                const res = await fetch(`/api/games/${activeGameId}`);
+                if (res.status === 404) {
+                    console.log("👻 Phantom game detected (404). Resetting...");
+                    useGameStore.getState().forceReset();
+                    return;
+                }
+                const data = await res.json();
+                if (data.isFinished) {
+                    console.log("🏁 Game finished on server. Resetting local state...");
+                    // Optional: If we want to show the winner, we might NOT want to reset immediately?
+                    // BUT user reported "reloads old game on board". 
+                    // If it's finished, we should probably clear it or show "Game Over" screen.
+                    // If the user is on the HOME page and sees a board, it's a bug.
+                    if (!pathname?.startsWith('/game/')) {
+                        useGameStore.getState().forceReset();
+                    }
+                }
+            } catch (e) {
+                console.error("Game validation failed", e);
+            }
+        };
+        validateGame();
+    }, [activeGameId, pathname]);
+
     // 2. Poll for Challenges & Send Heartbeat
     useEffect(() => {
         if (!myId) return;

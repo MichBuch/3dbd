@@ -108,9 +108,30 @@ export function Header() {
 
                         {/* Replay / Reset Button */}
                         <button
-                            onClick={() => useGameStore.getState().resetGame()}
+                            onClick={async () => {
+                                // 1. Try to tell server we are leaving
+                                const state = useGameStore.getState();
+                                if (state.gameId) {
+                                    try {
+                                        await fetch(`/api/games/${state.gameId}/leave`, { method: 'POST' });
+                                    } catch (e) {
+                                        console.error("Leave failed", e);
+                                    }
+                                }
+
+                                // 2. NUCLEAR OPTION: Manually wipe storage keys
+                                // resolving the "Persist rehydration" race condition
+                                localStorage.removeItem('3dbd-storage-v1');
+                                localStorage.removeItem('guest_id'); // Optional, but safer
+
+                                // 3. Force Internal Store Reset (Visual feedback)
+                                state.forceReset();
+
+                                // 4. HARD Reload to Home (Clears memory, React state, URL)
+                                window.location.href = '/';
+                            }}
                             className="p-2 text-white/50 hover:text-white transition-colors"
-                            title={t.replay}
+                            title={t.replay || "Reset Board"}
                         >
                             <RotateCcw size={20} />
                         </button>
