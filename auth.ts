@@ -66,10 +66,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 password: { label: "Password", type: "password" },
             },
             authorize: async (credentials) => {
+                console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
                 console.log("[Auth] Attempting login for:", credentials?.email);
+                console.log("[Auth] Password provided:", !!credentials?.password);
+                console.log("[Auth] Password length:", credentials?.password?.length);
 
                 if (!credentials?.email || !credentials?.password) {
-                    console.log("[Auth] Missing credentials");
+                    console.log("[Auth] ❌ Missing credentials");
                     return null;
                 }
 
@@ -80,8 +83,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     where: (users, { eq }) => eq(users.email, credentials.email)
                 });
 
+                console.log("[Auth] User found:", !!user);
+                console.log("[Auth] User email:", user?.email);
+                console.log("[Auth] User has password:", !!user?.password);
+                console.log("[Auth] Password hash preview:", user?.password?.substring(0, 20));
+
                 if (!user || !user.password) {
-                    console.log("[Auth] User not found or no password set");
+                    console.log("[Auth] ❌ User not found or no password set");
                     return null;
                 }
 
@@ -91,12 +99,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 // @ts-ignore
                 const isValid = await bcrypt.compare(credentials.password, user.password);
 
+                console.log("[Auth] Password match:", isValid);
+                console.log("[Auth] Input password:", credentials.password);
+
                 if (!isValid) {
-                    console.log("[Auth] Invalid password");
+                    console.log("[Auth] ❌ Invalid password");
                     return null;
                 }
 
-                console.log("[Auth] Login successful for:", user.email);
+                console.log("[Auth] ✅ Login successful for:", user.email);
+                console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
                 return {
                     ...user,

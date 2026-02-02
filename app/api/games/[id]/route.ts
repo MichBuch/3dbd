@@ -49,6 +49,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
                 white: whitePlayer,
                 black: blackPlayer
             }
+        }, {
+            headers: {
+                'Cache-Control': 'no-store, max-age=0, must-revalidate',
+            }
         });
     } catch (error) {
         console.error("Get Game Error:", error);
@@ -88,7 +92,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
             // Join as Black
             await db.update(games)
-                .set({ blackPlayerId: session.user.id })
+                .set({
+                    blackPlayerId: session.user.id,
+                    mode: 'pvp'  // Set to PVP when second player joins
+                })
                 .where(eq(games.id, id));
 
             return NextResponse.json({ success: true, role: 'black' });

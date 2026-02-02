@@ -246,45 +246,11 @@ export const useGameStore = create<GameState & { difficulty: number, setDifficul
             setGameId: (id) => set({ gameId: id }),
 
             setSyncState: (serverState) => {
-                const local = get();
-
-                // 1. If server indicates game over, always accept
-                if (serverState.winner || serverState.winningCells?.length) {
-                    set((state) => ({ ...state, ...serverState }));
-                    return;
-                }
-
-                // 2. Version Check
-                const serverMoves = serverState.moveHistory?.length || 0;
-                const localMoves = local.moveHistory.length;
-
-                // SPECIAL CASE: Game Reset / Rematch
-                // If server has 0 moves but we have moves...
-                // We must distinguish between "I just made Move 1 and Server hasn't seen it" (Lag)
-                // vs "We finished a game and Server reset it" (Rematch).
-                const isLocalFinished = !!local.winner || local.winningCells.length > 0;
-
-                if (serverMoves === 0 && localMoves > 0) {
-                    // Only Force Sync (Reset) if:
-                    // 1. We thought the game was over (Rematch scenario)
-                    // 2. We are desynced by a huge amount (Generic safety)
-                    if (isLocalFinished || localMoves > 2) {
-                        set((state) => ({ ...state, ...serverState }));
-                        return;
-                    }
-                    // Otherwise: It is likely Move 1 Lag. Maintain Optimistic State.
-                    // Do NOT sync.
-                    return;
-                }
-
-                if (serverMoves > localMoves) {
-                    // Server is ahead -> Fast Forward
-                    set((state) => ({ ...state, ...serverState }));
-                } else if (serverMoves === localMoves) {
-                    // Constant sync
-                    set((state) => ({ ...state, ...serverState }));
-                }
-                // else: serverMoves < localMoves (Optimistic, ignore)
+                // SERVER AUTHORITY: Blindly accept server state.
+                // We trust the server is the source of truth.
+                // Any local "lag" or "optimistic" state that disagrees is overwritten.
+                set((state) => ({ ...state, ...serverState }));
+                return;
             },
 
             rematchState: { requested: false, opponentRequested: false, status: 'none' },
@@ -305,6 +271,7 @@ export const useGameStore = create<GameState & { difficulty: number, setDifficul
                     themeSpeed: 1,
                     themeDensity: 'medium',
                     themeEvents: true,
+                    boardDrift: true,
                     soundVolume: 0.5,
                     musicVolume: 0.3,
                 }
@@ -437,11 +404,11 @@ export const useGameStore = create<GameState & { difficulty: number, setDifficul
             }
         }),
         {
-            name: '3dbd-storage-v1', // Updated branding to 3DBD
+            name: '3dbd-storage-v2', // Updated branding to 3DBD - v2 to Clear Cache
             storage: createJSONStorage(() => localStorage),
             partialize: (state) => ({
                 theme: state.theme,
-                isAiEnabled: state.isAiEnabled,
+                // Removed isAiEnabled from persistence to ensure mode is set by Server/URL
                 preferences: state.preferences,
             }),
             // Migrate from old storage key if exists

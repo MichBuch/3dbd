@@ -40,7 +40,7 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
             useGameStore.getState().setGameId(id);
         }
 
-        fetch(`/api/games/${id}`)
+        fetch(`/api/games/${id}?t=${Date.now()}`)
             .then(res => res.json())
             .then(data => {
                 if (data.error) {
@@ -55,6 +55,34 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
                     setTheme({
                         id: data.theme,
                         ...THEME_CONFIG[data.theme]
+                    });
+                }
+
+                // IMMEDIATE STATE SYNC (Rehydrate Store from Server immediately)
+                if (data.state) {
+                    const myRole = data.whitePlayerId === session?.user?.id ? 'white' : 'black';
+                    const opponentRole = myRole === 'white' ? 'black' : 'white';
+                    const votes = data.state.rematchVotes || {};
+
+                    useGameStore.getState().setSyncState({
+                        board: data.state.board,
+                        currentPlayer: data.state.currentPlayer,
+                        winner: data.winnerId ? (data.winnerId === data.whitePlayerId ? 'white' : data.winnerId === data.blackPlayerId ? 'black' : 'draw') : null,
+                        scores: { white: data.whiteScore || 0, black: data.blackScore || 0 },
+                        winningCells: data.state.winningCells || [],
+                        isAiEnabled: data.mode === 'ai',
+                        rematchState: {
+                            requested: votes[myRole] || false,
+                            opponentRequested: votes[opponentRole] || false,
+                            status: (votes.white && votes.black) ? 'accepted' : (votes[myRole] ? 'pending' : 'none')
+                        },
+                        preferences: {
+                            ...useGameStore.getState().preferences,
+                            opponentName: (data.whitePlayerId === session?.user?.id
+                                ? data.players?.black?.name
+                                : data.players?.white?.name) || 'Waiting...'
+                        },
+                        moveHistory: data.state.moveHistory || []
                     });
                 }
 
@@ -88,7 +116,7 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
         const interval = setInterval(async () => {
             try {
                 const startTime = Date.now();
-                const res = await fetch(`/api/games/${id}`);
+                const res = await fetch(`/api/games/${id}?t=${Date.now()}`);
 
                 if (res.status === 401) {
                     // Session expired?

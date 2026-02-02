@@ -324,17 +324,15 @@ export const GameUI = () => {
                             {gameId ? (
                                 <button
                                     onClick={async () => {
-                                        // NEW FLOW: Leave Game (Bot takes over)
-                                        // User gets a fresh start at Home
-                                        await fetch(`/api/games/${gameId}/leave`, {
-                                            method: 'POST'
-                                        });
-                                        // Hard Redirect to ensure fresh state
-                                        window.location.href = '/';
+                                        // NEW FLOW: Hard Reset via API
+                                        if (confirm("Force Reset this game? This will clear the board for everyone.")) {
+                                            await fetch(`/api/games/${gameId}/reset`, { method: 'POST' });
+                                            window.location.reload();
+                                        }
                                     }}
                                     className="bg-white text-black px-10 py-4 rounded-full font-bold text-xl hover:scale-105 hover:shadow-[0_0_20px_rgba(255,255,255,0.5)] transition-all"
                                 >
-                                    {t.playAgain} / New Game
+                                    {t.playAgain} / Reset
                                 </button>
                             ) : (
                                 <button
@@ -357,24 +355,20 @@ export const GameUI = () => {
             )}
 
             {/* Ads & Pricing - Bottom Centered (Hidden for Premium) */}
-            {/* Ads & Pricing - Bottom Centered (Hidden for Premium) */}
+            {/* DISABLED: Ad banner temporarily hidden
             {!isPremium && (
                 <div className="fixed bottom-0 left-0 right-0 z-[100] flex justify-center pointer-events-none">
                     <div className="bg-black/80 backdrop-blur-md border-t border-white/10 px-4 md:px-6 py-2 rounded-t-xl pointer-events-auto flex flex-col xl:flex-row gap-4 items-center justify-center flex-wrap">
-                        {/* Pricing Section Removed */}
-
-                        {/* Ad Banner - Secondary */}
                         <div className="hidden md:flex w-[728px] h-[90px] bg-white/5 items-center justify-center text-white/20 text-xs uppercase tracking-widest border border-dashed border-white/10 overflow-hidden order-2 xl:order-1">
                             <AdContainer slotId="PLACEHOLDER_SLOT_ID" />
                         </div>
-
-                        {/* Mobile Ad Placeholder */}
                         <div className="md:hidden text-[10px] text-white/20 uppercase tracking-widest pb-2 border-b border-white/10 w-full text-center order-3">
                             Support us or Go Pro
                         </div>
                     </div>
                 </div>
             )}
+            */}
 
             {/* Safe Chat - Only renders if connected */}
             {gameId && (

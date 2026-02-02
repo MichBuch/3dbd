@@ -13,7 +13,15 @@ export default function LoginPage() {
     const handleEmailSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        await signIn('nodemailer', { email, callbackUrl: '/' });
+
+        if (password) {
+            // Use credentials login if password is provided
+            await signIn('credentials', { email, password, callbackUrl: '/' });
+        } else {
+            // Use magic link if no password
+            await signIn('nodemailer', { email, callbackUrl: '/' });
+        }
+
         setLoading(false);
     };
 
@@ -86,7 +94,10 @@ export default function LoginPage() {
                             <input
                                 type={showPassword ? "text" : "password"}
                                 value={password}
-                                onChange={(e) => setPassword(e.target.value)}
+                                onChange={(e) => {
+                                    setPassword(e.target.value);
+                                    console.log('Password entered:', e.target.value);
+                                }}
                                 className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-gray-500"
                             />
                             <button

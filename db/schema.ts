@@ -43,6 +43,15 @@ export const users = pgTable("user", {
     referrerId: text("referrer_id"), // Self-reference added in relations
     // Settings Sync
     preferences: json("preferences"),
+    // Guest Tracking
+    ipAddress: text("ip_address"),
+    country: text("country"),
+    city: text("city"),
+    userAgent: text("user_agent"),
+    // Archival
+    isArchived: boolean("is_archived").default(false).notNull(),
+    archivedAt: timestamp("archived_at", { mode: "date" }),
+    archivedBy: text("archived_by"),
 });
 
 export const themeAssets = pgTable("theme_assets", {
