@@ -69,7 +69,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
                 console.log("[Auth] Attempting login for:", credentials?.email);
                 console.log("[Auth] Password provided:", !!credentials?.password);
-                console.log("[Auth] Password length:", credentials?.password?.length);
+                console.log("[Auth] Password length:", (credentials?.password as string)?.length);
 
                 if (!credentials?.email || !credentials?.password) {
                     console.log("[Auth] ❌ Missing credentials");
