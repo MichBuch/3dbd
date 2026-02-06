@@ -377,11 +377,14 @@ export const Bead = ({ position, color, player, isWinning = false, scale = 1, sk
 
     const beadRadius = 0.35 * scale;
 
+    // Get theme-specific emissive strength (default to 3.0 if not specified)
+    const themeEmissiveStrength = (theme as any).emissiveStrength || 3.0;
+
     // Determine visuals based on Skin
     let finalColor = new THREE.Color(color);
     let roughness = isWinning ? 0.1 : 0.3;
     let metalness = isWinning ? 0.9 : 0.4;
-    let emissiveIntensity = isWinning ? 3.0 : 0; // Much brighter default glow
+    let emissiveIntensity = isWinning ? themeEmissiveStrength : 0; // Use theme-specific strength
 
     // Geometry Selection
     let geometry = effectiveSkin === 'rubik'
@@ -404,8 +407,7 @@ export const Bead = ({ position, color, player, isWinning = false, scale = 1, sk
         roughness = 0.9;
 
         if (isWinning) {
-            // Strong yellow glow for moon, red for mars
-            emissiveIntensity = 4.0; // Boost space glow
+            // Theme already has high emissive strength (4.5), use it
             metalness = 0.5;
         } else {
             metalness = 0.1;
@@ -419,7 +421,7 @@ export const Bead = ({ position, color, player, isWinning = false, scale = 1, sk
         roughness = 1.0;
         metalness = 0.0;
         if (isWinning) {
-            emissiveIntensity = 2.5; // Boost tennis glow
+            // Tennis theme has moderate emissive (2.5)
             finalColor.multiplyScalar(1.5);
         }
     } else if (skin === 'easter') {
@@ -428,32 +430,31 @@ export const Bead = ({ position, color, player, isWinning = false, scale = 1, sk
         map = createPatternTexture('easter', hexColor) || null;
         roughness = 0.5;
         metalness = 0.1;
-        if (isWinning) emissiveIntensity = 2.5;
+        // Easter theme has low emissive (1.5) - subtle glow
     } else if (skin === 'xmas') {
         const hexColor = player === 'white' ? '#D42426' : '#165B33';
         finalColor = new THREE.Color(hexColor);
         map = createPatternTexture('xmas', hexColor) || null;
         metalness = 0.9;
         roughness = 0.1;
-        if (isWinning) emissiveIntensity = 3.0;
+        // Xmas theme has good emissive (3.5)
     } else if (skin === 'wood') {
         map = createWoodTexture(color) || null;
         roughness = 0.8;
         metalness = 0.0;
-        if (isWinning) emissiveIntensity = 1.5; // Wood shouldn't glow TOO much, but needs visibility
+        // Wood theme has low emissive (2.0) - shouldn't glow too much
     } else if (skin === 'rubik') {
         // Rubik logic
         map = createRubikTexture(player === 'white' ? '#ffffff' : '#ff0000') || null;
         roughness = 0.2; // Plastic
         metalness = 0.1;
-        if (isWinning) emissiveIntensity = 2.5;
+        // Rubik theme has moderate emissive (2.5)
     } else if (effectiveSkin === 'toys') {
         // High Gloss Plastic
         roughness = 0.05;
         metalness = 0.1;
-        // Keep base color from config
+        // Toys theme has low emissive (2.0)
         if (isWinning) {
-            emissiveIntensity = 2.5;
             finalColor.multiplyScalar(2.0);
         }
     }
