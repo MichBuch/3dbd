@@ -5,6 +5,7 @@ import { users } from '@/db/schema';
 import { desc, gt, and, ne, eq, or } from 'drizzle-orm';
 import { auth } from "@/auth";
 
+
 export async function getOnlineUsers() {
     const session = await auth();
     // Allow guests to see online users? 
@@ -15,6 +16,11 @@ export async function getOnlineUsers() {
     if (!session?.user?.id) return [];
 
     const userId = session.user.id;
+
+    // UPDATE LAST SEEN
+    await db.update(users)
+        .set({ lastSeen: new Date() })
+        .where(eq(users.id, userId));
 
     // Get users seen in the last 5 minutes OR bots (always online), excluding self
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);

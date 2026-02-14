@@ -27,8 +27,49 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
         scores // We don't undo scores, only settings
     } = useGameStore();
 
+
     const { t } = useTranslation();
-    const [openSection, setOpenSection] = useState<'gameplay' | 'audio' | 'appearance' | 'interface' | null>('gameplay');
+    const [openSection, setOpenSection] = useState<'gameplay' | 'audio' | 'appearance' | 'interface' | 'support' | null>('gameplay');
+
+    // Report Issue State
+    const [reportModalOpen, setReportModalOpen] = useState(false);
+    const [reportMessage, setReportMessage] = useState('');
+    const [reportType, setReportType] = useState<'bug' | 'feedback' | 'other'>('bug');
+    const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+    const [showReportSuccess, setShowReportSuccess] = useState(false);
+
+    const handleReportSubmit = async () => {
+        if (!reportMessage.trim()) return;
+
+        setIsSubmittingReport(true);
+
+        try {
+            const formData = new FormData();
+            formData.append('message', reportMessage);
+            formData.append('type', reportType);
+            formData.append('url', window.location.href);
+
+            const { submitFeedback } = await import('@/app/actions/feedback');
+            const result = await submitFeedback(formData);
+
+            if (result.success) {
+                setReportMessage('');
+                setShowReportSuccess(true);
+                setTimeout(() => {
+                    setShowReportSuccess(false);
+                    setReportModalOpen(false);
+                }, 2000);
+            } else {
+                alert('Failed to send report. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error submitting report:', error);
+            alert('An error occurred. Please try again.');
+        } finally {
+            setIsSubmittingReport(false);
+        }
+    };
+
 
     // Undo Buffer
     const undoState = useRef<{
@@ -336,10 +377,86 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                         </div>
                     )}
 
+
+                    {/* 4. Support Section */}
+                    <SectionHeader id="support" label="Support" icon={Eye} />
+                    {openSection === 'support' && (
+                        <div className="space-y-4 p-2 animate-in slide-in-from-top-2 duration-200">
+                            <div className="p-4 bg-white/5 rounded-xl border border-white/5 space-y-4">
+                                <p className="text-gray-400 text-sm">
+                                    Encountered a bug or have feedback? Let us know!
+                                </p>
+                                <button
+                                    onClick={() => setReportModalOpen(true)}
+                                    className="w-full py-3 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/50 rounded-lg font-bold transition-all flex items-center justify-center gap-2"
+                                >
+                                    <SettingsIcon size={16} /> Report Issue
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
-                {/* Floating Bottom Buttons Removed */}
+                {reportModalOpen && (
+                    <div className="fixed inset-0 z-[105] flex items-center justify-center bg-black/90 p-4">
+                        <div className="bg-[#1a1a1a] border border-white/10 rounded-xl w-full max-w-md p-6 space-y-4">
+                            <h3 className="text-xl font-bold text-white">Report a Bug / Feedback</h3>
 
+                            {showReportSuccess ? (
+                                <div className="py-8 text-center text-green-400">
+                                    <p className="text-lg font-semibold">Thank you!</p>
+                                    <p className="text-sm opacity-80">Your report has been sent.</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="space-y-2">
+                                        <label className="text-sm text-gray-400">Type</label>
+                                        <div className="flex gap-2">
+                                            {(['bug', 'feedback', 'other'] as const).map(t => (
+                                                <button
+                                                    key={t}
+                                                    onClick={() => setReportType(t)}
+                                                    className={`px-3 py-1.5 rounded-lg text-sm capitalize transition-colors ${reportType === t
+                                                            ? 'bg-blue-600 text-white'
+                                                            : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                                                        }`}
+                                                >
+                                                    {t}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-sm text-gray-400">Message</label>
+                                        <textarea
+                                            value={reportMessage}
+                                            onChange={(e) => setReportMessage(e.target.value)}
+                                            placeholder="Describe the issue or feedback..."
+                                            className="w-full h-32 bg-black/20 border border-white/10 rounded-lg p-3 text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 resize-none"
+                                        />
+                                    </div>
+
+                                    <div className="flex justify-end gap-3 pt-2">
+                                        <button
+                                            onClick={() => setReportModalOpen(false)}
+                                            className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={handleReportSubmit}
+                                            disabled={!reportMessage.trim() || isSubmittingReport}
+                                            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                        >
+                                            {isSubmittingReport ? 'Sending...' : 'Send Report'}
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

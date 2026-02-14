@@ -126,6 +126,8 @@ export const games = pgTable("game", {
     difficulty: text("difficulty"), // 'easy', 'medium', 'hard'
     mode: text("mode").default('ai'), // 'ai', 'pvp'
     theme: text("theme").default('dark'), // Store the theme used for this game
+    // Status for better lifecycle management
+    status: text("status").$type<'active' | 'completed' | 'abandoned' | 'timed_out'>().default('active'),
 });
 
 export const chats = pgTable("chat", {
@@ -321,3 +323,21 @@ export const passwordResetTokens = pgTable(
     })
 );
 
+
+export const feedback = pgTable("feedback", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    userId: text("user_id").references(() => users.id),
+    message: text("message").notNull(),
+    type: text("type").$type<"bug" | "feedback" | "other">().default("bug"),
+    url: text("url"),
+    screenshot: text("screenshot"), // Base64 or URL
+    status: text("status").$type<"open" | "resolved">().default("open"),
+    createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const feedbackRelations = relations(feedback, ({ one }) => ({
+    user: one(users, {
+        fields: [feedback.userId],
+        references: [users.id],
+    }),
+}));

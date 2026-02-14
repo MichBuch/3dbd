@@ -16,10 +16,10 @@ export default function LoginPage() {
 
         if (password) {
             // Use credentials login if password is provided
-            await signIn('credentials', { email, password, callbackUrl: '/' });
+            await signIn('credentials', { email, password, callbackUrl: window.location.origin });
         } else {
             // Use magic link if no password
-            await signIn('nodemailer', { email, callbackUrl: '/' });
+            await signIn('nodemailer', { email, callbackUrl: window.location.origin });
         }
 
         setLoading(false);
@@ -90,20 +90,20 @@ export default function LoginPage() {
                                 Forgot Password?
                             </Link>
                         </div>
+
                         <div className="relative">
                             <input
                                 type={showPassword ? "text" : "password"}
                                 value={password}
                                 onChange={(e) => {
                                     setPassword(e.target.value);
-                                    console.log('Password entered:', e.target.value);
                                 }}
-                                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-gray-500"
+                                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-gray-500 pr-12"
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white z-10 p-1"
                             >
                                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                             </button>

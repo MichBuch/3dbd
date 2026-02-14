@@ -24,10 +24,14 @@ export default function Home() {
     const setAiEnabled = useGameStore((state) => state.setAiEnabled);
 
 
-    // Force AI enabled on Home Page (Landing)
-    // This ensures local play is always against the Bot by default
+
+    // Force AI enabled on Home Page (Landing) & Clear Game ID
+    // This ensures local play is always against the Bot by default and we don't think we are in a networked game
     useEffect(() => {
-        useGameStore.setState({ isAiEnabled: true });
+        useGameStore.setState({
+            isAiEnabled: true,
+            gameId: null
+        });
     }, []);
 
     // Adjust camera distance based on board scale

@@ -222,7 +222,11 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
                     <directionalLight position={[5, 10, 5]} intensity={2} castShadow />
                     <ThemeBackground />
 
-                    <SyncListener gameId={id} isMyTurn={isMyTurn} />
+                    <SyncListener
+                        gameId={id}
+                        isMyTurn={isMyTurn}
+                        serverBoard={gameData?.state?.board}
+                    />
                     <Board />
                 </Canvas>
                 <ChatWindow gameId={id} />
@@ -232,8 +236,8 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
 }
 
 // Component to listen to store changes and push to server
-function SyncListener({ gameId, isMyTurn }: { gameId: string, isMyTurn: boolean }) {
-    const { board, currentPlayer, scores, winner, winningCells, moveHistory } = useGameStore(); // Use scores object
+function SyncListener({ gameId, isMyTurn, serverBoard }: { gameId: string, isMyTurn: boolean, serverBoard: any }) {
+    const { board, currentPlayer, scores, winner, winningCells, moveHistory } = useGameStore();
     const previousBoard = useRef(board);
     const firstRun = useRef(true);
 
@@ -245,18 +249,14 @@ function SyncListener({ gameId, isMyTurn }: { gameId: string, isMyTurn: boolean 
 
         // Simple diff check (reference usually changes in Zustand on updates)
         if (board !== previousBoard.current) {
-            // STOP SYNC if game is over. 
-            // We should not push "old" winner state over a "new" empty board.
-            // Was: if (winner) return; 
-            // We MUST sync if there is a winner, otherwise the opponent never sees the checkmate move.
+            // Echo Prevention: Only send move if local board differs from Last Known Server Board
+            // If they match, it means we just synced FROM the server.
+            // Using fast JSON stringify for deep compare (Board is small: 4x4x4 integers)
+            const isLocalChange = !serverBoard || JSON.stringify(board) !== JSON.stringify(serverBoard);
 
-            console.log("SyncListener Triggered:", { isMyTurn, winner, action: 'check' });
-
-            if (isMyTurn) {
+            if (isMyTurn && isLocalChange) {
                 console.log("SyncListener: Sending Move...", {
                     currentPlayer,
-                    whiteScore: scores.white,
-                    blackScore: scores.black,
                     moveCount: moveHistory.length
                 });
 
@@ -275,18 +275,14 @@ function SyncListener({ gameId, isMyTurn }: { gameId: string, isMyTurn: boolean 
                             // Extract scores from object
                             whiteScore: scores.white,
                             blackScore: scores.black,
-                            winnerId: winner ? (currentPlayer === 'white' ? 'black' : 'white') : null // Win logic is complex, usually 'winner' from store is the winner string 'white'/'black'
-                            // Wait, store 'winner' IS 'white'/'black'. And 'currentPlayer' has already flipped.
-                            // If `winner` is 'white', then winnerId should be mapped to the player. 
-                            // BE handles generic 'winnerId' which might be the string 'white'/'black' mapped or null.
-                            // Let's pass the raw store value and let backend decide or pass 'white'/'black' explicitly.
+                            winnerId: winner ? (currentPlayer === 'white' ? 'black' : 'white') : null // (Store already flipped)
                         }
                     })
                 }).catch(e => console.error("Sync Send Error:", e));
             }
             previousBoard.current = board;
         }
-    }, [board, currentPlayer, isMyTurn, gameId, scores, winner, winningCells, moveHistory]);
+    }, [board, currentPlayer, isMyTurn, gameId, scores, winner, winningCells, moveHistory, serverBoard]);
 
     return null;
 }

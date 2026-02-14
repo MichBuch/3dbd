@@ -20,6 +20,7 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
     const [billingInterval, setBillingInterval] = useState<'yearly' | 'monthly'>('yearly');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
 
     const [alertMessage, setAlertMessage] = useState<string | null>(null);
@@ -401,13 +402,22 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                             </div>
                             <div className="w-full flex flex-col items-center">
                                 <label className="block text-sm text-gray-300 mb-2 w-1/2 text-left">{t.passwordOptional}</label>
-                                <input
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="••••••••"
-                                    className="w-1/2 px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neonBlue"
-                                />
+                                <div className="w-1/2 relative">
+                                    <input
+                                        type={showPassword ? "text" : "password"}
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        placeholder="••••••••"
+                                        className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neonBlue pr-10"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                                    >
+                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
                                 <p className="text-[10px] text-gray-500 mt-1 w-1/2 text-left">Leave blank to use Magic Link</p>
                             </div>
 
@@ -490,13 +500,22 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                                         Forgot Password?
                                     </button>
                                 </div>
-                                <input
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="••••••••"
-                                    className="w-1/2 px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neonBlue"
-                                />
+                                <div className="w-1/2 relative">
+                                    <input
+                                        type={showPassword ? "text" : "password"}
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        placeholder="••••••••"
+                                        className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-neonBlue pr-10"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                                    >
+                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
                                 <p className="text-[10px] text-gray-500 mt-1 w-1/2 text-left">Leave blank to use Magic Link</p>
                             </div>
 

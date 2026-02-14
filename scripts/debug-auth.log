@@ -1,0 +1,32 @@
+[dotenv@17.2.3] injecting env (18) from .env.local -- tip: ­ƒøá´©Å  run anywhere with `dotenvx run -- yourcommand`
+­ƒöì Debugging Auth for red@3dbd.com
+Ô£à User found: red@3dbd.com
+   ID: 89b2c926-0de6-4c1d-9f1a-b8b8e1221793
+   Password Hash: $2b$10$BeKANd2wAItqiEww7ZLTS.YW0dDyy342iDz2rrB7yMCFn2DPGW9aS
+­ƒöæ Password '3dbd26' match: ÔØî NO
+   Attempting to compare with a newly hashed version for debug...
+   New hash of '3dbd26': $2b$10$/dFgwYQPcpU8CKR75FMdfuiw86TBkqBYcVAmmit7iVAm4zmchUVPa
+
+­ƒöä Simulating Forgot Password Token Generation...
+Ô£à Token inserted into DB successfully
+
+­ƒôº Testing Email Sending...
+   Host: email-smtp.eu-west-1.amazonaws.com
+   Port: 587
+   User: AKIATUUDZ4Y3HWEYFXGW
+ÔØî SMTP Verification Failed: Error: Invalid login: 535 Authentication Credentials Invalid
+    at SMTPConnection._formatError (C:\Lib\Dev\3dbd\node_modules\nodemailer\lib\smtp-connection\index.js:807:19)
+    at SMTPConnection._actionAUTHComplete (C:\Lib\Dev\3dbd\node_modules\nodemailer\lib\smtp-connection\index.js:1586:34)
+    at SMTPConnection.<anonymous> (C:\Lib\Dev\3dbd\node_modules\nodemailer\lib\smtp-connection\index.js:554:26)
+    at SMTPConnection._processResponse (C:\Lib\Dev\3dbd\node_modules\nodemailer\lib\smtp-connection\index.js:991:20)
+    at SMTPConnection._onData (C:\Lib\Dev\3dbd\node_modules\nodemailer\lib\smtp-connection\index.js:772:14)
+    at SMTPConnection._onSocketData (C:\Lib\Dev\3dbd\node_modules\nodemailer\lib\smtp-connection\index.js:195:44)
+    at TLSSocket.emit (node:events:508:28)
+    at addChunk (node:internal/streams/readable:559:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+    at Readable.push (node:internal/streams/readable:390:5) {
+  code: 'EAUTH',
+  response: '535 Authentication Credentials Invalid',
+  responseCode: 535,
+  command: 'AUTH PLAIN'
+}

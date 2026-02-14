@@ -187,31 +187,27 @@ export const GameUI = () => {
                 <div className="hidden md:block" style={{ position: 'fixed', top: '80px', right: '24px', zIndex: 50 }}>
                     {/* Only show 'Play Bot' if NOT in a multiplayer game (or implement lobby logic to go back) */}
                     {!gameId && (
+
                         <div className="mb-4 text-right">
                             <button
                                 onClick={async () => {
-                                    if (!session?.user) {
-                                        // Logged out? Play Locally immediately
+                                    if (isAiEnabled) {
+                                        // Switch to PVP
+                                        useGameStore.getState().setAiEnabled(false);
+                                    } else {
+                                        // Switch to AI
                                         useGameStore.getState().setAiEnabled(true);
-                                        useGameStore.getState().resetGame();
-                                        window.location.href = '/'; // Ensure we are on landing
-                                        return;
+                                        // Optionally reset if they want a fresh AI game?
+                                        // useGameStore.getState().resetGame();
                                     }
-
-                                    // Logged In? Create Server Game
-                                    const res = await fetch('/api/games/create', {
-                                        method: 'POST',
-                                        body: JSON.stringify({
-                                            difficulty: difficulty,
-                                            mode: 'ai' // Explicitly set AI mode
-                                        })
-                                    });
-                                    const game = await res.json();
-                                    if (game.id) window.location.href = `/game/${game.id}`;
                                 }}
                                 className="bg-neonBlue/20 hover:bg-neonBlue/40 text-neonBlue border border-neonBlue px-4 py-2 rounded-lg font-bold transition-all shadow-[0_0_10px_rgba(0,243,255,0.2)] hover:shadow-[0_0_20px_rgba(0,243,255,0.4)] text-xs uppercase tracking-widest"
                             >
-                                ⚔️ {t.playAlgo || 'Play Bot'}
+                                {isAiEnabled ? (
+                                    <>🌍 {t.playOnline || 'Play Humans'}</>
+                                ) : (
+                                    <>⚔️ {t.playAlgo || 'Play Bot'}</>
+                                )}
                             </button>
                         </div>
                     )}

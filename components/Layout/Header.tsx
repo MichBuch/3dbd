@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { AuthDialog } from '@/components/Auth/AuthDialog';
-import { User, LogOut, Settings, RotateCcw, Trophy, Gamepad2, Gift } from 'lucide-react';
+import { User, LogOut, Settings, RotateCcw, Trophy, Gamepad2, Gift, CreditCard } from 'lucide-react';
 import { SettingsPanel } from '@/components/Game/SettingsPanel';
 import { useGameStore } from '@/store/gameStore';
 import { LanguageSelector } from './LanguageSelector';
@@ -186,19 +186,31 @@ export function Header() {
                                 {isPremium && (
                                     <button
                                         onClick={async () => {
-                                            const res = await fetch('/api/portal', { method: 'POST' });
-                                            if (res.ok) {
+                                            try {
+                                                const res = await fetch('/api/portal', { method: 'POST' });
                                                 const data = await res.json();
-                                                window.location.href = data.url;
+
+                                                if (res.ok && data.url) {
+                                                    window.location.href = data.url;
+                                                } else {
+                                                    console.error("Portal Error:", data);
+                                                    alert(data.error || "Failed to load subscription portal.");
+                                                }
+                                            } catch (e) {
+                                                console.error("Portal Request Failed", e);
+                                                alert("An error occurred. Please try again later.");
                                             }
                                         }}
-                                        className="hover:bg-white/10 p-2 rounded-lg transition-colors border-0 text-white/50 hover:text-white"
                                         title="Manage Subscription"
                                     >
-                                        <Settings size={16} />
+                                        <CreditCard size={16} />
                                     </button>
                                 )}
-                                <button onClick={() => signOut()} className="hover:bg-white/10 p-2 rounded-lg transition-colors border-0" title={t.logout}>
+                                <button
+                                    onClick={() => signOut({ callbackUrl: window.location.origin })}
+                                    className="hover:bg-white/10 p-2 rounded-lg transition-colors border-0"
+                                    title={t.logout}
+                                >
                                     <LogOut size={16} className="text-white/50" />
                                 </button>
                             </div>

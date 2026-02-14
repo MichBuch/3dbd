@@ -22,7 +22,8 @@ export async function POST(req: Request) {
             .limit(1);
 
         if (!user || !user.stripeCustomerId) {
-            return NextResponse.json({ error: "No subscription found" }, { status: 400 });
+            console.error(`[STRIPE_PORTAL] User ${session.user.email} missing stripeCustomerId. Plan: ${user?.plan}`);
+            return NextResponse.json({ error: "No active subscription found. If you believe this is an error, please contact support." }, { status: 400 });
         }
 
         // Create billing portal session
