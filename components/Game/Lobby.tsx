@@ -52,8 +52,16 @@ export const Lobby = () => {
                                 <span className="text-[10px] text-white/50">{u.rankTier} • {u.points} pts</span>
                             </div>
                         </div>
-                        <button className="text-[10px] bg-white/10 hover:bg-neonBlue hover:text-black px-2 py-1 rounded transition-colors">
-                            PLAY
+                        <button
+                            onClick={() => {
+                                // If NO session, redirect to signup
+                                // But `session` isn't defined here? It needs to be passed or hooked.
+                                // Let's simplify: just redirect to /lobby which handles auth or guest.
+                                window.location.href = '/lobby';
+                            }}
+                            className="text-[10px] bg-white/10 hover:bg-neonBlue hover:text-black px-2 py-1 rounded transition-colors"
+                        >
+                            CHALLENGE
                         </button>
                     </li>
                 ))}

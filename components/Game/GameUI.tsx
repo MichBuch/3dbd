@@ -30,6 +30,8 @@ export const GameUI = () => {
     const [resignReason, setResignReason] = useState('');
     const params = useParams();
     const gameId = params?.id;
+    const isOnline = !!gameId;
+    const isFinished = !!winner;
 
     useEffect(() => {
         if (winner) {
@@ -280,6 +282,38 @@ export const GameUI = () => {
                             </button>
                         </div>
                         <div className="mt-4 pt-4 border-t border-white/10 text-center">
+                            {isOnline && !isFinished && (
+                                <button
+                                    onClick={async () => {
+                                        if (confirm(t.confirmLeave)) {
+                                            // Call abort endpoint to finish game on server
+                                            if (gameId) {
+                                                await fetch(`/api/games/${gameId}/abort`, { method: 'POST' });
+                                            }
+                                            // Clear local state
+                                            useGameStore.getState().forceReset();
+                                            // Redirect home
+                                            window.location.href = '/';
+                                        }
+                                    }}
+                                    className="w-full py-3 bg-red-500/20 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/50 rounded-xl font-bold uppercase tracking-wider transition-all"
+                                >
+                                    {t.leaveGame || "Leave Game"}
+                                </button>
+                            )}
+
+                            {!isOnline && (
+                                <button
+                                    onClick={() => {
+                                        if (confirm(t.confirmReset)) {
+                                            resetGame();
+                                        }
+                                    }}
+                                    className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/30 rounded-xl text-sm font-bold uppercase tracking-wider text-gray-400 hover:text-white transition-all"
+                                >
+                                    {t.resetGame}
+                                </button>
+                            )}
                             <button
                                 onClick={handleAbort}
                                 className="text-xs text-red-700 hover:text-red-500 flex items-center justify-center gap-1 mx-auto"

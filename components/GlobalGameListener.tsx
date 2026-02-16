@@ -72,17 +72,30 @@ export const GlobalGameListener = () => {
 
         const checkStatus = async () => {
             try {
-                // A. Heartbeat (Presence)
+                // A. Heartbeat (Presence) & Sync Check
                 // If I am in a game, I am "playing", else "online"
                 const isPlaying = !!activeGameId || pathname?.startsWith('/game/');
 
-                await fetch('/api/heartbeat', {
+                const heartbeatRes = await fetch('/api/heartbeat', {
                     method: 'POST',
                     body: JSON.stringify({
                         guestId: !session?.user ? myId : undefined,
                         status: isPlaying ? 'playing' : 'online'
                     })
                 });
+
+                const heartbeatData = await heartbeatRes.json();
+
+                // SYNC ENFORCEMENT: If server says we are in a game, but we are not there -> Redirect
+                // Only redirect if we are NOT already on the correct game page
+                if (heartbeatData.activeGameId) {
+                    const targetPath = `/game/${heartbeatData.activeGameId}`;
+                    if (pathname !== targetPath) {
+                        console.log("⚠️ Desync detected! Redirecting to active game:", heartbeatData.activeGameId);
+                        router.push(targetPath);
+                        return; // Stop processing other things
+                    }
+                }
 
                 // B. Check Challenges
                 // Only if NOT currently in a game (unless we want to allow stacking challenges?)

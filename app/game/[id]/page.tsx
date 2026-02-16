@@ -70,6 +70,7 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
                         winner: data.winnerId ? (data.winnerId === data.whitePlayerId ? 'white' : data.winnerId === data.blackPlayerId ? 'black' : 'draw') : null,
                         scores: { white: data.whiteScore || 0, black: data.blackScore || 0 },
                         winningCells: data.state.winningCells || [],
+                        // FORCE AI Disabled if mode is PvP, regardless of what server state says or defaults
                         isAiEnabled: data.mode === 'ai',
                         rematchState: {
                             requested: votes[myRole] || false,
