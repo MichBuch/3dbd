@@ -1,4 +1,5 @@
 export const THEMES = [
+    { id: 'african', translationKey: 'themeAfrican' },
     { id: 'area51', translationKey: 'themeArea51' },
     { id: 'beach', translationKey: 'themeBeach' },
     { id: 'black_white', translationKey: 'themeBlackWhite' },
@@ -60,6 +61,9 @@ export const THEME_CONFIG: Record<string, {
     rubik: { base: '#000000', white: '#ffffff', black: '#ff0000', skin: 'rubik', emissiveStrength: 2.5 },
     toys: { base: '#87CEEB', white: '#FFFF00', black: '#FF0000', skin: 'default', emissiveStrength: 2.0 },
     route66: { base: '#3E2723', white: '#FFD700', black: '#CD853F', skin: 'default', emissiveStrength: 2.5 }, // Peru vs Gold
+
+    // Cultural Themes
+    african: { base: '#8B4513', white: '#FFFFF0', black: '#1C1C1C', skin: 'default', emissiveStrength: 3.0 }, // Zebra: Ivory vs Ebony on warm earth
 
     // Sports Themes
     pickleball: { base: '#1E90FF', white: '#CCFF00', black: '#006400', skin: 'default', emissiveStrength: 2.5 }, // Dark green
