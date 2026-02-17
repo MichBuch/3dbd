@@ -29,7 +29,7 @@ export const THEME_CONFIG: Record<string, {
     base: string,
     white: string,
     black: string,
-    skin?: 'default' | 'tennis' | 'easter' | 'xmas' | 'wood' | 'rubik',
+    skin?: 'default' | 'tennis' | 'easter' | 'xmas' | 'wood' | 'rubik' | 'african' | 'chinese' | 'diwali',
     emissiveStrength?: number  // Controls winning bead glow intensity (default: 3.0)
 }> = {
     // Classic Themes
@@ -45,25 +45,25 @@ export const THEME_CONFIG: Record<string, {
     xmas: { base: '#1a472a', white: '#ff0000', black: '#00ff00', skin: 'xmas', emissiveStrength: 3.5 },
     easter: { base: '#FFF8E7', white: '#FF69B4', black: '#87CEEB', skin: 'easter', emissiveStrength: 1.5 },
     halloween: { base: '#1C1C1C', white: '#FF7518', black: '#9D4EDD', skin: 'default', emissiveStrength: 4.0 }, // Brighter purple
-    chinese_new_year: { base: '#8B0000', white: '#FFD700', black: '#FF0000', skin: 'default', emissiveStrength: 3.5 },
-    diwali: { base: '#FF6F00', white: '#FFD700', black: '#FF4500', skin: 'default', emissiveStrength: 3.0 }, // Gold vs Deep Orange
+    chinese_new_year: { base: '#8B0000', white: '#FFD700', black: '#FF0000', skin: 'chinese', emissiveStrength: 3.5 },
+    diwali: { base: '#FF6F00', white: '#FFD700', black: '#FF4500', skin: 'diwali', emissiveStrength: 3.0 }, // Gold vs Deep Orange
 
     // Weather/Nature Themes
     winter: { base: '#F0F8FF', white: '#4169E1', black: '#1E90FF', skin: 'default', emissiveStrength: 1.8 }, // Royal blue vs Dodger blue
-    snow: { base: '#FFFFFF', white: '#87CEEB', black: '#4682B4', skin: 'default', emissiveStrength: 1.5 },
+    snow: { base: '#FFFFFF', white: '#E0FFFF', black: '#4682B4', skin: 'default', emissiveStrength: 1.5 }, // LightCyan vs SteelBlue
     starry: { base: '#0B1026', white: '#FFFF99', black: '#9370DB', skin: 'default', emissiveStrength: 3.5 },
-    beach: { base: '#FFE5B4', white: '#FF4500', black: '#0077BE', skin: 'default', emissiveStrength: 2.0 }, // Orange-red vs Deep blue
+    beach: { base: '#FFE5B4', white: '#FAEBD7', black: '#008B8B', skin: 'default', emissiveStrength: 2.0 }, // AntiqueWhite vs DarkCyan
     cozy: { base: '#3E2723', white: '#FFA07A', black: '#8B4513', skin: 'default', emissiveStrength: 2.5 }, // Light salmon vs Saddle brown
 
     // Space/Tech Themes
     space: { base: '#000000', white: '#FDFD96', black: '#B22222', skin: 'default', emissiveStrength: 4.5 }, // Brighter mars red
     area51: { base: '#000000', white: '#00FF00', black: '#333333', skin: 'default', emissiveStrength: 5.0 }, // Pure green
     rubik: { base: '#000000', white: '#ffffff', black: '#ff0000', skin: 'rubik', emissiveStrength: 2.5 },
-    toys: { base: '#87CEEB', white: '#FFFF00', black: '#FF0000', skin: 'default', emissiveStrength: 2.0 },
+    toys: { base: '#87CEEB', white: '#FFFF00', black: '#FF0000', skin: 'default', emissiveStrength: 2.0 }, // Walls are SkyBlue in playroom now
     route66: { base: '#3E2723', white: '#FFD700', black: '#CD853F', skin: 'default', emissiveStrength: 2.5 }, // Peru vs Gold
 
     // Cultural Themes
-    african: { base: '#8B4513', white: '#FFFFF0', black: '#1C1C1C', skin: 'default', emissiveStrength: 3.0 }, // Zebra: Ivory vs Ebony on warm earth
+    african: { base: '#8B4513', white: '#FFFFF0', black: '#1C1C1C', skin: 'african', emissiveStrength: 3.0 }, // Zebra: Ivory vs Ebony on warm earth
 
     // Sports Themes
     pickleball: { base: '#1E90FF', white: '#CCFF00', black: '#006400', skin: 'default', emissiveStrength: 2.5 }, // Dark green

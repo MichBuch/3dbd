@@ -2,18 +2,12 @@
 
 import { useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
-import { useTexture, Billboard, Float } from '@react-three/drei';
 import * as THREE from 'three';
 import { useGameStore } from '@/store/gameStore';
 
 export const FestiveBackground = () => {
     const { theme } = useGameStore();
     const type = theme.id; // 'chinese_new_year', 'diwali', 'easter'
-
-    // Load Textures
-    const lanternTex = useTexture('/assets/sprites/lantern.png');
-    const diyaTex = useTexture('/assets/sprites/diya.png');
-    const rabbitTex = useTexture('/assets/sprites/rabbit.png');
 
     // Generate Objects
     const objects = useMemo(() => {
@@ -80,19 +74,38 @@ export const FestiveBackground = () => {
             <ambientLight intensity={0.8} />
             <pointLight position={[10, 10, 10]} intensity={1} />
 
-            {/* Ground (only for Diwali/Easter) */}
-            {type !== 'chinese_new_year' && (
+            {/* Chinese New Year Extras */}
+            {type === 'chinese_new_year' && (
+                <>
+                    <FireworkParticles />
+                    {/* Distant fog glow */}
+                    <pointLight position={[0, 20, -20]} color="#FF0000" intensity={2} distance={100} />
+                </>
+            )}
+
+            {/* Diwali Extras */}
+            {type === 'diwali' && (
+                <>
+                    <RangoliFloor />
+                    <SparkleParticles />
+                    {/* Warm ambient glow */}
+                    <pointLight position={[0, 5, 0]} color="#FFD700" intensity={1} distance={50} />
+                </>
+            )}
+
+            {/* Ground (Default for others) */}
+            {type === 'easter' && (
                 <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2, 0]} receiveShadow>
                     <planeGeometry args={[200, 200]} />
                     <meshStandardMaterial
-                        color={type === 'easter' ? '#90EE90' : '#3E2723'}
+                        color="#90EE90"
                         roughness={1}
                     />
                 </mesh>
             )}
 
             {objects.map((obj) => (
-                <FestiveObject key={obj.id} data={obj} tex={{ lantern: lanternTex, diya: diyaTex, rabbit: rabbitTex }} />
+                <FestiveObject key={obj.id} data={obj} />
             ))}
         </group>
     );
@@ -101,10 +114,10 @@ export const FestiveBackground = () => {
 // 3D Lantern Component
 const Lantern3D = ({ color = '#ff0000', scale = 1 }) => (
     <group scale={[scale, scale, scale]}>
-        {/* Paper Body */}
+        {/* Paper Body - Glowing */}
         <mesh castShadow>
             <capsuleGeometry args={[0.5, 1, 4, 8]} />
-            <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.6} transparent opacity={0.9} />
+            <meshStandardMaterial color={color} emissive={color} emissiveIntensity={2.0} transparent opacity={0.9} />
         </mesh>
         {/* Rims */}
         <mesh position={[0, 0.6, 0]}>
@@ -121,7 +134,7 @@ const Lantern3D = ({ color = '#ff0000', scale = 1 }) => (
             <meshStandardMaterial color="#ffcc00" />
         </mesh>
         {/* Internal Light */}
-        <pointLight color="orange" intensity={3} distance={10} decay={2} />
+        <pointLight color="orange" intensity={3} distance={15} decay={2} />
     </group>
 );
 
@@ -129,33 +142,88 @@ const Lantern3D = ({ color = '#ff0000', scale = 1 }) => (
 const Diya3D = ({ scale = 1 }) => (
     <group scale={[scale, scale, scale]}>
         {/* Clay Bowl */}
-        <mesh position={[0, 0, 0]}>
-            {/* Half Sphere */}
+        <mesh position={[0, 0, 0]} castShadow receiveShadow>
             <sphereGeometry args={[0.5, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2.5]} />
             <meshStandardMaterial color="#8B4513" roughness={1} />
         </mesh>
         {/* Rim */}
         <mesh position={[0, 0.4, 0]} rotation={[Math.PI / 2, 0, 0]}>
             <torusGeometry args={[0.5, 0.05, 8, 16]} />
-            <meshStandardMaterial color="#5D4037" roughness={1} />
+            <meshStandardMaterial color="#DAA520" roughness={0.5} metalness={0.5} />
         </mesh>
 
-        {/* Flame */}
+        {/* Flame - Animated via shader or simple geometry for now */}
         <mesh position={[0, 0.5, 0]}>
-            <coneGeometry args={[0.2, 0.6, 8]} />
-            <meshStandardMaterial color="orange" emissive="yellow" emissiveIntensity={2} transparent opacity={0.8} />
+            <coneGeometry args={[0.15, 0.5, 8]} />
+            <meshStandardMaterial color="#FF4500" emissive="#FFD700" emissiveIntensity={3} transparent opacity={0.9} />
         </mesh>
-        <mesh position={[0, 0.5, 0]} rotation={[0, 0.8, 0]}>
-            <planeGeometry args={[0.4, 0.8]} />
-            <meshBasicMaterial color="yellow" side={THREE.DoubleSide} transparent opacity={0.4} />
-        </mesh>
-
-        {/* Light */}
-        <pointLight position={[0, 1, 0]} color="orange" intensity={2} distance={8} decay={2} />
+        <pointLight position={[0, 0.8, 0]} color="#FFD700" intensity={1.5} distance={5} decay={2} />
     </group>
 );
 
-const FestiveObject = ({ data, tex }: { data: any, tex: any }) => {
+// Particle Systems
+const FireworkParticles = () => {
+    // Simple burst effect using points
+    const count = 200;
+    const positions = useMemo(() => {
+        const pos = new Float32Array(count * 3);
+        for (let i = 0; i < count; i++) {
+            pos[i * 3] = (Math.random() - 0.5) * 100; // Spread wide
+            pos[i * 3 + 1] = Math.random() * 50 + 10; // High in sky
+            pos[i * 3 + 2] = (Math.random() - 0.5) * 50;
+        }
+        return pos;
+    }, []);
+
+    return (
+        <points>
+            <bufferGeometry>
+                <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} args={[positions, 3]} />
+            </bufferGeometry>
+            <pointsMaterial size={0.5} color="#FFD700" transparent opacity={0.8} sizeAttenuation />
+        </points>
+    );
+}
+
+const SparkleParticles = () => {
+    const count = 300;
+    const positions = useMemo(() => {
+        const pos = new Float32Array(count * 3);
+        for (let i = 0; i < count; i++) {
+            pos[i * 3] = (Math.random() - 0.5) * 80;
+            pos[i * 3 + 1] = Math.random() * 20; // Lower to ground
+            pos[i * 3 + 2] = (Math.random() - 0.5) * 80;
+        }
+        return pos;
+    }, []);
+
+    return (
+        <points>
+            <bufferGeometry>
+                <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} args={[positions, 3]} />
+            </bufferGeometry>
+            <pointsMaterial size={0.2} color="#FFFFFF" transparent opacity={0.6} sizeAttenuation />
+        </points>
+    );
+}
+
+// Rangoli Ground Pattern
+const RangoliFloor = () => {
+    // Procedural ring pattern for ground
+    return (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2.1, 0]} receiveShadow>
+            <circleGeometry args={[40, 64]} />
+            <meshStandardMaterial
+                color="#4B0082" // Indigo base
+                emissive="#FF1493" // Pink glow
+                emissiveIntensity={0.2}
+                roughness={0.8}
+            />
+        </mesh>
+    );
+}
+
+const FestiveObject = ({ data }: { data: any }) => {
     const ref = useRef<THREE.Group>(null);
 
     useFrame((state) => {
@@ -164,16 +232,14 @@ const FestiveObject = ({ data, tex }: { data: any, tex: any }) => {
 
         if (data.type === 'lantern') {
             // Float Up
-            ref.current.position.y += data.speed * 0.02;
-            if (ref.current.position.y > 40) ref.current.position.y = -20;
+            ref.current.position.y += data.speed * 0.01;
+            if (ref.current.position.y > 60) ref.current.position.y = -20;
             // Sway
-            ref.current.rotation.z = Math.sin(t + data.id) * 0.05;
-            ref.current.rotation.y += 0.01;
+            ref.current.rotation.z = Math.sin(t + data.id) * 0.1;
+            ref.current.rotation.y += 0.005;
         } else if (data.type === 'diya') {
-            // Gentle bob (floating on water or ground?)
-            // Initial Z was random radius. Let's make them float slowly around center?
-            // Or just static.
-            ref.current.position.y = 0.5 + Math.sin(t * 2 + data.id) * 0.1;
+            // Gentle flicker/bob
+            ref.current.position.y = 0.5 + Math.sin(t * 3 + data.id) * 0.05;
         } else if (data.type === 'rabbit') {
             // Hop
             const hop = Math.abs(Math.sin(t * data.speed));
@@ -184,7 +250,7 @@ const FestiveObject = ({ data, tex }: { data: any, tex: any }) => {
     return (
         <group ref={ref} position={[data.x, data.type === 'lantern' ? data.y : 0, data.z]}>
             {data.type === 'lantern' && (
-                <Lantern3D color={data.id % 2 === 0 ? '#ff0000' : '#d42426'} scale={data.scale * 0.5} />
+                <Lantern3D color={data.id % 2 === 0 ? '#ff0000' : '#d42426'} scale={data.scale * 0.8} />
             )}
             {data.type === 'diya' && (
                 <Diya3D scale={data.scale * 0.8} />
@@ -195,9 +261,10 @@ const FestiveObject = ({ data, tex }: { data: any, tex: any }) => {
             {data.type === 'egg' && (
                 <mesh position={[0, 1, 0]} scale={[1, 1.5, 1]}>
                     <sphereGeometry args={[1, 16, 16]} />
-                    <meshStandardMaterial color={data.color} />
+                    <meshStandardMaterial color={data.color} roughness={0.5} />
                 </mesh>
             )}
         </group>
     );
 };
+

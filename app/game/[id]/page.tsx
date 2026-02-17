@@ -51,10 +51,10 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
                 setGameData(data);
 
                 // Sync Theme (Override local preference with Game's theme)
-                if (data.theme && THEME_CONFIG[data.theme]) {
+                if (data.theme && THEME_CONFIG[data.theme as keyof typeof THEME_CONFIG]) {
                     setTheme({
                         id: data.theme,
-                        ...THEME_CONFIG[data.theme]
+                        ...THEME_CONFIG[data.theme as keyof typeof THEME_CONFIG]
                     });
                 }
 

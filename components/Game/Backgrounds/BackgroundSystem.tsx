@@ -18,6 +18,9 @@ import { FestiveBackground } from './FestiveBackground';
 import { CozyBackground } from './CozyBackground';
 import { ComingSoonFlyby } from './ComingSoonFlyby';
 import { MoonBallBackground } from './MoonBallBackground';
+import { AfricanBackground } from './AfricanBackground';
+import { PlayroomBackground } from './PlayroomBackground';
+
 
 export const BackgroundSystem = () => {
     const { preferences, theme } = useGameStore();
@@ -58,6 +61,8 @@ export const BackgroundSystem = () => {
                     main.style.background = '#1a0a1a'; // Dark festive
                 } else if (['easter'].includes(theme.id)) {
                     main.style.background = '#F0F8FF'; // AliceBlue
+                } else if (theme.id === 'african') {
+                    main.style.background = 'linear-gradient(to bottom, #87CEEB 0%, #FF4500 50%, #DAA520 100%)'; // Sky -> Sunset -> Savanna
                 } else {
                     // Default gradients or theme base
                     main.style.background = theme.base;
@@ -83,8 +88,6 @@ export const BackgroundSystem = () => {
         <>
             {theme.id === 'space' && <><StarField /><SpaceObjects /></>}
             {theme.id === 'rubik' && <RubiksCubeBackground />}
-            {theme.id === 'toys' && <ToyObjects />}
-            {theme.id === 'route66' && <Route66Background />}
             {theme.id === 'area51' && <Area51Background />}
             {theme.id === 'beach' && <BeachBackground />}
             {theme.id === 'halloween' && <HalloweenBackground />}
@@ -98,6 +101,9 @@ export const BackgroundSystem = () => {
             {theme.id === 'snow' && <WinterBackground />}
             {theme.id === 'starry' && <StarField />}
             {theme.id === 'moonball' && <MoonBallBackground />}
+            {theme.id === 'african' && <AfricanBackground />}
+            {theme.id === 'toys' && <PlayroomBackground />}
+            {theme.id === 'route66' && <Route66Background />}
 
             {/* Flyby Banner for incomplete themes */}
             {showComingSoon && <ComingSoonFlyby />}

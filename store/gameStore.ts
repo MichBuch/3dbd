@@ -10,7 +10,7 @@ interface Theme {
     base: string;
     white: string;
     black: string;
-    skin?: 'default' | 'tennis' | 'easter' | 'xmas' | 'wood' | 'rubik';
+    skin?: 'default' | 'tennis' | 'easter' | 'xmas' | 'wood' | 'rubik' | 'african' | 'chinese' | 'diwali';
 }
 
 interface UserPreferences {

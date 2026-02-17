@@ -11,7 +11,7 @@ interface BeadProps {
     player: Player;
     isWinning?: boolean;
     scale?: number;
-    skin?: 'default' | 'tennis' | 'easter' | 'xmas' | 'wood' | 'rubik';
+    skin?: 'default' | 'tennis' | 'easter' | 'xmas' | 'wood' | 'rubik' | 'african' | 'chinese' | 'diwali';
 }
 
 // Texture Cache to prevent memory leaks and lag
@@ -335,6 +335,157 @@ const createWoodTexture = (colorHex: string) => {
 };
 
 
+// African Bead Texture Helper (Trade Beads / Krobo style)
+const createAfricanTexture = (colorHex: string) => {
+    const key = `african-${colorHex}`;
+    if (textureCache[key]) return textureCache[key];
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    // Base: Hand-painted ceramic look
+    ctx.fillStyle = colorHex;
+    ctx.fillRect(0, 0, 512, 256);
+
+    // Noise for clay texture
+    for (let i = 0; i < 2000; i++) {
+        const x = Math.random() * 512;
+        const y = Math.random() * 256;
+        ctx.fillStyle = Math.random() > 0.5 ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)';
+        ctx.fillRect(x, y, 2, 2);
+    }
+
+    // Stripes (Horizontal bands common in trade beads)
+    const colors = ['#1C1C1C', '#FFD700', '#40E0D0', '#FF4500']; // Ebony, Gold, Turquoise, OrangeRed
+    const bandHeight = 40;
+
+    // Top and Bottom Bands
+    ctx.fillStyle = colors[0]; // Black/Ebony
+    ctx.fillRect(0, 40, 512, bandHeight);
+    ctx.fillRect(0, 180, 512, bandHeight);
+
+    // Middle Accent Band
+    ctx.fillStyle = colors[2]; // Turquoise
+    ctx.fillRect(0, 110, 512, 30);
+
+    // Decorate Black Bands with Dots/Lines
+    ctx.fillStyle = '#FFFFFF'; // White dots
+    for (let x = 10; x < 512; x += 40) {
+        ctx.beginPath();
+        ctx.arc(x, 60, 5, 0, Math.PI * 2); // Top band dots
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(x + 20, 200, 5, 0, Math.PI * 2); // Bottom band dots (offset)
+        ctx.fill();
+    }
+
+    // ZigZag on Turquoise Band
+    ctx.beginPath();
+    ctx.strokeStyle = '#FFD700'; // Gold thread
+    ctx.lineWidth = 3;
+    ctx.moveTo(0, 125);
+    for (let x = 0; x <= 512; x += 20) {
+        ctx.lineTo(x, 125 + (x % 40 === 0 ? -10 : 10));
+    }
+    ctx.stroke();
+
+    const texture = new THREE.CanvasTexture(canvas);
+    textureCache[key] = texture;
+    return texture;
+};
+
+// Chinese Bead Texture (Red/Gold Lacquer)
+const createChineseTexture = (colorHex: string) => {
+    const key = `chinese-${colorHex}`;
+    if (textureCache[key]) return textureCache[key];
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    // Base: Deep Red Lacquer
+    ctx.fillStyle = colorHex === '#ffffff' ? '#ffffff' : '#8B0000'; // Keep white for white player, Red for others? 
+    // Actually, Chinese theme is usually Red vs Gold.
+    // If color passed is Gold (#FFD700) or Red (#FF0000), use it.
+    ctx.fillStyle = colorHex;
+    ctx.fillRect(0, 0, 512, 256);
+
+    // Gold Dust / Lacquer flecks
+    ctx.fillStyle = 'rgba(255, 215, 0, 0.2)';
+    for (let i = 0; i < 1000; i++) {
+        ctx.fillRect(Math.random() * 512, Math.random() * 256, 2, 2);
+    }
+
+    // Cloud / Dragon Scales Pattern
+    ctx.strokeStyle = '#FFD700'; // Gold
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 20; i++) {
+        const x = Math.random() * 512;
+        const y = Math.random() * 256;
+        ctx.beginPath();
+        ctx.arc(x, y, 10, 0, Math.PI, true); // Semicircle
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(x + 10, y, 10, 0, Math.PI, false);
+        ctx.stroke();
+    }
+
+    const texture = new THREE.CanvasTexture(canvas);
+    textureCache[key] = texture;
+    return texture;
+}
+
+// Diwali Bead Texture (Mandala/Paisley)
+const createDiwaliTexture = (colorHex: string) => {
+    const key = `diwali-${colorHex}`;
+    if (textureCache[key]) return textureCache[key];
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    // Base: Vibrant Silk
+    ctx.fillStyle = colorHex;
+    ctx.fillRect(0, 0, 512, 256);
+
+    // Mandala Rings
+    const centerX = 256;
+    const centerY = 128;
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.lineWidth = 2;
+
+    // Simple concentric patterns
+    for (let r = 20; r < 120; r += 20) {
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, r, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Dots on ring
+        const petals = r / 5;
+        for (let a = 0; a < Math.PI * 2; a += Math.PI * 2 / petals) {
+            const x = centerX + Math.cos(a) * r;
+            const y = centerY + Math.sin(a) * r;
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath();
+            ctx.arc(x, y, 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    const texture = new THREE.CanvasTexture(canvas);
+    textureCache[key] = texture;
+    return texture;
+}
+
 // Rubik Texture Helper
 const createRubikTexture = (colorHex: string) => {
     const key = `rubik-${colorHex}`;
@@ -457,6 +608,34 @@ export const Bead = ({ position, color, player, isWinning = false, scale = 1, sk
         if (isWinning) {
             finalColor.multiplyScalar(2.0);
         }
+    }
+
+    if (effectiveSkin === 'african' || skin === 'african') {
+        // African Trade Beads
+        // Use the passed color as base, but apply the pattern
+        map = createAfricanTexture(color) || null;
+        bumpMap = map;
+        bumpScale = 0.05;
+        roughness = 0.7; // Clay/Ceramic feel
+        metalness = 0.1;
+        // African theme has high emissive strength in config, so it will glow nicely when winning
+    } else if (skin === 'chinese') {
+        // Chinese Lacquer
+        const hexColor = player === 'white' ? '#ffffff' : '#8B0000'; // Force Red for black player if generic
+        // Actually utilize the theme config colors.
+        // If color matches theme 'base' or 'black', use texture.
+        map = createChineseTexture(color) || null;
+        bumpMap = map;
+        bumpScale = 0.02;
+        roughness = 0.1; // High Gloss Lacquer
+        metalness = 0.3; // Slight metallic
+    } else if (skin === 'diwali') {
+        // Diwali Silk/Lamp
+        map = createDiwaliTexture(color) || null;
+        // No bump map, smooth silk/light
+        roughness = 0.4;
+        metalness = 0.6; // Shiny/Glittery
+        emissiveIntensity = isWinning ? 4.0 : 0.5; // Always slight glow
     }
 
     if (skin === 'default') {
