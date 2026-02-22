@@ -46,6 +46,10 @@ export const LobbyDashboard = () => {
     const [activeTab, setActiveTab] = useState<'all' | 'friends'>('all');
     const { t } = useTranslation();
 
+    // Feature flag: Railway has Socket.IO; Vercel is serverless (no multiplayer)
+    const isMultiplayerEnabled = process.env.NEXT_PUBLIC_MULTIPLAYER_ENABLED === 'true';
+    const railwayUrl = process.env.NEXT_PUBLIC_RAILWAY_URL || 'https://triptrapping.up.railway.app';
+
     // SWR Fetcher
     const fetcher = (url: string) => fetch(url).then(r => r.json());
 
@@ -240,7 +244,28 @@ export const LobbyDashboard = () => {
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-6xl mx-auto p-4 md:p-0 relative">
-            {/* Left Col: Online Players */}
+
+            {/* Multiplayer Unavailable Banner (Vercel/serverless deployments) */}
+            {!isMultiplayerEnabled && (
+                <div className="col-span-full bg-yellow-500/10 border border-yellow-500/40 rounded-xl p-4 flex flex-col sm:flex-row items-center gap-4 text-sm">
+                    <span className="text-2xl">⚡</span>
+                    <div className="flex-1 text-center sm:text-left">
+                        <p className="font-bold text-yellow-300">Live Multiplayer requires the game server</p>
+                        <p className="text-yellow-200/70 mt-0.5">
+                            This deploy is serverless (Vercel) and cannot run Socket.IO.{' '}
+                            <a
+                                href={railwayUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="underline text-yellow-300 hover:text-white"
+                            >
+                                Play multiplayer at the Railway server →
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            )}
+
             <div className="glass-panel p-6 rounded-2xl border border-white/10 bg-black/60 relative">
                 <button
                     onClick={() => setPreference('isLobbyVisible', false)}
@@ -340,7 +365,7 @@ export const LobbyDashboard = () => {
                                     )}
 
                                     <button
-                                        disabled={u.status === 'playing'}
+                                        disabled={u.status === 'playing' || !isMultiplayerEnabled}
                                         onClick={() => {
                                             if (session) {
                                                 setShowChallengeModal(u.id);
@@ -348,7 +373,8 @@ export const LobbyDashboard = () => {
                                                 setShowChallengeModal(u.id);
                                             }
                                         }}
-                                        className="opacity-0 group-hover:opacity-100 transition-opacity bg-neonBlue/20 text-neonBlue px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-neonBlue hover:text-black disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                                        className="opacity-0 group-hover:opacity-100 transition-opacity bg-neonBlue/20 text-neonBlue px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-neonBlue hover:text-black disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1"
+                                        title={!isMultiplayerEnabled ? 'Multiplayer not available on this server' : undefined}
                                     >
                                         <Swords size={12} /> {t.challenge}
                                     </button>
@@ -433,10 +459,12 @@ export const LobbyDashboard = () => {
                                     </div>
                                 </div>
                                 <a
-                                    href={`/game/${g.id}`}
+                                    href={isMultiplayerEnabled ? `/game/${g.id}` : railwayUrl}
+                                    target={isMultiplayerEnabled ? undefined : '_blank'}
+                                    rel={isMultiplayerEnabled ? undefined : 'noopener noreferrer'}
                                     className="bg-neonBlue text-black px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-white hover:scale-105 transition-all shadow-[0_0_10px_rgba(0,255,255,0.3)] hover:shadow-[0_0_20px_rgba(0,255,255,0.6)]"
                                 >
-                                    {t.joinGame}
+                                    {isMultiplayerEnabled ? t.joinGame : 'Switch Server'}
                                 </a>
                             </div>
                         ))

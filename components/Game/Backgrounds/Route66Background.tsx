@@ -1,160 +1,156 @@
 'use client';
 
-import { useMemo, useRef } from 'react';
+import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Float, Text, Tube } from '@react-three/drei';
+import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 
-// Curve for the winding road
+// ---- Road Path: offset well away from board centre (5 units behind) ----
+// The board sits roughly at world origin (0,0,0). We push the road to z=-5 through z=-50
 const RoadPath = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(-100, 0, -100),
-    new THREE.Vector3(-40, 0, -40),
-    new THREE.Vector3(0, 0, 0),
-    new THREE.Vector3(40, 0, -40),
-    new THREE.Vector3(80, 0, -80),
-    new THREE.Vector3(120, 0, -40),
-    new THREE.Vector3(160, 0, 0)
+    new THREE.Vector3(-80, 0, -60),
+    new THREE.Vector3(-30, 0, -20),
+    new THREE.Vector3(0, 0, -5),   // closest point: 5 units behind origin
+    new THREE.Vector3(30, 0, -20),
+    new THREE.Vector3(70, 0, -50),
+    new THREE.Vector3(110, 0, -30),
+    new THREE.Vector3(140, 0, -55),
 ]);
 
-// Ramshackle Diner/Gas Station
-const Shack = ({ position, rotation }: any) => {
-    return (
-        <group position={position} rotation={rotation}>
-            {/* Main Building */}
-            <mesh castShadow receiveShadow position={[0, 4, 0]}>
-                <boxGeometry args={[12, 8, 8]} />
-                <meshStandardMaterial color="#8B4513" roughness={0.9} />
-            </mesh>
-            {/* Roof (Slanted) */}
-            <mesh position={[0, 9, 0]} rotation={[0.1, 0, 0]}>
-                <boxGeometry args={[14, 1, 10]} />
-                <meshStandardMaterial color="#555" />
-            </mesh>
-            {/* Neon Sign */}
-            <group position={[0, 12, 0]} rotation={[0, -0.2, 0]}>
-                <Text color="#FF00FF" fontSize={3} position={[0, 0, 0]} anchorX="center" anchorY="middle" font="/fonts/Inter-Bold.woff">
-                    DINER
-                </Text>
-                <pointLight color="#FF00FF" intensity={2} distance={10} />
-            </group>
+// ---- Ramshackle Diner ---- (moved off to the side, not directly behind board)
+const Shack = ({ position, rotation }: { position: [number, number, number]; rotation: [number, number, number] }) => (
+    <group position={position} rotation={rotation}>
+        <mesh castShadow receiveShadow position={[0, 4, 0]}>
+            <boxGeometry args={[12, 8, 8]} />
+            <meshStandardMaterial color="#8B4513" roughness={0.9} />
+        </mesh>
+        <mesh position={[0, 9, 0]} rotation={[0.1, 0, 0]}>
+            <boxGeometry args={[14, 1, 10]} />
+            <meshStandardMaterial color="#555" />
+        </mesh>
+        <group position={[0, 14, 0]}>
+            <Text color="#FF00FF" fontSize={2.5} anchorX="center" anchorY="middle" font="/fonts/Inter-Bold.woff">
+                DINER
+            </Text>
+            <pointLight color="#FF00FF" intensity={3} distance={15} />
         </group>
-    )
-}
+    </group>
+);
 
-// Alien Hitchhiker
-const Alien = ({ position }: any) => {
+// ---- Alien Hitchhiker ----
+const Alien = ({ position }: { position: [number, number, number] }) => {
     const ref = useRef<THREE.Group>(null);
     useFrame((state) => {
         if (ref.current) {
-            // Thumb wave
             ref.current.rotation.y = Math.sin(state.clock.elapsedTime) * 0.2;
         }
-    })
+    });
     return (
         <group ref={ref} position={position}>
-            {/* Head */}
             <mesh position={[0, 3.5, 0]}>
                 <sphereGeometry args={[1, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.8]} />
-                {/* Elongated Head? */}
                 <meshStandardMaterial color="#39FF14" roughness={0.4} />
             </mesh>
-            {/* Eyes */}
-            <mesh position={[-0.4, 3.6, 0.7]} rotation={[0.2, -0.2, 0]}>
+            <mesh position={[-0.4, 3.6, 0.7]}>
                 <sphereGeometry args={[0.3]} />
                 <meshStandardMaterial color="black" roughness={0} />
             </mesh>
-            <mesh position={[0.4, 3.6, 0.7]} rotation={[0.2, 0.2, 0]}>
+            <mesh position={[0.4, 3.6, 0.7]}>
                 <sphereGeometry args={[0.3]} />
                 <meshStandardMaterial color="black" roughness={0} />
             </mesh>
-            {/* Body */}
             <mesh position={[0, 1.5, 0]}>
                 <capsuleGeometry args={[0.5, 2.5, 8]} />
                 <meshStandardMaterial color="#39FF14" />
             </mesh>
-            {/* Thumb Arm */}
             <mesh position={[0.8, 2, 0.5]} rotation={[0, 0, -0.5]}>
                 <cylinderGeometry args={[0.15, 0.15, 1.5]} />
                 <meshStandardMaterial color="#39FF14" />
             </mesh>
         </group>
-    )
-}
+    );
+};
 
-// Crashed UFO
-const UFO = ({ position }: any) => {
+// ---- Crashed UFO ----
+const UFO = ({ position }: { position: [number, number, number] }) => (
+    <group position={position} rotation={[0.5, 0, 0.3]}>
+        <mesh castShadow receiveShadow>
+            <cylinderGeometry args={[6, 8, 1, 32]} />
+            <meshStandardMaterial color="silver" metalness={0.8} roughness={0.2} />
+        </mesh>
+        <mesh position={[0, 1, 0]}>
+            <sphereGeometry args={[3, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
+            <meshStandardMaterial color="#00FFFF" transparent opacity={0.6} />
+        </mesh>
+    </group>
+);
+
+// ---- Road Plane (flat, not a tube) ----
+// Using a flat plane is much simpler and guaranteed not to protrude in 3D space
+const Road = () => {
+    const roadPoints = RoadPath.getPoints(100);
     return (
-        <group position={position} rotation={[0.5, 0, 0.3]}>
-            {/* Disc */}
-            <mesh castShadow receiveShadow>
-                <cylinderGeometry args={[6, 8, 1, 32]} />
-                <meshStandardMaterial color="silver" metalness={0.8} />
+        <>
+            {/* Main tarmac strip */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.85, -25]}>
+                <planeGeometry args={[6, 120]} />
+                <meshStandardMaterial color="#2a2a2a" roughness={0.9} />
             </mesh>
-            {/* Dome */}
-            <mesh position={[0, 1, 0]}>
-                <sphereGeometry args={[3, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
-                <meshStandardMaterial color="#00FFFF" transparent opacity={0.6} />
+            {/* Centre dashes — a thin bright strip */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.84, -25]}>
+                <planeGeometry args={[0.15, 120]} />
+                <meshStandardMaterial color="#FFD700" roughness={0.7} />
             </mesh>
-            {/* Smoke Particles from crash? Simply a cloud for now */}
-            <Float speed={2} rotationIntensity={0} floatIntensity={0}>
-                <mesh position={[2, 2, 0]}>
-                    <sphereGeometry args={[1]} />
-                    <meshBasicMaterial color="#555" transparent opacity={0.4} />
-                </mesh>
-                <mesh position={[3, 3, 1]}>
-                    <sphereGeometry args={[1.5]} />
-                    <meshBasicMaterial color="#777" transparent opacity={0.3} />
-                </mesh>
-            </Float>
-        </group>
-    )
-}
+        </>
+    );
+};
 
 export const Route66Background = () => {
-
     return (
         <group>
-            {/* Sunset Atmosphere */}
-            <ambientLight intensity={0.2} color="#8B4513" />
-            <directionalLight position={[-80, 10, -80]} intensity={1.5} color="#FF4500" castShadow />
-            <fog attach="fog" args={['#2F1810', 10, 120]} />
+            {/* ---- Lighting ---- */}
+            {/* Enough ambient so meshStandardMaterial surfaces are clearly visible */}
+            <ambientLight intensity={0.7} color="#FFA07A" />
+            {/* Warm sunset directional light from the left */}
+            <directionalLight position={[-60, 20, -40]} intensity={2.5} color="#FF6030" castShadow />
+            {/* Fill from right to avoid pure shadow on board side */}
+            <directionalLight position={[40, 10, 20]} intensity={0.8} color="#FF8C42" />
 
-            {/* Sun */}
-            <mesh position={[-80, 5, -80]}>
-                <sphereGeometry args={[10]} />
+            {/* ---- Fog: start at 40 units, end at 150 — board is at ~12 units, safely before fog ---- */}
+            <fog attach="fog" args={['#3B1E08', 40, 150]} />
+            <color attach="background" args={['#3B1E08']} />
+
+            {/* ---- Sky dome ---- */}
+            <mesh>
+                <sphereGeometry args={[200, 32, 16]} />
+                <meshBasicMaterial side={THREE.BackSide} color="#1A0A30" />
+            </mesh>
+
+            {/* ---- Setting sun ---- */}
+            <mesh position={[-70, 12, -90]}>
+                <sphereGeometry args={[8, 16, 16]} />
                 <meshBasicMaterial color="#FF4500" />
             </mesh>
+            {/* sun glow */}
+            <pointLight position={[-70, 12, -90]} color="#FF4500" intensity={4} distance={200} />
 
-            {/* Sky */}
-            <mesh position={[0, 0, 0]}>
-                <sphereGeometry args={[200, 32, 32]} />
-                <meshBasicMaterial side={THREE.BackSide} color="#191970" />
-                {/* Midnight Blue merging with sunset fog */}
-            </mesh>
-
-            {/* Desert Floor */}
+            {/* ---- Desert floor ---- */}
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2, 0]} receiveShadow>
                 <planeGeometry args={[500, 500]} />
-                <meshStandardMaterial color="#3E2723" roughness={1} />
+                <meshStandardMaterial color="#5C3317" roughness={1} />
             </mesh>
 
-            {/* Winding Road */}
-            <Tube args={[RoadPath, 64, 4, 8, false]} position={[0, -1.9, 0]} rotation={[Math.PI / 2, Math.PI, 0]}>
-                <meshStandardMaterial color="#333" roughness={0.8} />
-            </Tube>
-            {/* Road Lines - Tube slightly higher */}
-            {/* Simplified central line by using another thin tube or texture. Let's skip for now, road shape is enough */}
+            {/* ---- Road — flat plane, offset behind the board ---- */}
+            <Road />
 
-            {/* Props */}
-            <Shack position={[-30, 0, -40]} rotation={[0, 0.5, 0]} />
+            {/* ---- Props: pushed off to the sides / back so they don't intrude on board ---- */}
+            <Shack position={[-35, 0, -45]} rotation={[0, 0.4, 0]} />
+            <Alien position={[18, -2, -22]} />
+            <UFO position={[45, -1, -55]} />
 
-            <Alien position={[15, -2, -20]} />
-
-            <UFO position={[40, -1, -50]} />
-
-            {/* Tumbleweeds? */}
-            <mesh position={[-10, 0, 10]}>
-                <dodecahedronGeometry args={[0.5]} />
+            {/* Tumbleweed */}
+            <mesh position={[-12, 0, -8]}>
+                <dodecahedronGeometry args={[0.6]} />
                 <meshStandardMaterial color="#DAA520" wireframe />
             </mesh>
         </group>

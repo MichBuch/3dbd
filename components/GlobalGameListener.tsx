@@ -21,6 +21,7 @@ export const GlobalGameListener = () => {
     const router = useRouter();
     const [incomingChallenge, setIncomingChallenge] = useState<Challenge | null>(null);
     const [guestId, setGuestId] = useState<string | null>(null);
+    const [resumeGameId, setResumeGameId] = useState<string | null>(null);
     const { gameId: activeGameId } = useGameStore();
 
     // 1. Initialize Guest ID
@@ -86,15 +87,17 @@ export const GlobalGameListener = () => {
 
                 const heartbeatData = await heartbeatRes.json();
 
-                // SYNC ENFORCEMENT: If server says we are in a game, but we are not there -> Redirect
-                // Only redirect if we are NOT already on the correct game page
+                // SYNC ENFORCEMENT: Server says we are in an unfinished game.
+                // NEVER force-redirect — show a prompt instead so the user can choose.
                 if (heartbeatData.activeGameId) {
                     const targetPath = `/game/${heartbeatData.activeGameId}`;
-                    if (pathname !== targetPath) {
-                        console.log("⚠️ Desync detected! Redirecting to active game:", heartbeatData.activeGameId);
-                        router.push(targetPath);
-                        return; // Stop processing other things
+                    // Don't show prompt if we are already on that page
+                    if (pathname !== targetPath && !resumeGameId) {
+                        setResumeGameId(heartbeatData.activeGameId);
                     }
+                } else {
+                    // Server says no active game — clear any stale prompt
+                    setResumeGameId(null);
                 }
 
                 // B. Check Challenges
@@ -154,47 +157,89 @@ export const GlobalGameListener = () => {
         }
     };
 
-    if (!incomingChallenge) return null;
+    const dismissResume = () => setResumeGameId(null);
 
-    // 4. Render Global Notification (Toast/Overlay)
+    if (!incomingChallenge && !resumeGameId) return null;
+
+    // 4. Render Global Notifications
     return (
-        <div className="fixed top-20 right-4 z-[9999] animate-in slide-in-from-right duration-300">
-            <div className="bg-black/90 border border-neonBlue shadow-[0_0_20px_rgba(0,243,255,0.3)] p-4 rounded-xl w-80 text-white relative overflow-hidden group">
-                {/* Decoration */}
-                <div className="absolute top-0 bottom-0 left-0 w-1 bg-neonBlue animate-pulse" />
+        <div className="fixed top-20 right-4 z-[9999] flex flex-col gap-3">
 
-                <div className="flex items-start gap-3">
-                    <div className="bg-neonBlue/20 p-2 rounded-full text-neonBlue">
-                        <Swords size={20} />
-                    </div>
-                    <div className="flex-1">
-                        <h4 className="font-bold text-sm text-neonBlue uppercase tracking-wider mb-1">
-                            Challenge Received!
-                        </h4>
-                        <p className="text-sm font-bold text-white mb-1">
-                            {incomingChallenge.fromName}
-                        </p>
-                        <p className="text-xs text-gray-400 italic mb-3">
-                            "{incomingChallenge.message || 'Let\'s play 3D Four in a Row!'}"
-                        </p>
-
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => respond('accept')}
-                                className="flex-1 bg-black hover:bg-gray-900 text-white border border-white font-bold py-1.5 px-3 rounded text-xs flex items-center justify-center gap-1 transition-colors"
-                            >
-                                <Check size={14} /> Accept
-                            </button>
-                            <button
-                                onClick={() => respond('decline')}
-                                className="flex-1 bg-red-500/20 hover:bg-red-500 hover:text-white text-red-500 border border-red-500/50 font-bold py-1.5 px-3 rounded text-xs flex items-center justify-center gap-1 transition-colors"
-                            >
-                                <X size={14} /> Decline
-                            </button>
+            {/* Resume Game Prompt */}
+            {resumeGameId && (
+                <div className="animate-in slide-in-from-right duration-300 bg-black/90 border border-yellow-500/60 shadow-[0_0_20px_rgba(234,179,8,0.2)] p-4 rounded-xl w-80 text-white relative overflow-hidden">
+                    <div className="absolute top-0 bottom-0 left-0 w-1 bg-yellow-500" />
+                    <div className="flex items-start gap-3">
+                        <div className="bg-yellow-500/20 p-2 rounded-full text-yellow-400">
+                            <Loader2 size={20} className="animate-spin" />
+                        </div>
+                        <div className="flex-1">
+                            <h4 className="font-bold text-sm text-yellow-400 uppercase tracking-wider mb-1">
+                                Active Game Found
+                            </h4>
+                            <p className="text-xs text-gray-400 mb-3">
+                                You have an unfinished multiplayer game. Resume it?
+                            </p>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => { router.push(`/game/${resumeGameId}`); setResumeGameId(null); }}
+                                    className="flex-1 bg-yellow-500/20 hover:bg-yellow-500 hover:text-black text-yellow-400 border border-yellow-500/50 font-bold py-1.5 px-3 rounded text-xs flex items-center justify-center gap-1 transition-colors"
+                                >
+                                    <Check size={14} /> Resume
+                                </button>
+                                <button
+                                    onClick={dismissResume}
+                                    className="flex-1 bg-white/5 hover:bg-white/10 text-gray-400 border border-white/10 font-bold py-1.5 px-3 rounded text-xs flex items-center justify-center gap-1 transition-colors"
+                                >
+                                    <X size={14} /> Dismiss
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            )}
+
+            {/* Incoming Challenge Notification */}
+            {incomingChallenge && (
+                <div className="animate-in slide-in-from-right duration-300">
+                    <div className="bg-black/90 border border-neonBlue shadow-[0_0_20px_rgba(0,243,255,0.3)] p-4 rounded-xl w-80 text-white relative overflow-hidden group">
+                        {/* Decoration */}
+                        <div className="absolute top-0 bottom-0 left-0 w-1 bg-neonBlue animate-pulse" />
+
+                        <div className="flex items-start gap-3">
+                            <div className="bg-neonBlue/20 p-2 rounded-full text-neonBlue">
+                                <Swords size={20} />
+                            </div>
+                            <div className="flex-1">
+                                <h4 className="font-bold text-sm text-neonBlue uppercase tracking-wider mb-1">
+                                    Challenge Received!
+                                </h4>
+                                <p className="text-sm font-bold text-white mb-1">
+                                    {incomingChallenge.fromName}
+                                </p>
+                                <p className="text-xs text-gray-400 italic mb-3">
+                                    "{incomingChallenge.message || 'Let\'s play 3D Four in a Row!'}"
+                                </p>
+
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => respond('accept')}
+                                        className="flex-1 bg-black hover:bg-gray-900 text-white border border-white font-bold py-1.5 px-3 rounded text-xs flex items-center justify-center gap-1 transition-colors"
+                                    >
+                                        <Check size={14} /> Accept
+                                    </button>
+                                    <button
+                                        onClick={() => respond('decline')}
+                                        className="flex-1 bg-red-500/20 hover:bg-red-500 hover:text-white text-red-500 border border-red-500/50 font-bold py-1.5 px-3 rounded text-xs flex items-center justify-center gap-1 transition-colors"
+                                    >
+                                        <X size={14} /> Decline
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

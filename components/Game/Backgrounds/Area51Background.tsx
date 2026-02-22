@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Stars, Text, Sparkles } from '@react-three/drei';
 import * as THREE from 'three';
@@ -9,13 +9,10 @@ import { AnimatedModel } from '../AnimatedModel';
 
 // Helper to generate a procedural sand texture safely
 const useSandTexture = () => {
-    const [texture, setTexture] = useState<THREE.Texture | null>(null);
+    const texture = useMemo(() => {
+        if (typeof window === 'undefined') return null;
 
-    // Use effect to generate texture only on client
-    useMemo(() => {
-        if (typeof window === 'undefined') return;
-
-        const width = 1024; // High res
+        const width = 1024;
         const height = 1024;
 
         const canvas = document.createElement('canvas');
@@ -23,10 +20,10 @@ const useSandTexture = () => {
         canvas.height = height;
 
         const context = canvas.getContext('2d');
-        if (!context) return;
+        if (!context) return null;
 
         // Fill with base warm sand color
-        context.fillStyle = '#4b3d32'; // Sand base
+        context.fillStyle = '#4b3d32';
         context.fillRect(0, 0, width, height);
 
         const imageData = context.getImageData(0, 0, width, height);
@@ -65,8 +62,8 @@ const useSandTexture = () => {
         const tex = new THREE.CanvasTexture(canvas);
         tex.wrapS = THREE.RepeatWrapping;
         tex.wrapT = THREE.RepeatWrapping;
-        tex.repeat.set(64, 64); // Repeat to keep grains small
-        setTexture(tex);
+        tex.repeat.set(64, 64);
+        return tex;
     }, []);
 
     return texture;

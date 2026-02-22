@@ -81,7 +81,9 @@ export const BackgroundSystem = () => {
         'space', // Specifically excluded
         'dark',  // Default/Classic
         'wood',  // Classic
-        'black_white' // Minimalist
+        'black_white', // Minimalist
+        'route66', // Has its own full 3D scene
+        'area51',  // Has its own full 3D scene
     ].includes(theme.id);
 
     return (

@@ -11,17 +11,50 @@ import { ChatWindow } from '@/components/Game/ChatWindow';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { ThemeBackground } from '@/components/Game/ThemeBackground';
-import { THEME_CONFIG } from '@/lib/themeConfig'; // Import Theme Config
+import { THEME_CONFIG } from '@/lib/themeConfig';
+
+// ---- Disconnect / Stale Modal -----------------------------------------------
+function GameEndModal({ title, message, onContinue, onLeave }: {
+    title: string;
+    message: string;
+    onContinue?: () => void;
+    onLeave: () => void;
+}) {
+    return (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-sm">
+            <div className="bg-gray-900 border border-white/10 rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl text-center">
+                <h2 className="text-2xl font-bold text-white mb-3">{title}</h2>
+                <p className="text-gray-400 mb-6 leading-relaxed">{message}</p>
+                <div className="flex gap-3 justify-center">
+                    {onContinue && (
+                        <button
+                            onClick={onContinue}
+                            className="px-6 py-2 bg-neonBlue text-black rounded-full font-bold hover:bg-white transition-colors"
+                        >
+                            Resume
+                        </button>
+                    )}
+                    <button
+                        onClick={onLeave}
+                        className="px-6 py-2 bg-white/10 text-gray-300 rounded-full font-medium hover:bg-white/20 transition-colors"
+                    >
+                        Leave Game
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 export default function MultiplayerGame({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
     const {
         setBoard,
         setCurrentPlayer,
-        currentPlayer, // Corrected from currentTurn
+        currentPlayer,
         setWinner,
         preferences,
-        setTheme, // Add setTheme
+        setTheme,
     } = useGameStore();
 
     const router = useRouter();
@@ -29,12 +62,14 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
     const [gameData, setGameData] = useState<any>(null);
     const [isPlayer2, setIsPlayer2] = useState(false);
 
+    // Disconnect / stale game modals
+    const [disconnectModal, setDisconnectModal] = useState<{ title: string; message: string } | null>(null);
+    const [staleModal, setStaleModal] = useState(false);
+
     // 1. Initial Load & Join Check
     useEffect(() => {
         if (!session) return;
 
-        // Reset Store if entering a new game ID
-        // This prevents "Ghost Beads" from previous games appearing
         if (useGameStore.getState().gameId !== id) {
             useGameStore.getState().resetGame();
             useGameStore.getState().setGameId(id);
@@ -50,7 +85,6 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
                 }
                 setGameData(data);
 
-                // Sync Theme (Override local preference with Game's theme)
                 if (data.theme && THEME_CONFIG[data.theme as keyof typeof THEME_CONFIG]) {
                     setTheme({
                         id: data.theme,
@@ -58,7 +92,6 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
                     });
                 }
 
-                // IMMEDIATE STATE SYNC (Rehydrate Store from Server immediately)
                 if (data.state) {
                     const myRole = data.whitePlayerId === session?.user?.id ? 'white' : 'black';
                     const opponentRole = myRole === 'white' ? 'black' : 'white';
@@ -70,7 +103,6 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
                         winner: data.winnerId ? (data.winnerId === data.whitePlayerId ? 'white' : data.winnerId === data.blackPlayerId ? 'black' : 'draw') : null,
                         scores: { white: data.whiteScore || 0, black: data.blackScore || 0 },
                         winningCells: data.state.winningCells || [],
-                        // FORCE AI Disabled if mode is PvP, regardless of what server state says or defaults
                         isAiEnabled: data.mode === 'ai',
                         rematchState: {
                             requested: votes[myRole] || false,
@@ -87,7 +119,6 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
                     });
                 }
 
-                // If I am not White, and Black is empty, Try to Join
                 if (data.whitePlayerId !== session.user?.id && !data.blackPlayerId) {
                     joinGame();
                 }
@@ -106,87 +137,108 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
         }
     };
 
-    // 2. Poll for Updates
+    // beforeunload — persist leave intent when closing tab / refreshing
+    useEffect(() => {
+        const handleUnload = () => {
+            if (gameData && !gameData.isFinished) {
+                // Use sendBeacon for reliability during page unload
+                navigator.sendBeacon(`/api/games/${id}/leave`, JSON.stringify({}));
+            }
+        };
+        window.addEventListener('beforeunload', handleUnload);
+        return () => window.removeEventListener('beforeunload', handleUnload);
+    }, [id, gameData]);
+
+    // 2. Poll for Updates + Stale Game Detection
     const [connectionStatus, setConnectionStatus] = useState<'connected' | 'reconnecting'>('connected');
     const lastHeartbeat = useRef(Date.now());
+    const STALE_THRESHOLD_MS = 60 * 60 * 1000; // 1 hour
 
     useEffect(() => {
-        // Set Game ID for Global Listener (Busy Status)
         useGameStore.getState().setGameId(id);
 
         const interval = setInterval(async () => {
             try {
-                const startTime = Date.now();
                 const res = await fetch(`/api/games/${id}?t=${Date.now()}`);
 
-                if (res.status === 401) {
-                    // Session expired?
-                    return;
-                }
+                if (res.status === 401) return;
 
                 const data = await res.json();
                 setConnectionStatus('connected');
                 lastHeartbeat.current = Date.now();
+
+                // Stale game detection: active for >1hr and not finished
+                if (!data.isFinished && data.updatedAt) {
+                    const lastUpdate = new Date(data.updatedAt).getTime();
+                    if (Date.now() - lastUpdate > STALE_THRESHOLD_MS) {
+                        setStaleModal(true);
+                    }
+                }
+
+                // If game was marked abandoned by server (opponent disconnected)
+                if (data.status === 'abandoned' && !disconnectModal) {
+                    const myId = session?.user?.id;
+                    const iWon = data.winnerId === myId;
+                    setDisconnectModal({
+                        title: iWon ? '🏆 You Win!' : '⚠️ Game Over',
+                        message: iWon
+                            ? 'Your opponent disconnected. The game has been awarded to you.'
+                            : 'You were disconnected and your opponent was awarded the win.'
+                    });
+                }
 
                 if (data.state) {
                     const myRole = data.whitePlayerId === session?.user?.id ? 'white' : 'black';
                     const opponentRole = myRole === 'white' ? 'black' : 'white';
                     const votes = data.state.rematchVotes || {};
 
-                    // Use Robust Sync Action
                     useGameStore.getState().setSyncState({
                         board: data.state.board,
                         currentPlayer: data.state.currentPlayer,
-                        // Only sync winner if we aren't already locally aware (to avoid flicker) or if it CLEARED (rematch)
                         winner: data.winnerId ? (data.winnerId === data.whitePlayerId ? 'white' : data.winnerId === data.blackPlayerId ? 'black' : 'draw') : null,
                         scores: { white: data.whiteScore || 0, black: data.blackScore || 0 },
                         winningCells: data.state.winningCells || [],
                         isAiEnabled: data.mode === 'ai',
-
-                        // Sync Rematch State
                         rematchState: {
                             requested: votes[myRole] || false,
                             opponentRequested: votes[opponentRole] || false,
                             status: (votes.white && votes.black) ? 'accepted' : (votes[myRole] ? 'pending' : 'none')
                         },
-
                         preferences: {
                             ...useGameStore.getState().preferences,
                             opponentName: (data.whitePlayerId === session?.user?.id
                                 ? data.players?.black?.name
                                 : data.players?.white?.name) || 'Waiting...'
                         },
-
-                        // Pass Move History for Version Check
                         moveHistory: data.state.moveHistory || []
                     });
 
-                    // Detect Bot Takeover
                     if (data.mode === 'ai' && !useGameStore.getState().isAiEnabled) {
                         useGameStore.setState({ isAiEnabled: true });
-                        // Optionally notify user via Toast?
-                        // For now, the game just continues seamlessly.
                     }
 
                     setGameData(data);
                 }
             } catch (e) {
                 console.error("Polling error", e);
-                // If persistent error > 3s
                 if (Date.now() - lastHeartbeat.current > 4000) {
                     setConnectionStatus('reconnecting');
                 }
             }
-        }, 1000); // Optimized to 1s polling
+        }, 1000);
 
         return () => {
             clearInterval(interval);
-            // Clear Busy Status on Exit
             useGameStore.getState().setGameId(null);
         };
     }, [id, session]);
 
-    // Connection Badge Component (Inline)
+    const handleLeaveGame = () => {
+        fetch(`/api/games/${id}/leave`, { method: 'POST' }).finally(() => {
+            router.push('/');
+        });
+    };
+
     const ConnectionBadge = () => (
         <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 px-3 py-1 rounded-full text-xs font-bold transition-all duration-300 ${connectionStatus === 'connected' ? 'opacity-0 pointer-events-none' : 'opacity-100 bg-red-500 text-white animate-pulse'
             }`}>
@@ -194,7 +246,6 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
         </div>
     );
 
-    // Camera
     const baseCameraDistance = 12;
     const cameraZ = baseCameraDistance / preferences.boardScale;
 
@@ -209,12 +260,30 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
         <>
             <Header />
             <main className="relative bg-black h-screen w-screen overflow-hidden">
-                {/* HUD Replaced by GameUI */}
                 <GameUI />
                 <div className="absolute top-24 left-0 right-0 z-10 flex flex-col items-center pointer-events-none">
                     {/* Banner removed */}
                 </div>
                 <ConnectionBadge />
+
+                {/* Disconnect Modal */}
+                {disconnectModal && (
+                    <GameEndModal
+                        title={disconnectModal.title}
+                        message={disconnectModal.message}
+                        onLeave={handleLeaveGame}
+                    />
+                )}
+
+                {/* Stale Game Modal */}
+                {staleModal && !disconnectModal && (
+                    <GameEndModal
+                        title="⏱️ Game Paused"
+                        message="This game has been inactive for over an hour. Would you like to resume, or abandon it?"
+                        onContinue={() => setStaleModal(false)}
+                        onLeave={handleLeaveGame}
+                    />
+                )}
 
                 <Canvas shadows>
                     <PerspectiveCamera makeDefault position={[0, 8, cameraZ]} fov={45} />
@@ -248,11 +317,7 @@ function SyncListener({ gameId, isMyTurn, serverBoard }: { gameId: string, isMyT
             return;
         }
 
-        // Simple diff check (reference usually changes in Zustand on updates)
         if (board !== previousBoard.current) {
-            // Echo Prevention: Only send move if local board differs from Last Known Server Board
-            // If they match, it means we just synced FROM the server.
-            // Using fast JSON stringify for deep compare (Board is small: 4x4x4 integers)
             const isLocalChange = !serverBoard || JSON.stringify(board) !== JSON.stringify(serverBoard);
 
             if (isMyTurn && isLocalChange) {
@@ -261,7 +326,6 @@ function SyncListener({ gameId, isMyTurn, serverBoard }: { gameId: string, isMyT
                     moveCount: moveHistory.length
                 });
 
-                // Pushing move to server
                 fetch(`/api/games/${gameId}`, {
                     method: 'POST',
                     body: JSON.stringify({
@@ -270,13 +334,12 @@ function SyncListener({ gameId, isMyTurn, serverBoard }: { gameId: string, isMyT
                             state: {
                                 board: board,
                                 currentPlayer: currentPlayer,
-                                winningCells: winningCells, // Push winning cells
-                                moveHistory: moveHistory // Push move history
+                                winningCells: winningCells,
+                                moveHistory: moveHistory
                             },
-                            // Extract scores from object
                             whiteScore: scores.white,
                             blackScore: scores.black,
-                            winnerId: winner ? (currentPlayer === 'white' ? 'black' : 'white') : null // (Store already flipped)
+                            winnerId: winner ? (currentPlayer === 'white' ? 'black' : 'white') : null
                         }
                     })
                 }).catch(e => console.error("Sync Send Error:", e));

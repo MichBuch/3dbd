@@ -13,15 +13,17 @@ export const POST = async (req: Request) => {
             lastSeen: new Date(),
             status: 'online'
         }).where(eq(users.id, session.user.id));
-        // Check if user is in an active game
-        // TIMEOUT: Ignore games not updated in the last hour
-        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+        // Check if user is in an ACTIVE PvP game updated within the last 5 minutes
+        // Only PvP games need resuming — AI games don't require network sync
+        // 5-minute window: anything older is treated as abandoned
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
 
         const activeGame = await db.query.games.findFirst({
             where: (games, { or, and, eq, gt }) => and(
                 or(eq(games.whitePlayerId, session.user.id), eq(games.blackPlayerId, session.user.id)),
                 eq(games.isFinished, false),
-                gt(games.updatedAt, oneHourAgo)
+                eq(games.mode, 'pvp'),          // Only PvP games need resuming
+                gt(games.updatedAt, fiveMinutesAgo) // Only if updated in last 5 min
             ),
             columns: { id: true }
         });

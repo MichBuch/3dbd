@@ -10,7 +10,12 @@ const port = parseInt(process.env.PORT || '3050', 10);
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
-app.prepare().then(() => {
+app.prepare().then(async () => {
+    // Import DB after Next.js is ready (avoids issues with env loading)
+    const { db } = await import('./db/index');
+    const { games } = await import('./db/schema');
+    const { eq, and, or } = await import('drizzle-orm');
+
     const httpServer = createServer(async (req, res) => {
         try {
             const parsedUrl = parse(req.url!, true);
@@ -76,12 +81,51 @@ app.prepare().then(() => {
             socket.emit('pong', { timestamp: Date.now() });
         });
 
-        // Handle disconnection
-        socket.on('disconnect', () => {
+        // Handle disconnection — persist to DB and notify surviving player
+        socket.on('disconnect', async () => {
             const { gameId, userId } = socket.data;
-            if (gameId && userId) {
+            if (!gameId || !userId) return;
+
+            console.log(`👋 User ${userId} disconnected from game ${gameId}`);
+
+            try {
+                // Only mark as abandoned if game is still active (not already finished)
+                const game = await db.query.games.findFirst({
+                    where: and(
+                        eq(games.id, gameId),
+                        eq(games.isFinished, false)
+                    ),
+                    columns: { id: true, whitePlayerId: true, blackPlayerId: true }
+                });
+
+                if (game) {
+                    // Determine the winner: the player who did NOT disconnect
+                    const survivorId = game.whitePlayerId === userId
+                        ? game.blackPlayerId
+                        : game.whitePlayerId;
+
+                    await db.update(games)
+                        .set({
+                            isFinished: true,
+                            status: 'abandoned',
+                            winnerId: survivorId || null,
+                            updatedAt: new Date(),
+                        })
+                        .where(eq(games.id, gameId));
+
+                    console.log(`🏆 Game ${gameId} marked as abandoned. Survivor: ${survivorId}`);
+
+                    // Notify the surviving player
+                    socket.to(`game:${gameId}`).emit('game-abandoned', {
+                        disconnectedUserId: userId,
+                        winnerId: survivorId,
+                        message: 'Your opponent disconnected. You win!'
+                    });
+                }
+            } catch (err) {
+                console.error('Error persisting disconnect:', err);
+                // Still notify the other player even if DB update fails
                 socket.to(`game:${gameId}`).emit('player-disconnected', { userId });
-                console.log(`👋 User ${userId} disconnected from game ${gameId}`);
             }
         });
     });
