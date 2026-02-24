@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import './globals.css';
 import { Providers } from './providers';
-import { CookieConsent } from '@/components/CookieConsent';
+import { CookieConsent } from '@/components/Layout/CookieConsent';
 import { GlobalGameListener } from '@/components/GlobalGameListener';
 
 export const viewport: Viewport = {

@@ -116,6 +116,9 @@ export const ThemeBackground = () => {
                 </>
             );
 
+        case 'route66':
+            return <color attach="background" args={['#1A0A30']} />;
+
         case 'black_white':
         case 'dark':
         default:

@@ -7,7 +7,8 @@ export const CookieConsent = () => {
     const [showBanner, setShowBanner] = useState(false);
 
     useEffect(() => {
-        const consent = localStorage.getItem('cookie-consent');
+        // Check both old key ('cookie_consent') and new key ('cookie-consent')
+        const consent = localStorage.getItem('cookie-consent') || localStorage.getItem('cookie_consent');
         if (!consent) {
             setShowBanner(true);
         }

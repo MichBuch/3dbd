@@ -46,7 +46,7 @@ export const BackgroundSystem = () => {
                 } else if (theme.id === 'toys' || theme.id === 'beach') {
                     main.style.background = '#87CEEB';
                 } else if (theme.id === 'route66') {
-                    main.style.background = 'linear-gradient(to bottom, #87CEEB 0%, #E6C288 100%)';
+                    main.style.background = 'linear-gradient(to bottom, #1A0A30 0%, #3B1E08 100%)';
                 } else if (theme.id === 'area51') {
                     main.style.background = '#0f1c0f';
                 } else if (theme.id === 'halloween') {

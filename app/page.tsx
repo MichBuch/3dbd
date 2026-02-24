@@ -8,7 +8,7 @@ import { Board } from '@/components/Game/Board';
 import { GameUI } from '@/components/Game/GameUI';
 import { Header } from '@/components/Layout/Header';
 import { LobbyDashboard } from '@/components/Lobby/LobbyDashboard';
-import { CookieConsent } from '@/components/Layout/CookieConsent';
+
 import { useGameStore } from '@/store/gameStore';
 import Link from 'next/link';
 import { useTranslation } from '@/lib/translations';
@@ -85,7 +85,7 @@ export default function Home() {
                     )}
                 </Canvas>
             </main>
-            <CookieConsent />
+
         </>
     );
 }
