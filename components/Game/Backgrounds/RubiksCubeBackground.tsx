@@ -18,7 +18,6 @@ export const RubiksCubeBackground = () => {
     const { preferences } = useGameStore();
     const count = 400;
     const mesh = useRef<THREE.InstancedMesh>(null);
-    const edgeMesh = useRef<THREE.InstancedMesh>(null);
     const dummy = useMemo(() => new THREE.Object3D(), []);
 
     const cubes = useMemo(() => {
@@ -41,7 +40,7 @@ export const RubiksCubeBackground = () => {
     }, [count]);
 
     useEffect(() => {
-        if (!mesh.current || !edgeMesh.current) return;
+        if (!mesh.current) return;
         cubes.forEach((cube, i) => {
             const color = new THREE.Color(cube.color);
             mesh.current!.setColorAt(i, color);
@@ -49,15 +48,13 @@ export const RubiksCubeBackground = () => {
             dummy.position.set(cube.x, cube.y, cube.z);
             dummy.updateMatrix();
             mesh.current!.setMatrixAt(i, dummy.matrix);
-            edgeMesh.current!.setMatrixAt(i, dummy.matrix);
         });
         mesh.current.instanceMatrix.needsUpdate = true;
         mesh.current.instanceColor!.needsUpdate = true;
-        edgeMesh.current.instanceMatrix.needsUpdate = true;
     }, [cubes, dummy]);
 
     useFrame((state, delta) => {
-        if (!mesh.current || !edgeMesh.current) return;
+        if (!mesh.current) return;
         if (preferences.reduceMotion) return;
 
         cubes.forEach((cube, i) => {
@@ -68,34 +65,18 @@ export const RubiksCubeBackground = () => {
             dummy.position.y += Math.sin(time + i) * 0.02;
             dummy.updateMatrix();
             mesh.current!.setMatrixAt(i, dummy.matrix);
-            edgeMesh.current!.setMatrixAt(i, dummy.matrix);
         });
 
         mesh.current.instanceMatrix.needsUpdate = true;
-        edgeMesh.current.instanceMatrix.needsUpdate = true;
     });
 
     return (
-        <group>
-            {/* Dark background */}
-            <mesh>
-                <sphereGeometry args={[200, 16, 16]} />
-                <meshBasicMaterial side={THREE.BackSide} color="#0a0a0a" />
-            </mesh>
-            <ambientLight intensity={0.6} />
-            <directionalLight position={[10, 10, 10]} intensity={1.5} />
-            <pointLight position={[-10, -10, -10]} color="#4444ff" intensity={0.5} distance={80} />
-
-            <instancedMesh ref={mesh} args={[undefined, undefined, count]}>
-                <boxGeometry args={[1.5, 1.5, 1.5]} />
-                <meshStandardMaterial metalness={0.2} roughness={0.1} />
-            </instancedMesh>
-
-            {/* Edge wireframes for each cube — rendered as a separate instanced mesh */}
-            <instancedMesh ref={edgeMesh} args={[undefined, undefined, count]}>
-                <boxGeometry args={[1.55, 1.55, 1.55]} />
-                <meshBasicMaterial color="#000000" wireframe />
-            </instancedMesh>
-        </group>
+        <instancedMesh ref={mesh} args={[undefined, undefined, count]}>
+            <boxGeometry args={[1.5, 1.5, 1.5]} />
+            <meshStandardMaterial
+                metalness={0.2}
+                roughness={0.1}
+            />
+        </instancedMesh>
     );
 };
