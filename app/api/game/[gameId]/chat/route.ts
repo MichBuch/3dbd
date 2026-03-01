@@ -1,48 +1,23 @@
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { games, trustedConnections, chats, users } from "@/db/schema";
-import { eq, and, asc } from "drizzle-orm";
+import { games, chats, users } from "@/db/schema";
+import { eq, asc } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
-// GET: Fetch Messages OR Check Permission
+// GET: Fetch messages (any player in the game can chat)
 export async function GET(req: Request, { params }: { params: Promise<{ gameId: string }> }) {
-    const { searchParams } = new URL(req.url);
-    const checkOnly = searchParams.get('check') === 'true';
-
     try {
         const session = await auth();
         if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const { gameId } = await params;
 
-        // 1. Validate Game & Membership
         const [game] = await db.select().from(games).where(eq(games.id, gameId)).limit(1);
         if (!game) return NextResponse.json({ error: "Game not found" }, { status: 404 });
 
-        const isWhite = game.whitePlayerId === session.user.id;
-        const isBlack = game.blackPlayerId === session.user.id;
-        if (!isWhite && !isBlack) return NextResponse.json({ error: "Not a player" }, { status: 403 });
+        const isPlayer = game.whitePlayerId === session.user.id || game.blackPlayerId === session.user.id;
+        if (!isPlayer) return NextResponse.json({ error: "Not a player" }, { status: 403 });
 
-        const opponentId = isWhite ? game.blackPlayerId : game.whitePlayerId;
-        if (!opponentId) return NextResponse.json({ allowed: false }); // No opponent yet
-
-        // 2. Check Trust
-        const trust = await db.select().from(trustedConnections).where(
-            and(
-                eq(trustedConnections.userId, session.user.id),
-                eq(trustedConnections.friendId, opponentId)
-            )
-        ).limit(1);
-
-        if (trust.length === 0) {
-            return NextResponse.json({ allowed: false });
-        }
-
-        if (checkOnly) {
-            return NextResponse.json({ allowed: true });
-        }
-
-        // Return Messages from DB
         const result = await db.select({
             id: chats.id,
             senderId: chats.senderId,
@@ -53,43 +28,62 @@ export async function GET(req: Request, { params }: { params: Promise<{ gameId: 
             .from(chats)
             .leftJoin(users, eq(chats.senderId, users.id))
             .where(eq(chats.gameId, gameId))
-            .orderBy(asc(chats.createdAt));
+            .orderBy(asc(chats.createdAt))
+            .limit(100);
 
-        // Map to ensure createdAt is number/date as expected by frontend
         const messages = result.map(msg => ({
             ...msg,
             senderName: msg.senderName || "Unknown",
             createdAt: msg.createdAt ? new Date(msg.createdAt).getTime() : Date.now()
         }));
 
-        return NextResponse.json({ allowed: true, messages });
-
+        return NextResponse.json({ messages });
     } catch (error) {
         console.error("GET Chat Error:", error);
         return NextResponse.json({ error: "Internal Error" }, { status: 500 });
     }
 }
 
-// POST: Send Message
+// POST: Send message — persists to DB and broadcasts via socket
 export async function POST(req: Request, { params }: { params: Promise<{ gameId: string }> }) {
     try {
         const session = await auth();
         if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const { text } = await req.json();
-        if (!text || text.length > 500) return NextResponse.json({ error: "Invalid text" }, { status: 400 });
+        if (!text || text.trim().length === 0 || text.length > 500) {
+            return NextResponse.json({ error: "Invalid text" }, { status: 400 });
+        }
 
         const { gameId } = await params;
 
-        // Insert into DB
-        await db.insert(chats).values({
+        const [game] = await db.select().from(games).where(eq(games.id, gameId)).limit(1);
+        if (!game) return NextResponse.json({ error: "Game not found" }, { status: 404 });
+
+        const isPlayer = game.whitePlayerId === session.user.id || game.blackPlayerId === session.user.id;
+        if (!isPlayer) return NextResponse.json({ error: "Not a player" }, { status: 403 });
+
+        const [inserted] = await db.insert(chats).values({
             gameId,
             senderId: session.user.id,
-            message: text,
-        });
+            message: text.trim(),
+        }).returning();
 
-        return NextResponse.json({ success: true });
+        const message = {
+            id: inserted.id,
+            senderId: session.user.id,
+            senderName: session.user.name || "Unknown",
+            text: text.trim(),
+            createdAt: Date.now()
+        };
 
+        // Broadcast via socket so the other player gets it instantly
+        const io = (global as any).io;
+        if (io) {
+            io.to(`game:${gameId}`).emit('chat-message', message);
+        }
+
+        return NextResponse.json({ success: true, message });
     } catch (error) {
         console.error("POST Chat Error:", error);
         return NextResponse.json({ error: "Internal Error" }, { status: 500 });

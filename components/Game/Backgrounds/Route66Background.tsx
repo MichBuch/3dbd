@@ -35,20 +35,69 @@ export const Route66Background = () => {
 
     return (
         <group>
+            {/* Sky dome — sunset gradient */}
+            <mesh>
+                <sphereGeometry args={[500, 32, 32]} />
+                <meshBasicMaterial side={THREE.BackSide} color="#1A0A30" />
+            </mesh>
+
+            {/* Sunset layers */}
+            <mesh position={[0, -50, -300]} rotation={[Math.PI / 2, 0, 0]}>
+                <planeGeometry args={[1000, 300]} />
+                <meshBasicMaterial color="#FF4500" transparent opacity={0.6} />
+            </mesh>
+            <mesh position={[0, -20, -300]} rotation={[Math.PI / 2, 0, 0]}>
+                <planeGeometry args={[1000, 200]} />
+                <meshBasicMaterial color="#FF6B35" transparent opacity={0.4} />
+            </mesh>
+
+            {/* Large setting sun */}
+            <mesh position={[0, 30, -300]}>
+                <circleGeometry args={[55, 32]} />
+                <meshBasicMaterial color="#FF4500" />
+            </mesh>
+            <mesh position={[0, 30, -299]}>
+                <circleGeometry args={[65, 32]} />
+                <meshBasicMaterial color="#FF6600" transparent opacity={0.3} />
+            </mesh>
+
+            {/* Distant mesa/mountains */}
+            {[[-120, -120], [-60, -150], [0, -130], [60, -160], [120, -110]].map(([x, z], i) => (
+                <mesh key={i} position={[x, 5, z]}>
+                    <coneGeometry args={[30 + i * 5, 25 + i * 3, 4]} />
+                    <meshStandardMaterial color="#5C3317" roughness={1} />
+                </mesh>
+            ))}
+
             {/* 1. The Road (Moving Stripes) */}
             <RoadFloor />
 
             {/* 2. Environment (Desert Plane) */}
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2, 0]} receiveShadow>
                 <planeGeometry args={[1000, 1000]} />
-                <meshStandardMaterial color="#E6C288" roughness={1} />
+                <meshStandardMaterial color="#C4A35A" roughness={1} />
             </mesh>
 
-            {/* 3. Sun/Sunset */}
-            <mesh position={[0, 50, -300]}>
-                <circleGeometry args={[60, 32]} />
-                <meshBasicMaterial color="#FF4500" />
-            </mesh>
+            {/* Desert scrub patches */}
+            {Array.from({ length: 40 }, (_, i) => {
+                const side = i % 2 === 0 ? 1 : -1;
+                const x = side * (18 + Math.random() * 40);
+                const z = -Math.random() * 200;
+                return (
+                    <mesh key={i} rotation={[-Math.PI / 2, 0, Math.random() * Math.PI]} position={[x, -1.9, z]}>
+                        <planeGeometry args={[3 + Math.random() * 5, 3 + Math.random() * 5]} />
+                        <meshStandardMaterial color="#8B7355" roughness={1} transparent opacity={0.6} />
+                    </mesh>
+                );
+            })}
+
+            {/* Roadside diner */}
+            <Diner position={[-45, -2, -60]} />
+
+            {/* Power line poles */}
+            {[-20, -60, -100, -140, -180].map((z, i) => (
+                <PowerPole key={i} position={[22, -2, z]} />
+            ))}
 
             {/* 4. Moving Objects */}
             {objects.map((obj) => (
@@ -182,3 +231,61 @@ const MovingRoadsideObject = ({ data, signTex }: { data: any, signTex: THREE.Tex
         </group>
     );
 };
+
+// Roadside diner
+const Diner = ({ position }: any) => (
+    <group position={position}>
+        {/* Main building */}
+        <mesh position={[0, 5, 0]} castShadow>
+            <boxGeometry args={[20, 10, 12]} />
+            <meshStandardMaterial color="#C0C0C0" metalness={0.4} roughness={0.5} />
+        </mesh>
+        {/* Roof overhang */}
+        <mesh position={[0, 10.5, 2]}>
+            <boxGeometry args={[22, 1, 16]} />
+            <meshStandardMaterial color="#CC0000" roughness={0.6} />
+        </mesh>
+        {/* Neon sign */}
+        <mesh position={[0, 13, 2]}>
+            <boxGeometry args={[12, 3, 0.5]} />
+            <meshStandardMaterial color="#FF4500" emissive="#FF2200" emissiveIntensity={2} />
+        </mesh>
+        {/* Windows */}
+        {[-5, 0, 5].map((x, i) => (
+            <mesh key={i} position={[x, 5, 6.1]}>
+                <boxGeometry args={[3.5, 4, 0.2]} />
+                <meshStandardMaterial color="#FFD700" emissive="#FF8C00" emissiveIntensity={0.8} transparent opacity={0.8} />
+            </mesh>
+        ))}
+        {/* Door */}
+        <mesh position={[0, 3, 6.1]}>
+            <boxGeometry args={[3, 6, 0.2]} />
+            <meshStandardMaterial color="#8B4513" roughness={0.8} />
+        </mesh>
+        {/* Parking lot light */}
+        <pointLight position={[0, 15, 5]} color="#FFD700" intensity={3} distance={30} decay={2} />
+    </group>
+);
+
+// Power line pole
+const PowerPole = ({ position }: any) => (
+    <group position={position}>
+        {/* Pole */}
+        <mesh position={[0, 8, 0]}>
+            <cylinderGeometry args={[0.3, 0.4, 16, 6]} />
+            <meshStandardMaterial color="#5C3A1E" roughness={0.9} />
+        </mesh>
+        {/* Cross arm */}
+        <mesh position={[0, 14, 0]} rotation={[0, 0, Math.PI / 2]}>
+            <cylinderGeometry args={[0.15, 0.15, 6, 6]} />
+            <meshStandardMaterial color="#5C3A1E" roughness={0.9} />
+        </mesh>
+        {/* Insulators */}
+        {[-2.5, 2.5].map((x, i) => (
+            <mesh key={i} position={[x, 13.5, 0]}>
+                <cylinderGeometry args={[0.25, 0.25, 0.8, 8]} />
+                <meshStandardMaterial color="#8B8B00" roughness={0.5} />
+            </mesh>
+        ))}
+    </group>
+);

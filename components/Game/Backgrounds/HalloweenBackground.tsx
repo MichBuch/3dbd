@@ -58,14 +58,49 @@ export const HalloweenBackground = () => {
     return (
         <group>
             {/* Spooky Atmosphere */}
-            <fog attach="fog" args={['#2a0a2a', 10, 80]} />
-            <ambientLight intensity={0.15} color="#4b0082" />
-            <pointLight position={[0, 10, 0]} intensity={1} color="#ff6600" distance={50} />
+            <fog attach="fog" args={['#1a051a', 8, 90]} />
+            <ambientLight intensity={0.1} color="#4b0082" />
+            <pointLight position={[0, 10, 0]} intensity={1.5} color="#ff6600" distance={60} />
+
+            {/* Sky dome */}
+            <mesh>
+                <sphereGeometry args={[200, 32, 32]} />
+                <meshBasicMaterial side={THREE.BackSide} color="#0d0010" />
+            </mesh>
+
+            {/* Full Moon */}
+            <group position={[-40, 35, -80]}>
+                <mesh>
+                    <sphereGeometry args={[12, 32, 32]} />
+                    <meshBasicMaterial color="#FFFDE7" />
+                </mesh>
+                {/* Moon craters */}
+                {[[-3, 2, 11], [4, -3, 11], [-1, -5, 11], [6, 4, 10], [-6, -1, 10]].map(([cx, cy, cz], i) => (
+                    <mesh key={i} position={[cx, cy, cz]}>
+                        <sphereGeometry args={[1 + i * 0.3, 8, 8]} />
+                        <meshBasicMaterial color="#E8E0C8" />
+                    </mesh>
+                ))}
+                <pointLight color="#FFFDE7" intensity={2} distance={200} decay={1} />
+            </group>
+
+            {/* Stars */}
+            {Array.from({ length: 200 }, (_, i) => {
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(Math.random() * 0.7);
+                const r = 180;
+                return (
+                    <mesh key={i} position={[Math.sin(phi) * Math.cos(theta) * r, Math.cos(phi) * r, Math.sin(phi) * Math.sin(theta) * r]}>
+                        <sphereGeometry args={[0.3 + Math.random() * 0.4, 4, 4]} />
+                        <meshBasicMaterial color="#ffffff" />
+                    </mesh>
+                );
+            })}
 
             {/* Ground - dark purple grass */}
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2, 0]} receiveShadow>
-                <planeGeometry args={[200, 200]} />
-                <meshStandardMaterial color="#1a051a" roughness={1} />
+                <planeGeometry args={[300, 300]} />
+                <meshStandardMaterial color="#0d0515" roughness={1} />
             </mesh>
 
             {/* Spooky Objects */}
@@ -93,6 +128,9 @@ export const HalloweenBackground = () => {
 
             {/* Fog Particles */}
             <FogParticles />
+
+            {/* Cauldron */}
+            <Cauldron position={[0, -2, -8]} />
         </group>
     );
 };
@@ -369,5 +407,71 @@ const FogParticles = () => {
                 sizeAttenuation
             />
         </points>
+    );
+};
+
+// Bubbling cauldron
+const Cauldron = ({ position }: any) => {
+    const bubbleRef = useRef<THREE.Points>(null);
+    const count = 40;
+    const positions = useMemo(() => new Float32Array(count * 3), []);
+    const bubbles = useMemo(() => Array.from({ length: count }, () => ({
+        x: (Math.random() - 0.5) * 2,
+        y: Math.random() * 3,
+        z: (Math.random() - 0.5) * 2,
+        speed: 0.5 + Math.random() * 1.5
+    })), []);
+
+    useFrame((state, delta) => {
+        if (!bubbleRef.current) return;
+        bubbles.forEach((b, i) => {
+            b.y += b.speed * delta;
+            if (b.y > 4) { b.y = 0; b.x = (Math.random() - 0.5) * 2; b.z = (Math.random() - 0.5) * 2; }
+            positions[i * 3] = b.x;
+            positions[i * 3 + 1] = b.y;
+            positions[i * 3 + 2] = b.z;
+        });
+        bubbleRef.current.geometry.attributes.position.needsUpdate = true;
+    });
+
+    return (
+        <group position={position} scale={[2, 2, 2]}>
+            {/* Cauldron body */}
+            <mesh position={[0, 1.2, 0]}>
+                <sphereGeometry args={[2, 16, 12, 0, Math.PI * 2, Math.PI / 6, Math.PI * 0.7]} />
+                <meshStandardMaterial color="#222" metalness={0.6} roughness={0.4} side={THREE.DoubleSide} />
+            </mesh>
+            {/* Rim */}
+            <mesh position={[0, 2.2, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                <torusGeometry args={[2, 0.2, 8, 24]} />
+                <meshStandardMaterial color="#333" metalness={0.7} roughness={0.3} />
+            </mesh>
+            {/* Legs */}
+            {[0, 1, 2].map(i => {
+                const a = (i / 3) * Math.PI * 2;
+                return (
+                    <mesh key={i} position={[Math.cos(a) * 1.5, 0, Math.sin(a) * 1.5]} rotation={[0.3, a, 0]}>
+                        <cylinderGeometry args={[0.15, 0.2, 1.5, 6]} />
+                        <meshStandardMaterial color="#222" metalness={0.5} roughness={0.5} />
+                    </mesh>
+                );
+            })}
+            {/* Brew surface */}
+            <mesh position={[0, 2.1, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+                <circleGeometry args={[1.9, 32]} />
+                <meshStandardMaterial color="#00CC44" emissive="#00FF44" emissiveIntensity={0.8} roughness={0.3} transparent opacity={0.9} />
+            </mesh>
+            {/* Bubbles */}
+            <points ref={bubbleRef} position={[0, 2, 0]}>
+                <bufferGeometry>
+                    <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} args={[positions, 3]} />
+                </bufferGeometry>
+                <pointsMaterial size={0.2} color="#00FF44" transparent opacity={0.8} blending={THREE.AdditiveBlending} depthWrite={false} sizeAttenuation />
+            </points>
+            {/* Green glow */}
+            <pointLight position={[0, 3, 0]} color="#00FF44" intensity={3} distance={15} decay={2} />
+            {/* Fire underneath */}
+            <pointLight position={[0, -0.5, 0]} color="#FF4500" intensity={2} distance={8} decay={2} />
+        </group>
     );
 };

@@ -16,7 +16,6 @@ import { SportsBackground } from './SportsBackground';
 import { WinterBackground } from './WinterBackground';
 import { FestiveBackground } from './FestiveBackground';
 import { CozyBackground } from './CozyBackground';
-import { ComingSoonFlyby } from './ComingSoonFlyby';
 import { MoonBallBackground } from './MoonBallBackground';
 import { AfricanBackground } from './AfricanBackground';
 import { PlayroomBackground } from './PlayroomBackground';
@@ -75,40 +74,23 @@ export const BackgroundSystem = () => {
     // Render 3D Backgrounds ONLY if in Theme mode
     if (preferences.backgroundMode !== 'theme') return null;
 
-    // Coming Soon Banner Logic
-    // User requested "Coming Soon" on most themes except Space
-    const showComingSoon = ![
-        'space', // Specifically excluded
-        'dark',  // Default/Classic
-        'wood',  // Classic
-        'black_white', // Minimalist
-        'route66', // Has its own full 3D scene
-        'area51',  // Has its own full 3D scene
-    ].includes(theme.id);
-
     return (
         <>
             {theme.id === 'space' && <><StarField /><SpaceObjects /></>}
+            {theme.id === 'starry' && <StarField />}
             {theme.id === 'rubik' && <RubiksCubeBackground />}
             {theme.id === 'area51' && <Area51Background />}
             {theme.id === 'beach' && <BeachBackground />}
             {theme.id === 'halloween' && <HalloweenBackground />}
-
-            {/* Sports Pack */}
-            {['tennis', 'padel', 'pickleball', 'rugby'].includes(theme.id) && <SportsBackground />}
-
-            {/* Festive Pack */}
-            {['chinese_new_year', 'diwali', 'easter'].includes(theme.id) && <FestiveBackground />}
-
+            {theme.id === 'cozy' && <CozyBackground />}
             {theme.id === 'snow' && <WinterBackground />}
-            {theme.id === 'starry' && <StarField />}
+            {theme.id === 'winter' && <WinterBackground />}
             {theme.id === 'moonball' && <MoonBallBackground />}
             {theme.id === 'african' && <AfricanBackground />}
-            {theme.id === 'toys' && <PlayroomBackground />}
+            {theme.id === 'toys' && <><ToyObjects /><PlayroomBackground /></>}
             {theme.id === 'route66' && <Route66Background />}
-
-            {/* Flyby Banner for incomplete themes */}
-            {showComingSoon && <ComingSoonFlyby />}
+            {['tennis', 'padel', 'pickleball', 'rugby'].includes(theme.id) && <SportsBackground />}
+            {['chinese_new_year', 'diwali', 'easter'].includes(theme.id) && <FestiveBackground />}
         </>
     );
 };

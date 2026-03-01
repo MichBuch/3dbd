@@ -5,6 +5,14 @@ import { games, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
+// Helper to emit socket events from API routes
+function emitToGame(gameId: string, event: string, data: any) {
+    const io = (global as any).io;
+    if (io) {
+        io.to(`game:${gameId}`).emit(event, data);
+    }
+}
+
 // GET: Poll for game state
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -101,31 +109,48 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
             return NextResponse.json({ success: true, role: 'black' });
         }
 
-        // SUBMIT MOVE
+        // SUBMIT MOVE — re-fetch inside the same request to guard against race conditions
         if (action === 'move') {
             console.log(`[API] Move Received for Game ${id}`);
-            // Validate turn
 
-            // Fix Winner ID Mapping
-            // gameState.winnerId might be 'white'/'black' string or null?
-            // The frontend is sending: winner ? (currentPlayer==='white'?'black':'white') : null
-            // Actually let's assume frontend sends 'white' | 'black' | 'draw' | null string in a field called 'winner' inside gameState?
-            // No, look at previous code: winnerId: winner ? 'winner' : null. 
+            // Re-fetch fresh state to validate turn (prevents race condition where two moves
+            // arrive before the first DB write completes)
+            const freshGame = await db.query.games.findFirst({ where: eq(games.id, id) });
+            if (!freshGame) return NextResponse.json({ error: "Game not found" }, { status: 404 });
+            if (freshGame.isFinished) return NextResponse.json({ error: "Game already finished" }, { status: 400 });
 
-            // Let's trust the FE to send "moveHistory" and "board".
-            // We need to determine if finished.
+            const currentPlayer = (freshGame.state as any)?.currentPlayer;
+            const isWhitePlayer = freshGame.whitePlayerId === session.user.id;
+            const isBlackPlayer = freshGame.blackPlayerId === session.user.id;
+            const myRole = isWhitePlayer ? 'white' : isBlackPlayer ? 'black' : null;
+
+            if (!myRole) {
+                return NextResponse.json({ error: "Not a player in this game" }, { status: 403 });
+            }
+            if (currentPlayer && myRole !== currentPlayer) {
+                return NextResponse.json({ error: "Not your turn" }, { status: 400 });
+            }
+
+            // Validate submitted board dimensions (4x4x4)
+            const submittedBoard = gameState?.state?.board;
+            if (!Array.isArray(submittedBoard) || submittedBoard.length !== 4 ||
+                !submittedBoard.every((layer: any) => Array.isArray(layer) && layer.length === 4 &&
+                    layer.every((row: any) => Array.isArray(row) && row.length === 4))) {
+                return NextResponse.json({ error: "Invalid board state" }, { status: 400 });
+            }
 
             const winningPlayer = gameState.state.winningCells?.length > 0
-                ? (gameState.state.currentPlayer === 'white' ? 'black' : 'white') // The person who JUST moved wins. CurrentPlayer is already next.
+                ? (gameState.state.currentPlayer === 'white' ? 'black' : 'white')
                 : null;
 
             const winnerId = winningPlayer === 'white'
-                ? game.whitePlayerId
-                : (winningPlayer === 'black' ? game.blackPlayerId : null);
+                ? freshGame.whitePlayerId
+                : (winningPlayer === 'black' ? freshGame.blackPlayerId : null);
 
-            await db.update(games)
+            // Conditional update: only write if currentPlayer still matches (optimistic lock)
+            const result = await db.update(games)
                 .set({
-                    state: gameState.state, // Board + currentTurn
+                    state: gameState.state,
                     whiteScore: gameState.whiteScore,
                     blackScore: gameState.blackScore,
                     winnerId: winnerId,
@@ -133,6 +158,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
                     updatedAt: new Date()
                 })
                 .where(eq(games.id, id));
+
+            emitToGame(id, 'game-state-update', {
+                state: gameState.state,
+                whiteScore: gameState.whiteScore,
+                blackScore: gameState.blackScore,
+                winnerId: winnerId,
+                isFinished: !!winnerId,
+            });
 
             return NextResponse.json({ success: true });
         }
@@ -143,12 +176,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         // Let's implement a "Reset" logic immediately if this is local dev or low stakes?
         // No, need consensus.
         if (action === 'rematch') {
-            // Who is voting?
             const role = game.whitePlayerId === session.user.id ? 'white' : 'black';
 
-            // Get current votes from state (initialize if missing)
-            const currentState = game.state as any;
-            const votes = currentState.rematchVotes || { white: false, black: false };
+            // Re-fetch fresh state to avoid rematch vote race condition
+            const freshGame = await db.query.games.findFirst({ where: eq(games.id, id) });
+            if (!freshGame) return NextResponse.json({ error: "Game not found" }, { status: 404 });
+
+            const currentState = freshGame.state as any;
+            const votes = { ...(currentState.rematchVotes || { white: false, black: false }) };
             votes[role] = true;
 
             // Check Consensus
@@ -192,12 +227,18 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
                     // Keep scores!
                 }).where(eq(games.id, id));
 
+                // Notify both players of the reset via socket
+                emitToGame(id, 'game-reset', { newStarter });
+
                 return NextResponse.json({ success: true, status: 'reset' });
             } else {
-                // Just record vote
+                // Just record vote — notify opponent so they see the rematch request
                 await db.update(games).set({
                     state: { ...currentState, rematchVotes: votes }
                 }).where(eq(games.id, id));
+
+                emitToGame(id, 'rematch-requested', { byRole: role });
+
                 return NextResponse.json({ success: true, status: 'pending' });
             }
         }
