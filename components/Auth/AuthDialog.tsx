@@ -288,6 +288,10 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                                     </div>
                                     <div className="flex items-center justify-center gap-2 text-gray-300">
                                         <span className="text-green-400 font-bold">✓</span>
+                                        <span>In-Game Chat</span>
+                                    </div>
+                                    <div className="flex items-center justify-center gap-2 text-gray-300">
+                                        <span className="text-green-400 font-bold">✓</span>
                                         <span>Cancel Anytime</span>
                                     </div>
                                 </div>
@@ -312,10 +316,18 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
                                 <div className="text-4xl font-bold text-white mb-1">$9.99<span className="text-sm text-gray-400">/yr</span></div>
                                 <div className="text-[10px] text-neonBlue mb-8 font-mono">SAVE 83% vs Monthly</div>
 
-                                <div className="space-y-3 mb-8 text-sm w-full flex justify-center">
-                                    <div className="flex items-center gap-2 text-gray-300">
+                                <div className="space-y-3 mb-8 text-sm w-full">
+                                    <div className="flex items-center justify-center gap-2 text-gray-300">
                                         <span className="text-green-400 font-bold">✓</span>
                                         <span>Online Multi-player</span>
+                                    </div>
+                                    <div className="flex items-center justify-center gap-2 text-gray-300">
+                                        <span className="text-green-400 font-bold">✓</span>
+                                        <span>In-Game Chat</span>
+                                    </div>
+                                    <div className="flex items-center justify-center gap-2 text-gray-300">
+                                        <span className="text-green-400 font-bold">✓</span>
+                                        <span>Best Value</span>
                                     </div>
                                 </div>
 
@@ -336,7 +348,7 @@ export function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
 
                         {/* Beta Banner */}
                         <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-6 text-center text-gray-300 text-sm">
-                            The app is in beta get these low price offerings available to the first 1000 signups
+                            Introductory offer at $9.99/year — pricing may increase as the platform scales
                         </div>
 
                         <p className="text-center text-gray-500 text-sm">

@@ -44,11 +44,16 @@ export async function GET(req: Request, { params }: { params: Promise<{ gameId: 
     }
 }
 
-// POST: Send message — persists to DB and broadcasts via socket
+// POST: Send message — premium only
 export async function POST(req: Request, { params }: { params: Promise<{ gameId: string }> }) {
     try {
         const session = await auth();
         if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+        // Chat is a premium feature
+        if ((session.user as any).plan !== 'premium') {
+            return NextResponse.json({ error: "Premium required" }, { status: 403 });
+        }
 
         const { text } = await req.json();
         if (!text || text.trim().length === 0 || text.length > 500) {

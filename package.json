@@ -10,7 +10,9 @@
     "lint": "next lint",
     "electron:dev": "electron .",
     "electron:build": "next build && electron-builder",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "seed:bots": "tsx scripts/seed-bots.ts",
+    "seed:users": "tsx scripts/seed-users.ts"
   },
   "engines": {
     "node": ">=20.x"

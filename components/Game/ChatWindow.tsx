@@ -13,8 +13,25 @@ interface ChatMessage {
     createdAt: number;
 }
 
-export const ChatWindow = ({ gameId }: { gameId: string }) => {
+export const ChatWindow = ({ gameId, isPremium }: { gameId: string; isPremium: boolean }) => {
     const { data: session } = useSession();
+
+    // Free users see a locked state
+    if (!isPremium) {
+        return (
+            <div className="fixed bottom-4 right-4 z-50">
+                <button
+                    onClick={() => window.location.href = '/?upgrade=true'}
+                    className="bg-gray-800 border border-white/10 text-gray-400 p-3 rounded-full shadow-lg hover:border-neonPink/50 transition-colors group"
+                    aria-label="Chat requires premium"
+                    title="Upgrade to unlock chat"
+                >
+                    <MessageSquare size={24} className="group-hover:text-neonPink transition-colors" />
+                    <span className="absolute -top-1 -right-1 bg-neonPink text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">🔒</span>
+                </button>
+            </div>
+        );
+    }
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [input, setInput] = useState('');
     const [isOpen, setIsOpen] = useState(false);

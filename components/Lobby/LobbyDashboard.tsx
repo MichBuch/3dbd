@@ -17,6 +17,7 @@ interface OnlineUser {
     status: 'online' | 'playing' | 'offline';
     wins: number;
     losses: number;
+    isBot?: boolean;
 }
 
 interface OpenGame {
@@ -49,6 +50,7 @@ export const LobbyDashboard = () => {
     // Feature flag: Railway has Socket.IO; Vercel is serverless (no multiplayer)
     const isMultiplayerEnabled = process.env.NEXT_PUBLIC_MULTIPLAYER_ENABLED === 'true';
     const railwayUrl = process.env.NEXT_PUBLIC_RAILWAY_URL || 'https://triptrapping.up.railway.app';
+    const isPremium = (session?.user as any)?.plan === 'premium';
 
     // SWR Fetcher
     const fetcher = (url: string) => fetch(url).then(r => r.json());
@@ -348,7 +350,10 @@ export const LobbyDashboard = () => {
                                         <div className={`w-3 h-3 rounded-full border-2 border-black ${u.status === 'playing' ? 'bg-yellow-500' : 'bg-green-500'}`} />
                                     </div>
                                     <div>
-                                        <div className="font-bold text-white text-sm">{u.name}</div>
+                                        <div className="font-bold text-white text-sm flex items-center gap-1">
+                                            {u.name}
+                                            {u.isBot && <span className="text-[10px] bg-neonBlue/20 text-neonBlue border border-neonBlue/30 rounded px-1 font-mono">BOT</span>}
+                                        </div>
                                         <div className="text-[10px] text-neonPink font-mono">Rating: {u.rating}</div>
                                     </div>
                                 </div>
@@ -365,18 +370,18 @@ export const LobbyDashboard = () => {
                                     )}
 
                                     <button
-                                        disabled={u.status === 'playing' || !isMultiplayerEnabled}
+                                        disabled={u.status === 'playing' || !isMultiplayerEnabled || !isPremium}
                                         onClick={() => {
-                                            if (session) {
-                                                setShowChallengeModal(u.id);
-                                            } else {
-                                                setShowChallengeModal(u.id);
+                                            if (!isPremium) {
+                                                window.location.href = '/?upgrade=true';
+                                                return;
                                             }
+                                            setShowChallengeModal(u.id);
                                         }}
                                         className="opacity-0 group-hover:opacity-100 transition-opacity bg-neonBlue/20 text-neonBlue px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-neonBlue hover:text-black disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1"
-                                        title={!isMultiplayerEnabled ? 'Multiplayer not available on this server' : undefined}
+                                        title={!isPremium ? 'Premium required for multiplayer' : !isMultiplayerEnabled ? 'Multiplayer not available on this server' : undefined}
                                     >
-                                        <Swords size={12} /> {t.challenge}
+                                        <Swords size={12} /> {!isPremium ? '🔒 ' : ''}{t.challenge}
                                     </button>
                                 </div>
                             </div>
@@ -459,12 +464,12 @@ export const LobbyDashboard = () => {
                                     </div>
                                 </div>
                                 <a
-                                    href={isMultiplayerEnabled ? `/game/${g.id}` : railwayUrl}
-                                    target={isMultiplayerEnabled ? undefined : '_blank'}
-                                    rel={isMultiplayerEnabled ? undefined : 'noopener noreferrer'}
+                                    href={!isPremium ? '/?upgrade=true' : isMultiplayerEnabled ? `/game/${g.id}` : railwayUrl}
+                                    target={isMultiplayerEnabled && isPremium ? undefined : '_blank'}
+                                    rel={isMultiplayerEnabled && isPremium ? undefined : 'noopener noreferrer'}
                                     className="bg-neonBlue text-black px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-white hover:scale-105 transition-all shadow-[0_0_10px_rgba(0,255,255,0.3)] hover:shadow-[0_0_20px_rgba(0,255,255,0.6)]"
                                 >
-                                    {isMultiplayerEnabled ? t.joinGame : 'Switch Server'}
+                                    {!isPremium ? '🔒 Upgrade' : isMultiplayerEnabled ? t.joinGame : 'Switch Server'}
                                 </a>
                             </div>
                         ))

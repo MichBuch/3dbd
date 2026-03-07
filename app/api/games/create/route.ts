@@ -14,6 +14,11 @@ export async function POST(req: Request) {
         const body = await req.json();
         const { difficulty, theme, mode } = body;
 
+        // Multiplayer (pvp) is a premium feature
+        if (mode === 'pvp' && (session.user as any).plan !== 'premium') {
+            return NextResponse.json({ error: "Premium required for multiplayer" }, { status: 403 });
+        }
+
         // Initial 4x4x4 Empty Board
         const initialBoard = Array(4).fill(null).map(() =>
             Array(4).fill(null).map(() =>
