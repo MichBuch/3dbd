@@ -125,6 +125,16 @@ const Snowman = ({ position, rotation }: any) => {
                 <sphereGeometry args={[1.5, 16, 16]} />
                 <meshStandardMaterial color="white" roughness={0.1} />
             </mesh>
+            {/* Scarf */}
+            <mesh position={[0, 5.1, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                <torusGeometry args={[1.55, 0.28, 8, 20]} />
+                <meshStandardMaterial color="#CC0000" roughness={0.9} />
+            </mesh>
+            {/* Scarf knot tail */}
+            <mesh position={[1.2, 4.7, 0]} rotation={[0, 0, 0.5]}>
+                <boxGeometry args={[0.25, 1.0, 0.25]} />
+                <meshStandardMaterial color="#CC0000" roughness={0.9} />
+            </mesh>
             {/* Head */}
             <mesh position={[0, 6, 0]}>
                 <sphereGeometry args={[1, 16, 16]} />
@@ -163,6 +173,9 @@ export const WinterBackground = () => {
                 <sphereGeometry args={[250, 32, 32]} />
                 <meshBasicMaterial side={THREE.BackSide} color="#B0D4F0" />
             </mesh>
+
+            {/* Aurora Borealis */}
+            <AuroraBorealis />
 
             {/* Snow Floor */}
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2, 0]} receiveShadow>
@@ -211,6 +224,9 @@ export const WinterBackground = () => {
 
             {/* Frozen pond skater silhouette */}
             <IceSkater position={[5, -1.9, 12]} />
+
+            {/* Reindeer silhouettes crossing the sky */}
+            <ReindeerHerd />
         </group>
     );
 };
@@ -296,6 +312,109 @@ const IceSkater = ({ position }: any) => {
                 <boxGeometry args={[0.15, 0.1, 0.7]} />
                 <meshStandardMaterial color="#333" metalness={0.5} />
             </mesh>
+        </group>
+    );
+};
+
+// Aurora Borealis — multiple rippling semi-transparent curtains
+const AuroraBorealis = () => {
+    const groupRef = useRef<THREE.Group>(null);
+    const curtains = useMemo(() => [
+        { x: -30, z: -120, color: '#00FF88', width: 60, phase: 0 },
+        { x: 0, z: -110, color: '#00FFCC', width: 80, phase: 1.5 },
+        { x: 40, z: -130, color: '#88FF44', width: 55, phase: 3 },
+    ], []);
+
+    useFrame((state) => {
+        if (!groupRef.current) return;
+        groupRef.current.children.forEach((child, i) => {
+            const t = state.clock.elapsedTime + curtains[i].phase;
+            // Make curtains ripple by rotating slightly around Y and pulsing opacity
+            child.rotation.y = Math.sin(t * 0.3 + i) * 0.12;
+            (child as THREE.Mesh).material && ((child as THREE.Mesh).material as any) &&
+                ((child as THREE.Mesh).children.forEach(sub => {
+                    if ((sub as THREE.Mesh).material) {
+                        ((sub as THREE.Mesh).material as THREE.MeshBasicMaterial).opacity =
+                            0.15 + Math.sin(t * 0.5 + i * 2) * 0.08;
+                    }
+                }));
+        });
+    });
+
+    return (
+        <group ref={groupRef} position={[0, 60, -100]}>
+            {curtains.map((c, i) => (
+                <group key={i} position={[c.x, 0, c.z - (-100)]}>
+                    {/* Multiple vertical bands */}
+                    {Array.from({ length: 5 }, (_, j) => (
+                        <mesh key={j} position={[(j - 2) * (c.width / 5), -15 + Math.sin(j * 0.8 + i) * 8, 0]}>
+                            <planeGeometry args={[c.width / 5 - 1, 40 + Math.sin(j) * 10]} />
+                            <meshBasicMaterial
+                                color={c.color}
+                                transparent
+                                opacity={0.12 + j * 0.02}
+                                side={THREE.DoubleSide}
+                                depthWrite={false}
+                                blending={THREE.AdditiveBlending}
+                            />
+                        </mesh>
+                    ))}
+                </group>
+            ))}
+        </group>
+    );
+};
+
+// Reindeer herd silhouette crossing the sky
+const ReindeerHerd = () => {
+    const ref = useRef<THREE.Group>(null);
+
+    useFrame((state) => {
+        if (!ref.current) return;
+        // Slowly drift from left to right, looping
+        const t = state.clock.elapsedTime * 0.8;
+        ref.current.position.x = -120 + ((t * 4) % 250);
+        ref.current.position.y = 55 + Math.sin(state.clock.elapsedTime * 0.2) * 3;
+    });
+
+    return (
+        <group ref={ref} position={[-120, 55, -90]}>
+            {/* Santa's sleigh */}
+            <mesh position={[0, 0, 0]} rotation={[0, 0, 0.05]}>
+                <boxGeometry args={[5, 1, 2]} />
+                <meshBasicMaterial color="#1a1a1a" transparent opacity={0.8} />
+            </mesh>
+            {/* Reindeer - 8 in a row */}
+            {[0, 1, 2, 3, 4, 5, 6, 7].map(i => (
+                <group key={i} position={[-8 - i * 5.5, 1 + Math.sin(i * 0.8) * 0.5, 0]}>
+                    {/* Body */}
+                    <mesh>
+                        <boxGeometry args={[2, 0.8, 0.6]} />
+                        <meshBasicMaterial color="#1a1a1a" transparent opacity={0.75} />
+                    </mesh>
+                    {/* Head */}
+                    <mesh position={[1.2, 0.6, 0]}>
+                        <sphereGeometry args={[0.4, 6, 6]} />
+                        <meshBasicMaterial color="#1a1a1a" transparent opacity={0.75} />
+                    </mesh>
+                    {/* Antlers */}
+                    <mesh position={[1.2, 1.1, 0]} rotation={[0, 0, 0.3]}>
+                        <boxGeometry args={[0.08, 0.7, 0.08]} />
+                        <meshBasicMaterial color="#1a1a1a" transparent opacity={0.75} />
+                    </mesh>
+                    <mesh position={[1.35, 1.2, 0]} rotation={[0, 0, 0.8]}>
+                        <boxGeometry args={[0.06, 0.35, 0.06]} />
+                        <meshBasicMaterial color="#1a1a1a" transparent opacity={0.75} />
+                    </mesh>
+                    {/* Legs animating */}
+                    {[-0.5, 0.5].map((x, li) => (
+                        <mesh key={li} position={[x, -0.7, 0]} rotation={[Math.sin(i * 1.2 + li) * 0.4, 0, 0]}>
+                            <boxGeometry args={[0.1, 0.7, 0.1]} />
+                            <meshBasicMaterial color="#1a1a1a" transparent opacity={0.75} />
+                        </mesh>
+                    ))}
+                </group>
+            ))}
         </group>
     );
 };

@@ -218,7 +218,13 @@ export const CozyBackground = () => {
             {/* Fish Tank */}
             <FishTank position={[25, -2, -25]} rotation={[0, -0.5, 0]} />
 
-            {/* Window (Cold Outside) */}
+            {/* Cat on rug */}
+            <CozyCat position={[-5, -1.85, 5]} />
+
+            {/* Bookshelf on back wall */}
+            <Bookshelf position={[20, 0, -37.5]} rotation={[0, 0, 0]} />
+
+            {/* Window (Cold Outside) with falling snow */}
             <group position={[-20, 10, -38]}>
                 <mesh>
                     <boxGeometry args={[10, 8, 1]} />
@@ -233,8 +239,148 @@ export const CozyBackground = () => {
                     <boxGeometry args={[8.5, 0.5, 1.2]} />
                     <meshStandardMaterial color="#333" />
                 </mesh>
+                {/* Snow falling outside window */}
+                <WindowSnow />
             </group>
 
         </group>
+    );
+};
+
+// Cat with swishing tail
+const CozyCat = ({ position }: any) => {
+    const tailRef = useRef<THREE.Mesh>(null);
+    const blinkRef = useRef<THREE.Mesh>(null);
+    useFrame((state) => {
+        if (tailRef.current) {
+            // Tail sways left-right
+            tailRef.current.rotation.z = Math.sin(state.clock.elapsedTime * 1.5) * 0.5;
+        }
+        if (blinkRef.current) {
+            // Blink every ~4 seconds
+            const t = state.clock.elapsedTime;
+            const blinkCycle = t % 4;
+            blinkRef.current.scale.y = (blinkCycle > 3.9 && blinkCycle < 4) ? 0.1 : 1;
+        }
+    });
+    return (
+        <group position={position}>
+            {/* Body - curled up */}
+            <mesh position={[0, 0.3, 0]} scale={[1.2, 0.8, 1]}>
+                <sphereGeometry args={[0.55, 10, 10]} />
+                <meshStandardMaterial color="#888" roughness={0.9} />
+            </mesh>
+            {/* Head */}
+            <mesh position={[0.5, 0.7, 0]}>
+                <sphereGeometry args={[0.35, 10, 10]} />
+                <meshStandardMaterial color="#888" roughness={0.9} />
+            </mesh>
+            {/* Ears */}
+            <mesh position={[0.6, 1.0, 0.15]} rotation={[0, 0, 0.3]}>
+                <coneGeometry args={[0.1, 0.25, 4]} />
+                <meshStandardMaterial color="#777" roughness={0.9} />
+            </mesh>
+            <mesh position={[0.6, 1.0, -0.15]} rotation={[0, 0, -0.3]}>
+                <coneGeometry args={[0.1, 0.25, 4]} />
+                <meshStandardMaterial color="#777" roughness={0.9} />
+            </mesh>
+            {/* Eyes */}
+            <mesh ref={blinkRef} position={[0.82, 0.75, 0.15]}>
+                <sphereGeometry args={[0.06, 6, 6]} />
+                <meshBasicMaterial color="#44ff44" />
+            </mesh>
+            <mesh position={[0.82, 0.75, -0.15]}>
+                <sphereGeometry args={[0.06, 6, 6]} />
+                <meshBasicMaterial color="#44ff44" />
+            </mesh>
+            {/* Nose */}
+            <mesh position={[0.87, 0.68, 0]}>
+                <sphereGeometry args={[0.03, 5, 5]} />
+                <meshBasicMaterial color="#ffaaaa" />
+            </mesh>
+            {/* Tail - swings */}
+            <mesh ref={tailRef} position={[-0.4, 0.2, 0]} rotation={[0, 0, -1.2]}>
+                <capsuleGeometry args={[0.07, 0.9, 4, 8]} />
+                <meshStandardMaterial color="#888" roughness={0.9} />
+            </mesh>
+            {/* White chest */}
+            <mesh position={[0.2, 0.3, 0]} scale={[0.5, 0.6, 0.9]}>
+                <sphereGeometry args={[0.4, 8, 8]} />
+                <meshStandardMaterial color="#dddddd" roughness={0.9} />
+            </mesh>
+        </group>
+    );
+};
+
+// Bookshelf on the wall
+const Bookshelf = ({ position, rotation }: any) => {
+    const bookColors = ['#CC2200', '#224488', '#116622', '#AA6600', '#882288', '#116688', '#AA2244', '#446600'];
+    return (
+        <group position={position} rotation={rotation}>
+            {/* Shelf frame */}
+            <mesh position={[0, 5, 0]}>
+                <boxGeometry args={[12, 10, 2]} />
+                <meshStandardMaterial color="#5C3A1E" roughness={0.9} />
+            </mesh>
+            {/* Back panel */}
+            <mesh position={[0, 5, 0.6]}>
+                <boxGeometry args={[11.5, 9.5, 0.2]} />
+                <meshStandardMaterial color="#7A4A2A" roughness={0.9} />
+            </mesh>
+            {/* 3 shelves */}
+            {[1.5, 4.5, 7.5].map((y, si) => (
+                <group key={si}>
+                    <mesh position={[0, y, 0]}>
+                        <boxGeometry args={[11.6, 0.3, 2]} />
+                        <meshStandardMaterial color="#5C3A1E" roughness={0.9} />
+                    </mesh>
+                    {/* Books on each shelf */}
+                    {bookColors.slice(0, 6).map((color, bi) => (
+                        <mesh key={bi} position={[-4.5 + bi * 1.5 + (si % 2) * 0.4, y + 1.1, 0.2]}>
+                            <boxGeometry args={[0.8 + (bi % 2) * 0.2, 2, 1.2]} />
+                            <meshStandardMaterial color={color} roughness={0.8} />
+                        </mesh>
+                    ))}
+                </group>
+            ))}
+        </group>
+    );
+};
+
+// Snow falling outside the window
+const WindowSnow = () => {
+    const count = 30;
+    const ref = useRef<THREE.Points>(null);
+    const particles = useMemo(() => {
+        return Array.from({ length: count }, () => ({
+            x: (Math.random() - 0.5) * 8,
+            y: 4 + Math.random() * 8,
+            z: 0.8,
+            speed: 0.3 + Math.random() * 0.5,
+            drift: (Math.random() - 0.5) * 0.5
+        }));
+    }, []);
+    const positions = useMemo(() => new Float32Array(count * 3), []);
+
+    useFrame((state, delta) => {
+        if (!ref.current) return;
+        particles.forEach((p, i) => {
+            p.y -= p.speed * delta * 2;
+            p.x += p.drift * delta;
+            if (p.y < -4) { p.y = 4; p.x = (Math.random() - 0.5) * 8; }
+            positions[i * 3] = p.x;
+            positions[i * 3 + 1] = p.y;
+            positions[i * 3 + 2] = p.z;
+        });
+        ref.current.geometry.attributes.position.needsUpdate = true;
+    });
+
+    return (
+        <points ref={ref}>
+            <bufferGeometry>
+                <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} args={[positions, 3]} />
+            </bufferGeometry>
+            <pointsMaterial size={0.25} color="#ffffff" transparent opacity={0.85} sizeAttenuation />
+        </points>
     );
 };

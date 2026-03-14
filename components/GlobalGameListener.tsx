@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Swords, X, Check, Bell, Loader2 } from 'lucide-react';
@@ -23,6 +23,8 @@ export const GlobalGameListener = () => {
     const [guestId, setGuestId] = useState<string | null>(null);
     const [resumeGameId, setResumeGameId] = useState<string | null>(null);
     const { gameId: activeGameId } = useGameStore();
+    // Track games the user has dismissed so we don't reprompt them
+    const dismissedGames = useRef<Set<string>>(new Set());
 
     // 1. Initialize Guest ID
     useEffect(() => {
@@ -91,8 +93,8 @@ export const GlobalGameListener = () => {
                 // NEVER force-redirect — show a prompt instead so the user can choose.
                 if (heartbeatData.activeGameId) {
                     const targetPath = `/game/${heartbeatData.activeGameId}`;
-                    // Don't show prompt if we are already on that page
-                    if (pathname !== targetPath && !resumeGameId) {
+                    // Don't show prompt if we are already on that page, or user already dismissed it
+                    if (pathname !== targetPath && !resumeGameId && !dismissedGames.current.has(heartbeatData.activeGameId)) {
                         setResumeGameId(heartbeatData.activeGameId);
                     }
                 } else {
@@ -157,7 +159,12 @@ export const GlobalGameListener = () => {
         }
     };
 
-    const dismissResume = () => setResumeGameId(null);
+    const dismissResume = () => {
+        if (resumeGameId) {
+            dismissedGames.current.add(resumeGameId); // Never reprompt for this game
+        }
+        setResumeGameId(null);
+    };
 
     if (!incomingChallenge && !resumeGameId) return null;
 
@@ -218,7 +225,7 @@ export const GlobalGameListener = () => {
                                     {incomingChallenge.fromName}
                                 </p>
                                 <p className="text-xs text-gray-400 italic mb-3">
-                                    "{incomingChallenge.message || 'Let\'s play 3D Four in a Row!'}"
+                                    &ldquo;{incomingChallenge.message || "Let's play 3D Four in a Row!"}&rdquo;
                                 </p>
 
                                 <div className="flex gap-2">

@@ -28,6 +28,8 @@ export const GameUI = () => {
     const [showWinnerDialog, setShowWinnerDialog] = useState(false);
     const [showResignDialog, setShowResignDialog] = useState(false);
     const [resignReason, setResignReason] = useState('');
+    const [opponentName, setOpponentName] = useState<string | null>(null);
+    const [opponentWantsRematch, setOpponentWantsRematch] = useState(false);
     const params = useParams();
     const gameId = params?.id;
     const isOnline = !!gameId;
@@ -38,6 +40,36 @@ export const GameUI = () => {
             setShowWinnerDialog(true);
         }
     }, [winner]);
+
+    // Fetch opponent name from game data (online mode)
+    useEffect(() => {
+        if (!gameId || !isOnline) return;
+        const fetchGameData = async () => {
+            try {
+                const res = await fetch(`/api/games/${gameId}`);
+                if (!res.ok) return;
+                const data = await res.json();
+                // Determine which player is the opponent
+                const myId = session?.user?.id;
+                if (data.players) {
+                    const opponent = Object.values(data.players).find((p: any) => p.id !== myId) as any;
+                    if (opponent?.name) setOpponentName(opponent.name);
+                }
+                // Check if opponent wants rematch
+                if (data.rematchRequestedBy && data.rematchRequestedBy !== myId) {
+                    setOpponentWantsRematch(true);
+                } else {
+                    setOpponentWantsRematch(false);
+                }
+            } catch (e) {
+                console.error('Failed to fetch game data', e);
+            }
+        };
+        fetchGameData();
+        // Poll every 5 seconds when game is ongoing or just finished
+        const interval = setInterval(fetchGameData, 5000);
+        return () => clearInterval(interval);
+    }, [gameId, isOnline, session, winner]);
 
     // Save Game Result
     useEffect(() => {
@@ -342,7 +374,11 @@ export const GameUI = () => {
                                 ? t.draw
                                 : winner === 'white'
                                     ? `${(session?.user?.name || t.player1).toUpperCase()} ${t.wins}`
-                                    : isAiEnabled ? t.computer : `${t.player2} ${t.wins}`
+                                    : isAiEnabled
+                                        ? t.computer
+                                        : isOnline
+                                            ? `${(opponentName || t.player2).toUpperCase()} ${t.wins}`
+                                            : `${(preferences.opponentName || t.player2).toUpperCase()} ${t.wins}`
                             }
                         </h2>
                         <div className="text-gray-400 mb-10 font-mono text-xl flex items-center justify-center gap-4">
@@ -409,6 +445,44 @@ export const GameUI = () => {
                         black: { id: 'unknown', name: 'Black' }  // The component fetches messages itself
                     }}
                 />
+            )}
+
+            {/* Rematch Request Banner (Online Mode) */}
+            {isOnline && opponentWantsRematch && !winner && (
+                <div className="fixed bottom-24 right-4 z-50 animate-in slide-in-from-right duration-300">
+                    <div className="bg-black/90 border border-neonPink/60 shadow-[0_0_20px_rgba(255,0,128,0.2)] p-4 rounded-xl w-72 text-white relative overflow-hidden">
+                        <div className="absolute top-0 bottom-0 left-0 w-1 bg-neonPink animate-pulse" />
+                        <div className="flex items-start gap-3 ml-2">
+                            <div className="flex-1">
+                                <h4 className="font-bold text-sm text-neonPink uppercase tracking-wider mb-1">
+                                    Rematch Request!
+                                </h4>
+                                <p className="text-xs text-gray-400 mb-3">
+                                    {opponentName || 'Your opponent'} wants a rematch. Accept?
+                                </p>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={async () => {
+                                            try {
+                                                await fetch(`/api/games/${gameId}/reset`, { method: 'POST' });
+                                                window.location.reload();
+                                            } catch (e) { console.error(e); }
+                                        }}
+                                        className="flex-1 bg-neonPink/20 hover:bg-neonPink hover:text-black text-neonPink border border-neonPink/50 font-bold py-1.5 px-3 rounded text-xs transition-colors"
+                                    >
+                                        ✓ Accept
+                                    </button>
+                                    <button
+                                        onClick={() => setOpponentWantsRematch(false)}
+                                        className="flex-1 bg-white/5 hover:bg-white/10 text-gray-400 border border-white/10 font-bold py-1.5 px-3 rounded text-xs transition-colors"
+                                    >
+                                        ✗ Decline
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             )}
         </>
     );

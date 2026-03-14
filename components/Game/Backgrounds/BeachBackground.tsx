@@ -296,6 +296,139 @@ const Island = ({ position, scale }: any) => (
     </group>
 );
 
+// Jumping dolphin
+const Dolphin = ({ position }: any) => {
+    const ref = useRef<THREE.Group>(null);
+    useFrame((state) => {
+        if (!ref.current) return;
+        const t = state.clock.elapsedTime * 0.6;
+        // Arc in and out of water
+        const jumpPhase = ((t % (Math.PI * 2)) < Math.PI) ? Math.sin((t % (Math.PI * 2))) : 0;
+        ref.current.position.y = position[1] + jumpPhase * 6;
+        ref.current.position.x = position[0] + Math.sin(t * 0.4) * 10;
+        ref.current.rotation.z = -jumpPhase * 0.5; // Lean on arc
+    });
+    return (
+        <group ref={ref}>
+            {/* Body */}
+            <mesh rotation={[0, 0, 0]}>
+                <capsuleGeometry args={[0.7, 3, 8, 16]} />
+                <meshStandardMaterial color="#5b8fd4" roughness={0.4} metalness={0.1} />
+            </mesh>
+            {/* Belly */}
+            <mesh position={[0, -0.5, 0]}>
+                <capsuleGeometry args={[0.5, 2.5, 6, 12]} />
+                <meshStandardMaterial color="#d4eaf7" roughness={0.5} />
+            </mesh>
+            {/* Dorsal fin */}
+            <mesh position={[0, 0.9, -0.5]} rotation={[0, 0, 0.15]}>
+                <coneGeometry args={[0.25, 0.9, 5]} />
+                <meshStandardMaterial color="#4a7bbf" roughness={0.4} />
+            </mesh>
+            {/* Tail flukes */}
+            <mesh position={[0, 0, -2.2]} rotation={[0, 0, 0]}>
+                <boxGeometry args={[2, 0.2, 0.8]} />
+                <meshStandardMaterial color="#4a7bbf" roughness={0.4} />
+            </mesh>
+        </group>
+    );
+};
+
+// Distant sailboat drifting across horizon
+const Sailboat = () => {
+    const ref = useRef<THREE.Group>(null);
+    useFrame((state) => {
+        if (!ref.current) return;
+        const t = state.clock.elapsedTime * 0.05;
+        ref.current.position.x = -80 + ((t * 6) % 200);
+        ref.current.position.y = -1.8 + Math.sin(state.clock.elapsedTime * 0.3) * 0.15;
+    });
+    return (
+        <group ref={ref} position={[-80, -1.8, -55]}>
+            {/* Hull */}
+            <mesh position={[0, 0, 0]}>
+                <boxGeometry args={[6, 1.2, 2.5]} />
+                <meshStandardMaterial color="#8B4513" roughness={0.8} />
+            </mesh>
+            {/* Mast */}
+            <mesh position={[0, 4, 0]}>
+                <cylinderGeometry args={[0.08, 0.08, 7, 6]} />
+                <meshStandardMaterial color="#aaaaaa" metalness={0.4} />
+            </mesh>
+            {/* Main sail */}
+            <mesh position={[0.8, 4.5, 0]} rotation={[0, 0, 0.08]}>
+                <boxGeometry args={[0.1, 5, 2.2]} />
+                <meshStandardMaterial color="#fffef0" side={THREE.DoubleSide} roughness={0.9} />
+            </mesh>
+            {/* Jib sail */}
+            <mesh position={[2, 3.5, 0]} rotation={[0, 0, 0.35]}>
+                <boxGeometry args={[0.08, 3.5, 1.2]} />
+                <meshStandardMaterial color="#fffef0" side={THREE.DoubleSide} roughness={0.9} />
+            </mesh>
+        </group>
+    );
+};
+
+// Crab skittering sideways on sand
+const Crab = ({ position }: any) => {
+    const ref = useRef<THREE.Group>(null);
+    const dir = useRef(1);
+    useFrame((state, delta) => {
+        if (!ref.current) return;
+        const t = state.clock.elapsedTime;
+        // Skitter sideways with pauses
+        const sinT = Math.sin(t * 0.8);
+        ref.current.position.x = position[0] + sinT * 8;
+        // Slight bobbing
+        ref.current.position.y = position[1] + Math.abs(Math.sin(t * 4)) * 0.1;
+        // Face direction of movement (sideways creature)
+        dir.current = Math.cos(t * 0.8) > 0 ? 1 : -1;
+        ref.current.rotation.y = dir.current > 0 ? 0 : Math.PI;
+    });
+    return (
+        <group ref={ref}>
+            {/* Body */}
+            <mesh>
+                <boxGeometry args={[0.8, 0.3, 0.6]} />
+                <meshStandardMaterial color="#e8622a" roughness={0.8} />
+            </mesh>
+            {/* Eyes on stalks */}
+            {[-0.25, 0.25].map((x, i) => (
+                <group key={i} position={[x, 0.2, 0.3]}>
+                    <mesh>
+                        <cylinderGeometry args={[0.03, 0.03, 0.2, 4]} />
+                        <meshStandardMaterial color="#c0501a" />
+                    </mesh>
+                    <mesh position={[0, 0.12, 0]}>
+                        <sphereGeometry args={[0.07, 6, 6]} />
+                        <meshBasicMaterial color="#111" />
+                    </mesh>
+                </group>
+            ))}
+            {/* Claws */}
+            {[-0.55, 0.55].map((x, i) => (
+                <group key={i} position={[x, 0, 0.2]}>
+                    <mesh rotation={[0, i === 0 ? -0.5 : 0.5, 0]}>
+                        <boxGeometry args={[0.35, 0.2, 0.25]} />
+                        <meshStandardMaterial color="#e8622a" roughness={0.8} />
+                    </mesh>
+                </group>
+            ))}
+            {/* Legs (4 per side) */}
+            {[-1, -0.5, 0.5, 1].map((zOffset, i) => [
+                <mesh key={`L${i}`} position={[-0.5, -0.1, zOffset * 0.18]} rotation={[Math.sin(i) * 0.3, 0, -0.8]}>
+                    <cylinderGeometry args={[0.03, 0.02, 0.5, 4]} />
+                    <meshStandardMaterial color="#c0501a" />
+                </mesh>,
+                <mesh key={`R${i}`} position={[0.5, -0.1, zOffset * 0.18]} rotation={[Math.sin(i) * 0.3, 0, 0.8]}>
+                    <cylinderGeometry args={[0.03, 0.02, 0.5, 4]} />
+                    <meshStandardMaterial color="#c0501a" />
+                </mesh>
+            ])}
+        </group>
+    );
+};
+
 export const BeachBackground = () => {
     const umbrellaData = useMemo(() => [
         { pos: [-12, -1.8, -8], color: '#FF6B35' },
@@ -353,6 +486,16 @@ export const BeachBackground = () => {
 
             {/* Whale */}
             <Whale position={[-20, -1.5, 35]} />
+
+            {/* Dolphin jumping */}
+            <Dolphin position={[15, -2.5, 25]} />
+
+            {/* Sailboat on horizon */}
+            <Sailboat />
+
+            {/* Crab on sand */}
+            <Crab position={[5, -1.9, 0]} />
+            <Crab position={[-12, -1.9, 4]} />
 
             {/* Seagulls with flapping wings */}
             <Seagull position={[0, 18, -15]} speed={0.5} offset={0} />

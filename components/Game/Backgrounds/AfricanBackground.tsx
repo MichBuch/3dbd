@@ -323,7 +323,133 @@ export const AfricanBackground = () => {
             <ZebraHerd />
             <CirclingVultures />
 
+            {/* Animated lion stalking */}
+            <AnimatedLion />
+
+            {/* Shooting stars across the sky */}
+            <ShootingStars />
+
             <Stars radius={200} depth={60} count={800} factor={3} saturation={0} fade speed={0.5} />
+        </group>
+    );
+};
+
+// Low-poly lion slowly stalking across the savanna
+const AnimatedLion = () => {
+    const ref = useRef<THREE.Group>(null);
+    useFrame((state) => {
+        if (!ref.current) return;
+        const t = state.clock.elapsedTime * 0.15;
+        // Walk left to right then loop
+        ref.current.position.x = -70 + ((t * 15) % 160);
+        // Subtle up-down walking motion
+        ref.current.position.y = -5 + Math.abs(Math.sin(t * 8)) * 0.2;
+        // Leg animation
+        ref.current.children.forEach((child, i) => {
+            if (child.name.startsWith('leg')) {
+                child.rotation.x = Math.sin(t * 8 + i * 0.8) * 0.35;
+            }
+        });
+    });
+
+    return (
+        <group ref={ref} position={[-70, -5, -20]} rotation={[0, -Math.PI / 2, 0]}>
+            {/* Body */}
+            <mesh position={[0, 1.5, 0]} scale={[1.5, 1, 1]}>
+                <sphereGeometry args={[1.2, 8, 6]} />
+                <meshStandardMaterial color="#C8860A" roughness={0.8} />
+            </mesh>
+            {/* Chest */}
+            <mesh position={[1.2, 1.2, 0]} scale={[0.9, 1, 1]}>
+                <sphereGeometry args={[1.0, 8, 6]} />
+                <meshStandardMaterial color="#C8860A" roughness={0.8} />
+            </mesh>
+            {/* Head */}
+            <mesh position={[2.5, 1.8, 0]}>
+                <sphereGeometry args={[0.75, 8, 8]} />
+                <meshStandardMaterial color="#C8860A" roughness={0.8} />
+            </mesh>
+            {/* Mane */}
+            <mesh position={[2.3, 1.9, 0]}>
+                <sphereGeometry args={[0.95, 8, 8]} />
+                <meshStandardMaterial color="#7B4700" roughness={1} transparent opacity={0.85} />
+            </mesh>
+            {/* Ears */}
+            <mesh position={[2.6, 2.55, 0.4]}>
+                <coneGeometry args={[0.18, 0.35, 4]} />
+                <meshStandardMaterial color="#B87030" roughness={0.9} />
+            </mesh>
+            <mesh position={[2.6, 2.55, -0.4]}>
+                <coneGeometry args={[0.18, 0.35, 4]} />
+                <meshStandardMaterial color="#B87030" roughness={0.9} />
+            </mesh>
+            {/* Legs */}
+            {[[-0.6, 0, 0.5], [0.6, 0, 0.5], [-0.6, 0, -0.5], [0.6, 0, -0.5]].map(([lx, ly, lz], i) => (
+                <mesh
+                    key={i}
+                    name={`leg${i}`}
+                    position={[lx, 0.4, lz]}
+                >
+                    <capsuleGeometry args={[0.22, 1.2, 4, 8]} />
+                    <meshStandardMaterial color="#B87030" roughness={0.9} />
+                </mesh>
+            ))}
+            {/* Tail */}
+            <mesh position={[-1.5, 1.6, 0]} rotation={[0, 0, -0.6]}>
+                <capsuleGeometry args={[0.1, 1.5, 4, 6]} />
+                <meshStandardMaterial color="#C8860A" roughness={0.9} />
+            </mesh>
+            {/* Tail tuft */}
+            <mesh position={[-2.5, 2.4, 0]}>
+                <sphereGeometry args={[0.22, 6, 6]} />
+                <meshStandardMaterial color="#7B4700" roughness={1} />
+            </mesh>
+        </group>
+    );
+};
+
+// Shooting stars across the sky
+const ShootingStars = () => {
+    const count = 4;
+    return (
+        <group>
+            {Array.from({ length: count }, (_, i) => (
+                <ShootingStar key={i} index={i} />
+            ))}
+        </group>
+    );
+};
+
+const ShootingStar = ({ index }: { index: number }) => {
+    const ref = useRef<THREE.Group>(null);
+    const phase = useMemo(() => index * 4.5 + Math.random() * 3, [index]);
+
+    useFrame((state) => {
+        if (!ref.current) return;
+        const t = (state.clock.elapsedTime + phase) % 8; // 8 second cycle
+        if (t < 1.5) {
+            // Streak across sky
+            const progress = t / 1.5;
+            ref.current.position.x = 80 - progress * 180;
+            ref.current.position.y = 40 + index * 12 - progress * 20;
+            ref.current.position.z = -80 - index * 10;
+            ref.current.visible = true;
+        } else {
+            ref.current.visible = false;
+        }
+    });
+
+    return (
+        <group ref={ref}>
+            <mesh rotation={[0, 0, Math.PI / 6]}>
+                <capsuleGeometry args={[0.15, 6, 4, 6]} />
+                <meshBasicMaterial color="#FFD700" transparent opacity={0.9} />
+            </mesh>
+            {/* Glow trail */}
+            <mesh rotation={[0, 0, Math.PI / 6]} position={[-3, -1.5, 0]}>
+                <capsuleGeometry args={[0.06, 4, 4, 6]} />
+                <meshBasicMaterial color="#FFA500" transparent opacity={0.4} />
+            </mesh>
         </group>
     );
 };

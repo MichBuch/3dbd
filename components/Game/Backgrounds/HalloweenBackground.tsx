@@ -4,6 +4,7 @@ import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Float } from '@react-three/drei';
 import * as THREE from 'three';
+import { useGameStore } from '@/store/gameStore';
 
 export const HalloweenBackground = () => {
     // Generate spooky objects
@@ -115,13 +116,20 @@ export const HalloweenBackground = () => {
                 return null;
             })}
 
+            {/* Spider Webs between some trees */}
+            <SpiderWeb position={[-22, 6, -18]} rotation={[0, 0.5, 0.2]} />
+            <SpiderWeb position={[18, 5, -22]} rotation={[0, -0.3, -0.15]} />
+            <SpiderWeb position={[-15, 4, 20]} rotation={[0, 0.8, 0.1]} />
+
             {/* Floating Ghosts */}
             <FloatingGhost position={[10, 5, -10]} />
             <FloatingGhost position={[-15, 7, -20]} />
-            <FloatingGhost position={[8, 6, -30]} />
 
-            {/* Flying Bats */}
+            {/* Flying Bats - speed-aware */}
             <FlyingBats />
+
+            {/* Witch on broomstick flying across sky */}
+            <WitchOnBroom />
 
             {/* Lightning Effect */}
             <Lightning />
@@ -239,6 +247,38 @@ const Tombstone = ({ position, rotation, tilt }: any) => {
     );
 };
 
+// Spider Web
+const SpiderWeb = ({ position, rotation }: any) => {
+    const rings = [0.5, 1.0, 1.5, 2.0, 2.5];
+    const spokes = 8;
+    return (
+        <group position={position} rotation={rotation}>
+            {/* Spokes */}
+            {Array.from({ length: spokes }, (_, i) => {
+                const angle = (i / spokes) * Math.PI * 2;
+                return (
+                    <mesh key={`spoke-${i}`} rotation={[0, 0, angle]}>
+                        <boxGeometry args={[0.02, 2.5, 0.01]} />
+                        <meshBasicMaterial color="#aaaaaa" transparent opacity={0.5} />
+                    </mesh>
+                );
+            })}
+            {/* Rings */}
+            {rings.map((r, i) => (
+                <mesh key={`ring-${i}`} rotation={[Math.PI / 2, 0, 0]}>
+                    <torusGeometry args={[r, 0.012, 4, spokes * 2]} />
+                    <meshBasicMaterial color="#aaaaaa" transparent opacity={0.4} />
+                </mesh>
+            ))}
+            {/* Spider */}
+            <mesh position={[0.8, -0.8, 0]}>
+                <sphereGeometry args={[0.08, 6, 6]} />
+                <meshBasicMaterial color="#111111" />
+            </mesh>
+        </group>
+    );
+};
+
 // Floating Ghost
 const FloatingGhost = ({ position }: any) => {
     return (
@@ -289,7 +329,7 @@ const FloatingGhost = ({ position }: any) => {
     );
 };
 
-// Flying Bats
+// Flying Bats — speed-aware
 const FlyingBats = () => {
     const batCount = 6;
     return (
@@ -302,6 +342,7 @@ const FlyingBats = () => {
 };
 
 const Bat = ({ index }: { index: number }) => {
+    const { preferences } = useGameStore();
     const ref = useRef<THREE.Group>(null);
     const speed = 8 + Math.random() * 4;
     const yHeight = 8 + Math.random() * 10;
@@ -309,9 +350,10 @@ const Bat = ({ index }: { index: number }) => {
 
     useFrame((state, delta) => {
         if (!ref.current) return;
-        const t = state.clock.elapsedTime + phase;
+        const themeSpeed = preferences.themeSpeed || 1;
+        const t = state.clock.elapsedTime * themeSpeed + phase;
 
-        // Circular flight path
+        // Circular flight path, speed-controlled
         const radius = 20;
         ref.current.position.x = Math.cos(t * 0.5 + index) * radius;
         ref.current.position.z = Math.sin(t * 0.5 + index) * radius;
@@ -347,6 +389,73 @@ const Bat = ({ index }: { index: number }) => {
                 <coneGeometry args={[0.4, 0.8, 3]} />
                 <meshStandardMaterial color="#1a1a1a" />
             </mesh>
+        </group>
+    );
+};
+
+// Witch on Broomstick flying figure-8 path
+const WitchOnBroom = () => {
+    const { preferences } = useGameStore();
+    const ref = useRef<THREE.Group>(null);
+
+    useFrame((state) => {
+        if (!ref.current) return;
+        const themeSpeed = preferences.themeSpeed || 1;
+        const t = state.clock.elapsedTime * 0.25 * themeSpeed;
+
+        // Figure-8 (lemniscate) path: x = a*cos(t)/(1+sin²(t)), z = a*sin(t)*cos(t)/(1+sin²(t))
+        const a = 55;
+        const denom = 1 + Math.sin(t) * Math.sin(t);
+        const x = a * Math.cos(t) / denom;
+        const z = a * Math.sin(t) * Math.cos(t) / denom - 25;
+        const y = 22 + Math.sin(t * 1.7) * 4;
+
+        ref.current.position.set(x, y, z);
+
+        // Face direction of travel
+        const dx = -a * Math.sin(t) / denom;
+        const dz = a * (Math.cos(2 * t)) / denom;
+        ref.current.rotation.y = Math.atan2(dx, dz);
+    });
+
+    return (
+        <group ref={ref}>
+            {/* Broomstick */}
+            <mesh rotation={[0, 0, Math.PI / 2]}>
+                <cylinderGeometry args={[0.08, 0.06, 4, 6]} />
+                <meshStandardMaterial color="#8B4513" roughness={0.9} />
+            </mesh>
+            {/* Bristles */}
+            <mesh position={[-2.1, 0, 0]} rotation={[0, 0, -0.3]}>
+                <coneGeometry args={[0.35, 0.9, 6]} />
+                <meshStandardMaterial color="#DAA520" roughness={1} />
+            </mesh>
+
+            {/* Witch body */}
+            <group position={[0.3, 0.3, 0]}>
+                {/* Dress/Robe */}
+                <mesh position={[0, 0.2, 0]}>
+                    <coneGeometry args={[0.35, 0.9, 6]} />
+                    <meshStandardMaterial color="#1a001a" roughness={0.8} />
+                </mesh>
+                {/* Head */}
+                <mesh position={[0, 0.85, 0]}>
+                    <sphereGeometry args={[0.22, 10, 10]} />
+                    <meshStandardMaterial color="#7CFC00" roughness={0.8} />
+                </mesh>
+                {/* Hat brim */}
+                <mesh position={[0, 1.1, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                    <torusGeometry args={[0.32, 0.07, 6, 16]} />
+                    <meshStandardMaterial color="#111111" />
+                </mesh>
+                {/* Hat cone */}
+                <mesh position={[0, 1.4, 0]}>
+                    <coneGeometry args={[0.2, 0.7, 6]} />
+                    <meshStandardMaterial color="#111111" />
+                </mesh>
+                {/* Green magic glow */}
+                <pointLight color="#39FF14" intensity={1.5} distance={8} />
+            </group>
         </group>
     );
 };

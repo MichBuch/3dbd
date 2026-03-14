@@ -11,6 +11,7 @@ interface OnlineUser {
     image: string | null;
     rankTier: string | null;
     points: number;
+    status?: 'online' | 'playing';
 }
 
 export const Lobby = () => {
@@ -38,13 +39,21 @@ export const Lobby = () => {
                 {users.map((u) => (
                     <li key={u.id} className="flex justify-between items-center group cursor-pointer hover:bg-white/5 p-1 rounded transition-colors">
                         <div className="flex items-center gap-2 overflow-hidden">
-                            {u.image ? (
-                                <img src={u.image} className="w-6 h-6 rounded-full border border-white/20" />
-                            ) : (
-                                <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center">
-                                    <User size={12} />
-                                </div>
-                            )}
+                            <div className="relative">
+                                {u.image ? (
+                                    <img src={u.image} className="w-6 h-6 rounded-full border border-white/20" />
+                                ) : (
+                                    <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center">
+                                        <User size={12} />
+                                    </div>
+                                )}
+                                {/* Status dot */}
+                                <span
+                                    className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-black"
+                                    style={{ backgroundColor: u.status === 'playing' ? '#EAB308' : '#22C55E' }}
+                                    title={u.status === 'playing' ? 'In a game' : 'Available'}
+                                />
+                            </div>
                             <div className="flex flex-col">
                                 <Link href={`/lobby/invite/${u.id}`} className="text-sm font-bold truncate max-w-[100px] text-white group-hover:text-neonPink transition-colors">
                                     {u.name || 'Anonymous'}
@@ -54,14 +63,12 @@ export const Lobby = () => {
                         </div>
                         <button
                             onClick={() => {
-                                // If NO session, redirect to signup
-                                // But `session` isn't defined here? It needs to be passed or hooked.
-                                // Let's simplify: just redirect to /lobby which handles auth or guest.
-                                window.location.href = '/lobby';
+                                window.location.href = `/lobby/invite/${u.id}`;
                             }}
-                            className="text-[10px] bg-white/10 hover:bg-neonBlue hover:text-black px-2 py-1 rounded transition-colors"
+                            disabled={u.status === 'playing'}
+                            className="text-[10px] bg-white/10 hover:bg-neonBlue hover:text-black px-2 py-1 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                         >
-                            CHALLENGE
+                            {u.status === 'playing' ? 'BUSY' : 'CHALLENGE'}
                         </button>
                     </li>
                 ))}

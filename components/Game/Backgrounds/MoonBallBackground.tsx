@@ -201,10 +201,123 @@ export const MoonBallBackground = () => {
             <StadiumLights />
             <CrowdStands />
 
+            {/* Arena Scoreboard */}
+            <ArenaScoreboard />
+
+            {/* Periodic confetti burst */}
+            <ConfettiBurst />
+
             {/* Balls */}
             {balls.map((ball, i) => (
                 <NeonBall key={i} ball={ball} index={i} />
             ))}
         </group>
+    );
+};
+
+// Arena scoreboard on stadium wall
+const ArenaScoreboard = () => {
+    const scoreRef1 = useRef<THREE.Mesh>(null);
+    const scoreRef2 = useRef<THREE.Mesh>(null);
+
+    return (
+        <group position={[0, 18, -56]}>
+            {/* Board backing */}
+            <mesh>
+                <boxGeometry args={[20, 8, 0.8]} />
+                <meshStandardMaterial color="#111" metalness={0.5} roughness={0.6} />
+            </mesh>
+            {/* Screen glow */}
+            <mesh position={[0, 0, 0.45]}>
+                <boxGeometry args={[18, 6.5, 0.1]} />
+                <meshBasicMaterial color="#001100" />
+            </mesh>
+            {/* SCORE text blocks (simulated) */}
+            {/* Team 1 label */}
+            {[-0.5, 0, 0.5].map((x, i) => (
+                <mesh key={`t1-${i}`} position={[-6 + x * 0.5, 1.5, 0.5]}>
+                    <boxGeometry args={[0.4, 1.2, 0.05]} />
+                    <meshBasicMaterial color="#FFD700" />
+                </mesh>
+            ))}
+            {/* Team 2 label */}
+            {[-0.5, 0, 0.5].map((x, i) => (
+                <mesh key={`t2-${i}`} position={[6 + x * 0.5, 1.5, 0.5]}>
+                    <boxGeometry args={[0.4, 1.2, 0.05]} />
+                    <meshBasicMaterial color="#FF2200" />
+                </mesh>
+            ))}
+            {/* Divider */}
+            <mesh position={[0, 0, 0.5]}>
+                <boxGeometry args={[0.15, 5, 0.05]} />
+                <meshBasicMaterial color="#444" />
+            </mesh>
+            {/* Score digits (decorative) */}
+            <mesh position={[-3.5, -0.5, 0.5]}>
+                <boxGeometry args={[3, 4, 0.05]} />
+                <meshBasicMaterial color="#FFD700" />
+            </mesh>
+            <mesh position={[3.5, -0.5, 0.5]}>
+                <boxGeometry args={[3, 4, 0.05]} />
+                <meshBasicMaterial color="#FF2200" />
+            </mesh>
+            {/* Scoreboard glow */}
+            <pointLight position={[0, 0, 2]} color="#FFD700" intensity={1.5} distance={15} decay={2} />
+        </group>
+    );
+};
+
+// Periodic confetti burst from ceiling
+const ConfettiBurst = () => {
+    const count = 60;
+    const ref = useRef<THREE.Points>(null);
+    const particles = useMemo(() => Array.from({ length: count }, () => ({
+        x: (Math.random() - 0.5) * 40,
+        y: 20,
+        z: (Math.random() - 0.5) * 30,
+        vx: (Math.random() - 0.5) * 0.2,
+        vy: -(0.5 + Math.random() * 0.8),
+        t: Math.random() * 10 // phase offset
+    })), []);
+    const positions = useMemo(() => new Float32Array(count * 3), []);
+    const colors = useMemo(() => {
+        const cols = new Float32Array(count * 3);
+        const palette = [[1, 0.85, 0], [1, 0.13, 0], [0, 0.8, 1], [0, 1, 0.5], [1, 0.3, 1]];
+        for (let i = 0; i < count; i++) {
+            const c = palette[i % palette.length];
+            cols[i * 3] = c[0]; cols[i * 3 + 1] = c[1]; cols[i * 3 + 2] = c[2];
+        }
+        return cols;
+    }, []);
+
+    useFrame((state, delta) => {
+        if (!ref.current) return;
+        const cycle = Math.floor(state.clock.elapsedTime / 6); // burst every 6 seconds
+        particles.forEach((p, i) => {
+            const localT = (state.clock.elapsedTime + p.t) % 6;
+            if (localT < 3) {
+                p.y += p.vy * delta * 15;
+                p.x += p.vx * delta * 10;
+                if (p.y < -5) { p.y = 20; p.x = (Math.random() - 0.5) * 40; }
+            } else {
+                // Reset for next burst
+                p.y = 20;
+                p.x = (Math.random() - 0.5) * 40;
+            }
+            positions[i * 3] = p.x;
+            positions[i * 3 + 1] = p.y;
+            positions[i * 3 + 2] = p.z;
+        });
+        ref.current.geometry.attributes.position.needsUpdate = true;
+    });
+
+    return (
+        <points ref={ref}>
+            <bufferGeometry>
+                <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} args={[positions, 3]} />
+                <bufferAttribute attach="attributes-color" count={count} array={colors} itemSize={3} args={[colors, 3]} />
+            </bufferGeometry>
+            <pointsMaterial size={0.7} vertexColors transparent opacity={0.9} blending={THREE.AdditiveBlending} depthWrite={false} sizeAttenuation />
+        </points>
     );
 };
