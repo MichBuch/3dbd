@@ -35,7 +35,7 @@ export default async function AdminThemesPage() {
     const themes = [
         'beach', 'black_white', 'chinese_new_year', 'diwali', 'xmas', 'dark',
         'easter', 'halloween', 'rubik', 'snow', 'space', 'starry', 'tennis',
-        'winter', 'wood', 'area51', 'cozy', 'padel', 'pickleball', 'rugby', 'toys', 'route66'
+        'winter', 'wood', 'area51', 'cozy', 'padel', 'pickleball', 'rugby', 'toys', 'route66', 'pyramids'
     ];
     // Note: Added missing themes from THEME_CONFIG to be safe
 

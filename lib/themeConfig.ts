@@ -23,6 +23,7 @@ export const THEMES = [
     { id: 'wood', translationKey: 'themeWood' },
     { id: 'xmas', translationKey: 'themeXmas' },
     { id: 'moonball', translationKey: 'themeMoonBall' },
+    { id: 'pyramids', translationKey: 'themePyramids' },
 ];
 
 export const THEME_CONFIG: Record<string, {
@@ -64,6 +65,7 @@ export const THEME_CONFIG: Record<string, {
 
     // Cultural Themes
     african: { base: '#8B4513', white: '#FFFFF0', black: '#1C1C1C', skin: 'african', emissiveStrength: 3.0 }, // Zebra: Ivory vs Ebony on warm earth
+    pyramids: { base: '#C4993B', white: '#FFD700', black: '#8B4513', skin: 'default', emissiveStrength: 3.0 }, // Gold vs SaddleBrown on warm sand
 
     // Sports Themes
     pickleball: { base: '#1E90FF', white: '#CCFF00', black: '#006400', skin: 'default', emissiveStrength: 2.5 }, // Dark green

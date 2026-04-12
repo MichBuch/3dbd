@@ -19,6 +19,7 @@ import { CozyBackground } from './CozyBackground';
 import { MoonBallBackground } from './MoonBallBackground';
 import { AfricanBackground } from './AfricanBackground';
 import { PlayroomBackground } from './PlayroomBackground';
+import { PyramidsBackground } from './PyramidsBackground';
 
 
 export const BackgroundSystem = () => {
@@ -62,6 +63,8 @@ export const BackgroundSystem = () => {
                     main.style.background = '#F0F8FF'; // AliceBlue
                 } else if (theme.id === 'african') {
                     main.style.background = 'linear-gradient(to bottom, #87CEEB 0%, #FF4500 50%, #DAA520 100%)'; // Sky -> Sunset -> Savanna
+                } else if (theme.id === 'pyramids') {
+                    main.style.background = 'linear-gradient(to bottom, #C47A2A 0%, #D4A843 50%, #E8C872 100%)'; // Warm desert sky -> Sand
                 } else {
                     // Default gradients or theme base
                     main.style.background = theme.base;
@@ -91,6 +94,7 @@ export const BackgroundSystem = () => {
             {theme.id === 'route66' && <Route66Background />}
             {['tennis', 'padel', 'pickleball', 'rugby'].includes(theme.id) && <SportsBackground />}
             {['chinese_new_year', 'diwali', 'easter'].includes(theme.id) && <FestiveBackground />}
+            {theme.id === 'pyramids' && <PyramidsBackground />}
         </>
     );
 };

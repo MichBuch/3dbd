@@ -136,6 +136,7 @@ export const translations = {
         themeDiwali: "Diwali",
         // themeToys (defined above)
         themeMoonBall: "Moon Ball",
+        themePyramids: "Pyramids of Cairo",
         // Page
     },
     zh: {
@@ -257,9 +258,7 @@ export const translations = {
         themeChineseNewYear: "春节",
         themeDiwali: "排灯节",
         themeToys: "玩具",
-        // Page
-    },
-    es: {
+        themePyramids: "开罗金字塔",
         leaderboard: "Clasificación",
         settings: "Ajustes",
         login: "Entrar",
@@ -378,9 +377,7 @@ export const translations = {
         themeChineseNewYear: "Año Nuevo Chino",
         themeDiwali: "Diwali",
         themeToys: "Juguetes",
-        // Page
-    },
-    ja: {
+        themePyramids: "Pirámides de El Cairo",
         leaderboard: "リーダーボード",
         settings: "設定",
         login: "ログイン",
@@ -499,9 +496,7 @@ export const translations = {
         themeChineseNewYear: "春節",
         themeDiwali: "ディワリ",
         themeToys: "おもちゃ",
-        // Page
-    },
-    hi: {
+        themePyramids: "カイロのピラミッド",
         leaderboard: "लीडरबोर्ड",
         settings: "सेटिंग्स",
         login: "लॉग इन",
@@ -620,9 +615,7 @@ export const translations = {
         themeChineseNewYear: "चीनी नव वर्ष",
         themeDiwali: "दिवाली",
         themeToys: "खिलौने",
-        // Page
-    }
-};
+        themePyramids: "काहिरा के पिरामिड",
 
 export function useTranslation() {
     const language = useGameStore((state) => state.preferences.language) || 'en';
