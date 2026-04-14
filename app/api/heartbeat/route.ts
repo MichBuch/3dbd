@@ -3,8 +3,10 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { logApiUsage, extractRequestInfo } from "@/lib/usageLogger";
 
 export const POST = async (req: Request) => {
+    const reqInfo = extractRequestInfo(req);
     const session = await auth();
 
     // 1. Logged In User
@@ -90,5 +92,13 @@ export const POST = async (req: Request) => {
         console.error("Guest Heartbeat Error", e);
     }
 
+    logApiUsage({
+        ...reqInfo,
+        statusCode: 200,
+        userId: session?.user?.id ?? null,
+        durationMs: Date.now() - reqInfo.startTime,
+    });
+
     return NextResponse.json({ success: true }); // Silent fail is fine
 }
+

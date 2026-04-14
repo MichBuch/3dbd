@@ -3,10 +3,13 @@ import { db } from "@/db";
 import { users, games } from "@/db/schema";
 import { desc, gt, and, ne, eq, or, isNull, like } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { logApiUsage, extractRequestInfo } from "@/lib/usageLogger";
 
 export const GET = async (request: Request) => {
+    const reqInfo = extractRequestInfo(request);
     const session = await auth();
     if (!session?.user?.id) {
+        logApiUsage({ ...reqInfo, statusCode: 401, durationMs: Date.now() - reqInfo.startTime });
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -79,9 +82,11 @@ export const GET = async (request: Request) => {
             limit: 10
         });
 
+        logApiUsage({ ...reqInfo, statusCode: 200, userId: session.user.id, durationMs: Date.now() - reqInfo.startTime });
         return NextResponse.json({ users: allUsers, openGames });
     } catch (error) {
         console.error("Lobby API Error:", error);
+        logApiUsage({ ...reqInfo, statusCode: 500, userId: session.user.id, durationMs: Date.now() - reqInfo.startTime });
         return NextResponse.json({ error: "Internal Server Error", users: [], openGames: [] }, { status: 500 });
     }
 }

@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { Building2, Music, Settings, Users, ArrowLeft } from "lucide-react";
+import { Building2, Music, Settings, Users, ArrowLeft, BarChart3 } from "lucide-react";
 import Link from "next/link";
 
 export default async function AdminLayout({
@@ -19,6 +19,7 @@ export default async function AdminLayout({
         { href: "/admin/themes", label: "Theme Music", icon: Music },
         { href: "/admin/settings", label: "General", icon: Settings },
         { href: "/admin/users", label: "Users", icon: Users },
+        { href: "/admin/usage", label: "API Usage", icon: BarChart3 },
     ];
 
     return (

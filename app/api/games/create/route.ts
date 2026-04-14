@@ -3,10 +3,13 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { games } from "@/db/schema";
 import { NextResponse } from "next/server";
+import { logApiUsage, extractRequestInfo } from "@/lib/usageLogger";
 
 export async function POST(req: Request) {
+    const reqInfo = extractRequestInfo(req);
     const session = await auth();
     if (!session?.user?.id) {
+        logApiUsage({ ...reqInfo, statusCode: 401, durationMs: Date.now() - reqInfo.startTime });
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -40,9 +43,11 @@ export async function POST(req: Request) {
             blackScore: 0
         }).returning();
 
+        logApiUsage({ ...reqInfo, statusCode: 200, userId: session.user.id, durationMs: Date.now() - reqInfo.startTime });
         return NextResponse.json(newGame[0]);
     } catch (error) {
         console.error("Create Game Error:", error);
+        logApiUsage({ ...reqInfo, statusCode: 500, userId: session.user.id, durationMs: Date.now() - reqInfo.startTime });
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

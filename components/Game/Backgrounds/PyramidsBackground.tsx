@@ -59,6 +59,34 @@ const Sphinx = ({ position }: { position: [number, number, number] }) => (
     </group>
 );
 
+// Palm tree
+const PalmTree = ({ position, rotation = 0 }: { position: [number, number, number]; rotation?: number }) => (
+    <group position={position} rotation={[0, rotation, 0]}>
+        {/* Trunk - curved segments */}
+        {[0, 1, 2, 3, 4].map(i => (
+            <mesh key={i} position={[i * 0.15, i * 1.2, 0]} castShadow>
+                <cylinderGeometry args={[0.3 - i * 0.03, 0.35 - i * 0.03, 1.3, 8]} />
+                <meshStandardMaterial color="#8B4513" roughness={0.9} />
+            </mesh>
+        ))}
+        {/* Palm fronds */}
+        {[0, 1, 2, 3, 4, 5, 6, 7].map(i => {
+            const angle = (i / 8) * Math.PI * 2;
+            return (
+                <mesh
+                    key={i}
+                    position={[0.75 + Math.cos(angle) * 1.5, 6.5 + Math.sin(angle * 2) * 0.3, Math.sin(angle) * 1.5]}
+                    rotation={[Math.sin(angle) * 0.4, angle, Math.cos(angle) * 0.3]}
+                    castShadow
+                >
+                    <boxGeometry args={[0.3, 3, 0.1]} />
+                    <meshStandardMaterial color="#228B22" roughness={0.8} />
+                </mesh>
+            );
+        })}
+    </group>
+);
+
 // Obelisk
 const Obelisk = ({ position }: { position: [number, number, number] }) => (
     <group position={position}>
@@ -176,6 +204,20 @@ const SandParticles = () => {
 
 // Main exported component
 export const PyramidsBackground = () => {
+    const palmTrees = useMemo(() => {
+        const positions: Array<{ pos: [number, number, number]; rot: number }> = [
+            { pos: [25, -5, -8], rot: 0.3 },
+            { pos: [20, -5, 5], rot: -0.5 },
+            { pos: [-35, -5, 10], rot: 1.2 },
+            { pos: [-40, -5, -5], rot: -0.8 },
+            { pos: [35, -5, -25], rot: 0.7 },
+            { pos: [-25, -5, -30], rot: -1.1 },
+            { pos: [10, -5, 15], rot: 0.2 },
+            { pos: [-15, -5, 20], rot: -0.4 },
+        ];
+        return positions;
+    }, []);
+
     return (
         <group>
             {/* Warm desert lighting */}
@@ -211,6 +253,11 @@ export const PyramidsBackground = () => {
 
             {/* Sphinx */}
             <Sphinx position={[15, -5, -12]} />
+
+            {/* Palm trees scattered around */}
+            {palmTrees.map((tree, i) => (
+                <PalmTree key={i} position={tree.pos} rotation={tree.rot} />
+            ))}
 
             {/* Obelisks */}
             <Obelisk position={[30, -5, -20]} />

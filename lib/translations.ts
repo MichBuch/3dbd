@@ -616,6 +616,9 @@ export const translations = {
         themeDiwali: "दिवाली",
         themeToys: "खिलौने",
         themePyramids: "काहिरा के पिरामिड",
+        // Page
+    }
+};
 
 export function useTranslation() {
     const language = useGameStore((state) => state.preferences.language) || 'en';

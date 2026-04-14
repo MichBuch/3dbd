@@ -324,6 +324,20 @@ export const passwordResetTokens = pgTable(
 );
 
 
+// API Usage Tracking
+export const apiUsageLogs = pgTable("api_usage_logs", {
+    id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+    method: text("method").notNull(),           // GET, POST, etc.
+    path: text("path").notNull(),               // /api/heartbeat, /api/game/xyz, etc.
+    statusCode: integer("status_code"),
+    userId: text("user_id"),                    // nullable — guests may not have session
+    ip: text("ip"),
+    userAgent: text("user_agent"),
+    durationMs: integer("duration_ms"),         // response time
+    country: text("country"),
+    createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const feedback = pgTable("feedback", {
     id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
     userId: text("user_id").references(() => users.id),
