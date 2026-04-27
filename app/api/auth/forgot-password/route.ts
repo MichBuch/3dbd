@@ -4,6 +4,12 @@ import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { createTransport } from "nodemailer";
 
+function envFlag(name: string, defaultValue: boolean) {
+    const v = process.env[name];
+    if (!v) return defaultValue;
+    return v === "1" || v.toLowerCase() === "true" || v.toLowerCase() === "yes";
+}
+
 export async function POST(req: Request) {
     try {
         const { email } = await req.json();
@@ -53,7 +59,7 @@ export async function POST(req: Request) {
                 pass: process.env.EMAIL_SERVER_PASSWORD,
             },
             tls: {
-                rejectUnauthorized: false
+                rejectUnauthorized: !envFlag("EMAIL_TLS_INSECURE", false)
             }
         });
 

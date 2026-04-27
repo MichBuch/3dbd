@@ -11,13 +11,15 @@ export const GET = async (req: Request) => {
     const fromId = searchParams.get('fromId');
 
     try {
+        const session = await auth();
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
         if (toId) {
-            // User polling for incoming challenges
-            // ALLOW Guests to poll if they strictly provide their ID (security trade-off for usability)
-            // const session = await auth();
-            // if (session?.user?.id !== toId) {
-            //      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-            // }
+            if (session.user.id !== toId) {
+                return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+            }
 
             const incoming = await db.query.challenges.findMany({
                 where: and(
@@ -30,7 +32,9 @@ export const GET = async (req: Request) => {
             return NextResponse.json(incoming);
 
         } else if (fromId) {
-            // Guest polling for status updates
+            if (session.user.id !== fromId) {
+                return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+            }
             const myChallenges = await db.query.challenges.findMany({
                 where: eq(challenges.fromId, fromId),
                 orderBy: [desc(challenges.createdAt)],

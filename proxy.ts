@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
     const start = Date.now();
     const response = NextResponse.next();
 
@@ -11,7 +11,6 @@ export function middleware(request: NextRequest) {
     // Pass IP through for logging
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
         || request.headers.get('x-real-ip')
-        || request.ip
         || 'unknown';
     response.headers.set('x-client-ip', ip);
 

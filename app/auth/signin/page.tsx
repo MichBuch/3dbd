@@ -166,7 +166,6 @@ export default function SignInPage() {
                                 value={password}
                                 onChange={(e) => {
                                     setPassword(e.target.value);
-                                    console.log('Password entered:', e.target.value);
                                 }}
                                 placeholder="........"
                                 className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-gray-500 pr-12"

@@ -8,12 +8,26 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
     const session = await auth();
-    if (!session?.user) {
+    if (!session?.user?.id) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     try {
-        console.log(`[API] FORCE RESET Request for Game ${id} by ${session.user.name}`);
+        const game = await db.query.games.findFirst({
+            where: eq(games.id, id),
+            columns: { id: true, whitePlayerId: true, blackPlayerId: true }
+        });
+
+        if (!game) {
+            return NextResponse.json({ error: "Game not found" }, { status: 404 });
+        }
+
+        const isPlayer = game.whitePlayerId === session.user.id || game.blackPlayerId === session.user.id;
+        const isAdmin = !!session.user.admin;
+
+        if (!isPlayer && !isAdmin) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
 
         const newBoard = Array(4).fill(null).map(() => Array(4).fill(null).map(() => Array(4).fill(null)));
 

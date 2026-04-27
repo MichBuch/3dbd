@@ -5,6 +5,12 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { createTransport } from "nodemailer";
 
+function envFlag(name: string, defaultValue: boolean) {
+    const v = process.env[name];
+    if (!v) return defaultValue;
+    return v === "1" || v.toLowerCase() === "true" || v.toLowerCase() === "yes";
+}
+
 export async function POST(req: Request) {
     try {
         const session = await auth();
@@ -37,7 +43,7 @@ export async function POST(req: Request) {
                         user: process.env.EMAIL_SERVER_USER,
                         pass: process.env.EMAIL_SERVER_PASSWORD,
                     },
-                    tls: { rejectUnauthorized: false }
+                    tls: { rejectUnauthorized: !envFlag("EMAIL_TLS_INSECURE", false) }
                 });
 
                 const userEmail = session?.user?.email || "Anonymous";

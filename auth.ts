@@ -16,6 +16,12 @@ import Credentials from "next-auth/providers/credentials"
 
 import Nodemailer from "next-auth/providers/nodemailer"
 
+function envFlag(name: string, defaultValue: boolean) {
+    const v = process.env[name];
+    if (!v) return defaultValue;
+    return v === "1" || v.toLowerCase() === "true" || v.toLowerCase() === "yes";
+}
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
     secret: process.env.NEXTAUTH_SECRET,
     pages: {
@@ -66,13 +72,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 password: { label: "Password", type: "password" },
             },
             authorize: async (credentials) => {
-                console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-                console.log("[Auth] Attempting login for:", credentials?.email);
-                console.log("[Auth] Password provided:", !!credentials?.password);
-                console.log("[Auth] Password length:", (credentials?.password as string)?.length);
-
                 if (!credentials?.email || !credentials?.password) {
-                    console.log("[Auth] ❌ Missing credentials");
                     return null;
                 }
 
@@ -83,13 +83,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     where: (users, { eq }) => eq(users.email, credentials.email)
                 });
 
-                console.log("[Auth] User found:", !!user);
-                console.log("[Auth] User email:", user?.email);
-                console.log("[Auth] User has password:", !!user?.password);
-                console.log("[Auth] Password hash preview:", user?.password?.substring(0, 20));
-
                 if (!user || !user.password) {
-                    console.log("[Auth] ❌ User not found or no password set");
                     return null;
                 }
 
@@ -99,16 +93,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 // @ts-ignore
                 const isValid = await bcrypt.compare(credentials.password, user.password);
 
-                console.log("[Auth] Password match:", isValid);
-                console.log("[Auth] Input password:", credentials.password);
-
                 if (!isValid) {
-                    console.log("[Auth] ❌ Invalid password");
                     return null;
                 }
-
-                console.log("[Auth] ✅ Login successful for:", user.email);
-                console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
                 return {
                     ...user,
@@ -128,19 +115,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                     user: process.env.EMAIL_SERVER_USER,
                     pass: process.env.EMAIL_SERVER_PASSWORD,
                 },
-                debug: true, // Enable SMTP logging
-                logger: true, // Log to console
+                debug: envFlag("EMAIL_DEBUG", false),
+                logger: envFlag("EMAIL_DEBUG", false),
                 tls: {
-                    rejectUnauthorized: false
+                    rejectUnauthorized: !envFlag("EMAIL_TLS_INSECURE", false),
                 }
             },
             from: process.env.EMAIL_FROM,
             async sendVerificationRequest({ identifier: email, url, provider }) {
-                console.log('📧 Attempting to send verification email to:', email);
-                console.log('🔗 Magic link URL:', url);
-                console.log('📮 From:', provider.from);
-                console.log('🖥️  SMTP:', process.env.EMAIL_SERVER_HOST);
-
                 try {
                     // @ts-ignore
                     const { createTransport } = await import('nodemailer');
@@ -154,7 +136,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                         html: `<div><h2>Sign in to 3DBD</h2><p><a href="${url}">Click here to log in</a></p></div>`,
                     });
 
-                    console.log('✅ Email sent successfully!', result);
+                    if (envFlag("EMAIL_DEBUG", false)) {
+                        console.log('✅ Verification email sent', { messageId: (result as any)?.messageId });
+                    }
                 } catch (error) {
                     console.error('❌ Email send FAILED:', error);
                     throw error;

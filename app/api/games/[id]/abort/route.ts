@@ -7,7 +7,7 @@ import { auth } from "@/auth";
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const session = await auth();
-        if (!session?.user?.email) {
+        if (!session?.user?.id) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
@@ -25,15 +25,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
         // Allow players or admin to abort
         const isPlayer = game.whitePlayerId === session.user.id || game.blackPlayerId === session.user.id;
-        const isAdmin = session.user.admin || session.user.email === 'michbuch1966@gmail.com'; // Hardcoded fallback
+        const isAdmin = !!session.user.admin;
 
         // Identify legacy/migrated users by name/email match if IDs differ (common in dev seed)
         // ... (Skipping complex logic, assume IDs match or Admin force)
 
         if (!isPlayer && !isAdmin) {
-            console.log("Abort attempt by non-player:", session.user.email);
-            // Allow it for now if it's truly stuck? No, security first.
-            // return NextResponse.json({ error: "Not a player" }, { status: 403 });
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
         // Force End

@@ -259,6 +259,9 @@ export const translations = {
         themeDiwali: "排灯节",
         themeToys: "玩具",
         themePyramids: "开罗金字塔",
+        // Page
+    },
+    es: {
         leaderboard: "Clasificación",
         settings: "Ajustes",
         login: "Entrar",
@@ -378,6 +381,9 @@ export const translations = {
         themeDiwali: "Diwali",
         themeToys: "Juguetes",
         themePyramids: "Pirámides de El Cairo",
+        // Page
+    },
+    ja: {
         leaderboard: "リーダーボード",
         settings: "設定",
         login: "ログイン",
@@ -497,6 +503,9 @@ export const translations = {
         themeDiwali: "ディワリ",
         themeToys: "おもちゃ",
         themePyramids: "カイロのピラミッド",
+        // Page
+    },
+    hi: {
         leaderboard: "लीडरबोर्ड",
         settings: "सेटिंग्स",
         login: "लॉग इन",
