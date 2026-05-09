@@ -92,7 +92,7 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
     const [showPremiumGate, setShowPremiumGate] = useState(false);
     const [gameMode, setGameMode] = useState<string | null>(null);
     const lastHeartbeat = useRef(Date.now());
-    const pollBackoff = useRef(1000);
+    const pollBackoff = useRef(3000); // Start at 3s — socket handles real-time, this is fallback only
     const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const STALE_THRESHOLD_MS = 60 * 60 * 1000;
 
@@ -290,7 +290,7 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
                 const data = await res.json();
                 setConnectionStatus('connected');
                 lastHeartbeat.current = Date.now();
-                pollBackoff.current = 1000;
+                pollBackoff.current = 3000;
 
                 if (!data.isFinished && data.updatedAt) {
                     const lastUpdate = new Date(data.updatedAt).getTime();
@@ -337,7 +337,7 @@ export default function MultiplayerGame({ params }: { params: Promise<{ id: stri
             } catch (e) {
                 console.error("Polling error", e);
                 if (Date.now() - lastHeartbeat.current > 4000) setConnectionStatus('reconnecting');
-                pollBackoff.current = Math.min(pollBackoff.current * 2, 16000);
+                pollBackoff.current = Math.min(pollBackoff.current * 2, 8000); // Cap at 8s
             }
             pollTimer.current = setTimeout(poll, pollBackoff.current);
         };

@@ -8,19 +8,12 @@ import { auth } from "@/auth";
 
 export async function getOnlineUsers() {
     const session = await auth();
-    // Allow guests to see online users? 
-    // If we return [], then guests see nothing. 
-    // The previous code returned [] if (!user).
-    // Let's Keep that behavior for now, but really guests should see online list too.
-    // For now, stick to the fix:
     if (!session?.user?.id) return [];
 
     const userId = session.user.id;
 
-    // UPDATE LAST SEEN
-    await db.update(users)
-        .set({ lastSeen: new Date() })
-        .where(eq(users.id, userId));
+    // NOTE: lastSeen is updated by the heartbeat (/api/heartbeat) — not here.
+    // Updating it here caused a DB write on every lobby poll (every 30s per user).
 
     // Get users seen in the last 5 minutes OR bots (always online), excluding self
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);

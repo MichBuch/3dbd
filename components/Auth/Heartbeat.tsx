@@ -18,7 +18,7 @@ export function Heartbeat() {
         };
 
         sendHeartbeat();
-        const interval = setInterval(sendHeartbeat, 60000); // Every minute
+        const interval = setInterval(sendHeartbeat, 90000); // Every 90s — enough for presence tracking
 
         return () => clearInterval(interval);
     }, [session]);
