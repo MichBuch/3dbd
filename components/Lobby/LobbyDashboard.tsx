@@ -8,6 +8,7 @@ import { useSession } from 'next-auth/react';
 import { useGameStore } from '@/store/gameStore';
 import { useTranslation } from '@/lib/translations';
 import { ConnectDialog } from './ConnectDialog';
+import { MultiplayerStatus } from './MultiplayerStatus';
 
 interface OnlineUser {
     id: string;
@@ -59,14 +60,14 @@ export const LobbyDashboard = () => {
     const { data: lobbyData, error: lobbyError } = useSWR(
         `/api/lobby${searchQuery ? `?q=${encodeURIComponent(searchQuery)}` : ''}`,
         fetcher,
-        { refreshInterval: 3000, revalidateOnFocus: true }
+        { refreshInterval: 15000, revalidateOnFocus: true } // 15s (was 3s) — 80% fewer requests
     );
 
     // 2. Fetch Friends
     const { data: friendsData, mutate: mutateFriends } = useSWR(
         session?.user ? '/api/friends' : null,
         fetcher,
-        { refreshInterval: 10000 }
+        { refreshInterval: 30000 } // 30s (was 10s)
     );
 
     // Challenge System State
@@ -94,7 +95,7 @@ export const LobbyDashboard = () => {
     const { data: challengesData } = useSWR(
         challengesUrl,
         fetcher,
-        { refreshInterval: 3000 }
+        { refreshInterval: 10000 } // 10s (was 3s)
     );
 
     // 4. Fetch Outgoing Challenges (For redirecting Sender)
@@ -102,7 +103,7 @@ export const LobbyDashboard = () => {
     const { data: outgoingData } = useSWR(
         (session?.user?.id || guestId) ? outgoingUrl : null,
         fetcher,
-        { refreshInterval: 3000 }
+        { refreshInterval: 10000 } // 10s (was 3s)
     );
 
     // Derived State
@@ -245,28 +246,10 @@ export const LobbyDashboard = () => {
     }, [session, guestId]);
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-6xl mx-auto p-4 md:p-0 relative">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-7xl mx-auto p-4 md:p-0 relative">
 
-            {/* Multiplayer Unavailable Banner (Vercel/serverless deployments) */}
-            {!isMultiplayerEnabled && (
-                <div className="col-span-full bg-yellow-500/10 border border-yellow-500/40 rounded-xl p-4 flex flex-col sm:flex-row items-center gap-4 text-sm">
-                    <span className="text-2xl">⚡</span>
-                    <div className="flex-1 text-center sm:text-left">
-                        <p className="font-bold text-yellow-300">Live Multiplayer requires the game server</p>
-                        <p className="text-yellow-200/70 mt-0.5">
-                            This deploy is serverless (Vercel) and cannot run Socket.IO.{' '}
-                            <a
-                                href={railwayUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="underline text-yellow-300 hover:text-white"
-                            >
-                                Play multiplayer at the Railway server →
-                            </a>
-                        </p>
-                    </div>
-                </div>
-            )}
+            {/* Subtle multiplayer status — fading toast + persistent corner icon */}
+            <MultiplayerStatus isMultiplayerEnabled={isMultiplayerEnabled} railwayUrl={railwayUrl} />
 
             <div className="glass-panel p-6 rounded-2xl border border-white/10 bg-black/60 relative">
                 <button
